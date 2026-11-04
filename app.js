@@ -160,7 +160,7 @@ class AppController {
 
             <div class="topbar-right">
               <div class="ticker-badge" title="Campus Active">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: #16a34a; display: inline-block; animation: badgePulse 2s infinite;"></span>
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #BF9A33; display: inline-block; animation: badgePulse 2s infinite;"></span>
                 <span>Session ${TMS_CONFIG.academic.currentYear} Active</span>
               </div>
 
@@ -311,7 +311,7 @@ class AppController {
     html += `
       <div class="sidebar-group-title" style="margin-top: 14px;">Dedicated Portals</div>
       <a class="nav-item" href="/admission" target="_blank" data-tooltip="Admission Form (A4)">
-        <i data-lucide="file-text" style="color: #16a34a;"></i>
+        <i data-lucide="file-text" style="color: #BF9A33;"></i>
         <span>Admission Form (A4)</span>
       </a>
     `;
@@ -409,7 +409,7 @@ class AppController {
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="kiosk" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="scan" style="color: #16a34a;"></i>
+              <i data-lucide="scan" style="color: #BF9A33;"></i>
               <div><strong>Launch QR Kiosk</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Attendance Terminal</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="challan" style="justify-content: flex-start; padding: 10px; text-align: left;">
@@ -425,11 +425,11 @@ class AppController {
               <div><strong>Transfer Certificate</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Issue Official TC</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="reports" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="award" style="color: #16a34a;"></i>
+              <i data-lucide="award" style="color: #BF9A33;"></i>
               <div><strong>Exam Gradebook</strong><div style="font-size: 0.7rem; color: var(--text-muted);">CBSE Progress Reports</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="id-cards" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="contact-2" style="color: #16a34a;"></i>
+              <i data-lucide="contact-2" style="color: #BF9A33;"></i>
               <div><strong>ID Cards Studio</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Batch A4 Badges</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="homework" style="justify-content: flex-start; padding: 10px; text-align: left;">
@@ -519,7 +519,7 @@ class AppController {
           let html = '';
 
           if (matchedStudents.length) {
-            html += `<div style="font-weight: 700; color: #16a34a; font-size: 0.78rem; text-transform: uppercase; margin: 8px 0 4px;">Students (${matchedStudents.length}):</div>`;
+            html += `<div style="font-weight: 700; color: #BF9A33; font-size: 0.78rem; text-transform: uppercase; margin: 8px 0 4px;">Students (${matchedStudents.length}):</div>`;
             matchedStudents.forEach(s => {
               html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-subtle, #f8fafc); border-radius: 6px; margin-bottom: 4px;">
@@ -528,7 +528,7 @@ class AppController {
                     <span style="color: var(--text-muted); font-size: 0.75rem; margin-left: 6px;">(${esc(s.admissionNo)} • ${esc(s.grade)})</span>
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-secondary btn-sm cmd-wa-student" data-phone="${esc(s.phone || s.parentPhone || '')}" data-name="${esc(s.fullName)}" title="WhatsApp Contact" style="padding: 2px 6px; color: #16a34a;">
+                    <button class="btn btn-secondary btn-sm cmd-wa-student" data-phone="${esc(s.phone || s.parentPhone || '')}" data-name="${esc(s.fullName)}" title="WhatsApp Contact" style="padding: 2px 6px; color: #BF9A33;">
                       <i data-lucide="message-circle" style="width: 13px; height: 13px;"></i>
                     </button>
                     <button class="btn btn-secondary btn-sm cmd-view-student" data-id="${esc(s.id)}" style="padding: 2px 8px; font-size: 0.72rem;">View Profile</button>
@@ -546,11 +546,11 @@ class AppController {
                   <div>
                     <span class="font-mono" style="font-weight: 700;">${esc(inv.invoiceNo)}</span>
                     <span style="margin-left: 6px;">${esc(inv.studentName)}</span>
-                    <span style="color: ${inv.balance > 0 ? '#ef4444' : '#16a34a'}; font-weight: 700; margin-left: 6px;">(₹ ${(inv.balance || inv.amount || 0).toLocaleString()})</span>
+                    <span style="color: ${inv.balance > 0 ? '#ef4444' : '#BF9A33'}; font-weight: 700; margin-left: 6px;">(₹ ${(inv.balance || inv.amount || 0).toLocaleString()})</span>
                   </div>
                   <div style="display: flex; gap: 4px;">
                     ${inv.balance > 0 ? `
-                      <button class="btn btn-secondary btn-sm cmd-wa-invoice" data-name="${esc(inv.studentName)}" data-inv="${esc(inv.invoiceNo)}" data-bal="${esc(inv.balance)}" data-due="${esc(inv.dueDate || '')}" title="WhatsApp Reminder" style="padding: 2px 6px; color: #16a34a;">
+                      <button class="btn btn-secondary btn-sm cmd-wa-invoice" data-name="${esc(inv.studentName)}" data-inv="${esc(inv.invoiceNo)}" data-bal="${esc(inv.balance)}" data-due="${esc(inv.dueDate || '')}" title="WhatsApp Reminder" style="padding: 2px 6px; color: #BF9A33;">
                         <i data-lucide="message-circle" style="width: 13px; height: 13px;"></i>
                       </button>
                     ` : ''}
@@ -915,121 +915,267 @@ class AppController {
       { name: 'Senior (G11-G12)', count: students.filter(s => (s.grade || '').includes('11') || (s.grade || '').includes('12')).length || 40, pct: 10 }
     ];
 
+    // Adaptive TPSH Feature Metrics
+    const totalStudentCount = students.length || 0;
+    const boysCount = students.filter(s => (s.gender || '').toLowerCase() === 'male' || (s.gender || '').toLowerCase() === 'boys').length || Math.round(totalStudentCount * 0.54);
+    const girlsCount = students.filter(s => (s.gender || '').toLowerCase() === 'female' || (s.gender || '').toLowerCase() === 'girls').length || (totalStudentCount - boysCount);
+    const pendingAdmissions = (applications || []).filter(a => (a.status || '').toLowerCase() === 'pending').length;
+
+    // Attendance breakdown for Arc Radar Gauge
+    const lateStudents = todayAttendance.filter(a => a.status === 'late').length;
+    const leaveStudents = todayAttendance.filter(a => a.status === 'leave').length;
+    const absentCountCalc = todayAttendance.filter(a => a.status === 'absent').length || (totalStudentCount > 0 ? absentees : 0);
+    const presentCountCalc = Math.max(0, (totalStudentCount || 100) - absentCountCalc - leaveStudents);
+
+    // SVG Half-Donut Arc Geometry (Semi-circle radius = 80, circumference length = 251.3)
+    const arcTotal = totalStudentCount > 0 ? totalStudentCount : 100;
+    const lenPresent = Math.min(251.3, Math.max(0, (presentCountCalc / arcTotal) * 251.3));
+    const lenLate = Math.min(251.3 - lenPresent, Math.max(0, (lateStudents / arcTotal) * 251.3));
+    const lenLeave = Math.min(251.3 - (lenPresent + lenLate), Math.max(0, (leaveStudents / arcTotal) * 251.3));
+    const lenAbsent = Math.max(0, 251.3 - (lenPresent + lenLate + lenLeave));
+
+    const offsetLate = -lenPresent;
+    const offsetLeave = -(lenPresent + lenLate);
+    const offsetAbsent = -(lenPresent + lenLate + lenLeave);
+
+    // Students with special attendance or leave status today
+    const activeStatusStudents = (todayAttendance.length > 0)
+      ? todayAttendance.filter(a => a.status === 'absent' || a.status === 'leave' || a.status === 'late')
+          .map(a => {
+            const st = students.find(s => s.id === a.student_id) || {};
+            return {
+              id: a.student_id,
+              name: st.name || a.student_name || 'Student',
+              avatar: st.photo || st.avatar || null,
+              status: a.status || 'absent'
+            };
+          })
+      : [];
+
+    const isPrivacyInitial = localStorage.getItem('tms_privacy_mode') === 'true';
+
     container.innerHTML = `
       <div class="tms-content-wrapper">
-        <!-- Section 1: Welcome Header -->
-        <div class="card" style="margin-bottom: 24px; padding: 24px 28px; background: linear-gradient(135deg, #ffffff 0%, #F0FDF4 100%); border: 1.5px solid #dcfce7; box-shadow: var(--shadow-sm);">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-            <div>
-              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-                <span class="badge badge-success" style="font-size:0.75rem;"><i data-lucide="shield-check" style="width:12px; height:12px;"></i> Official Campus Gateway</span>
-                <span style="font-size:0.78rem; color:var(--text-secondary);">${today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              </div>
-              <h1 style="font-size: 1.85rem; font-weight: 800; color: #111827; letter-spacing: -0.025em; margin: 0;">
-                ${timeGreeting}, ${esc(user.name || 'Campus Leader')}
-              </h1>
-              <p style="color: var(--text-secondary); font-size: 0.88rem; margin: 4px 0 0 0;">
-                THAIBA PUBLIC SCHOOL • Unified Campus Operations • Session ${TMS_CONFIG.academic.currentYear}
-              </p>
+        <!-- Top Executive Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="badge badge-success" style="font-size:0.75rem;"><i data-lucide="shield-check" style="width:12px; height:12px;"></i> Official Campus Gateway</span>
+            <span style="font-size:0.8rem; color:var(--text-secondary);">${today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="btn btn-secondary btn-sm" id="btn-print-morning-pulse">
+              <i data-lucide="printer"></i> Executive Pulse (A4)
+            </button>
+            <a href="/admission" target="_blank" class="btn btn-secondary btn-sm">
+              <i data-lucide="file-plus" style="color: #BF9A33;"></i> Admission Portal (A4)
+            </a>
+            <a href="#/attendance" class="btn btn-primary btn-sm">
+              <i data-lucide="scan"></i> Gate Kiosk
+            </a>
+          </div>
+        </div>
+
+        <!-- 1. Dark Contrast Executive Hero Card (TPSH Adaptation) -->
+        <div class="m-hero-card">
+          <div class="m-hero-top-row">
+            <a href="${pendingAdmissions > 0 ? '/admission' : '#/attendance'}" class="m-hero-brand-pill ${pendingAdmissions > 0 ? 'has-alert' : ''}" id="m-hero-brand-pill" title="Official Institutional Real-Time Synchronization">
+              <span class="m-hero-live-indicator"></span>
+              <span class="m-hero-brand-text">
+                ${pendingAdmissions > 0 ? `${pendingAdmissions} Admissions Pending Review` : `THAIBA PUBLIC SCHOOL • CAMPUS LIVE`}
+              </span>
+            </a>
+            <button class="m-hero-eye-btn" id="m-hero-eye-toggle" title="Toggle metrics privacy display" aria-label="Toggle metrics display">
+              <i data-lucide="${isPrivacyInitial ? 'eye-off' : 'eye'}" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+
+          <div class="m-hero-metric-body">
+            <span class="m-hero-metric-label">TOTAL CAMPUS LEARNERS ENROLLED • SESSION ${TMS_CONFIG.academic.currentYear}</span>
+            <div class="m-hero-metric-row">
+              <span class="m-hero-big-number" id="m-hero-val">${isPrivacyInitial ? '••••' : totalStudentCount}</span>
+              <span class="m-hero-unit">Active Students</span>
             </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-              <button class="btn btn-secondary" id="btn-print-morning-pulse">
-                <i data-lucide="printer"></i> Executive Pulse (A4)
-              </button>
-              <a href="/admission" target="_blank" class="btn btn-secondary">
-                <i data-lucide="file-plus" style="color: #16a34a;"></i> Admission Portal (A4)
+            <div class="m-hero-trend-badge">
+              <span>Boys: ${boysCount} • Girls: ${girlsCount}</span>
+              <span class="m-hero-trend-sep">•</span>
+              <span>Primary, Middle & Senior Wings</span>
+            </div>
+          </div>
+
+          <div class="m-hero-footer-stats">
+            <div class="m-hero-f-stat">
+              <span class="m-hero-f-label">Morning Turnout</span>
+              <span class="m-hero-f-val" id="m-hero-turnout-val" style="color: #34D399;">${isPrivacyInitial ? '••%' : attPercent + '%'}</span>
+            </div>
+            <div class="m-hero-f-stat">
+              <span class="m-hero-f-label">Faculty & Staff</span>
+              <span class="m-hero-f-val" id="m-hero-staff-val">${isPrivacyInitial ? '••' : staff.length + ' Active'}</span>
+            </div>
+            <div class="m-hero-f-stat">
+              <span class="m-hero-f-label">Fee Realization</span>
+              <span class="m-hero-f-val" id="m-hero-fee-val" style="color: #FBBF24;">${isPrivacyInitial ? '₹ ••••••' : '₹ ' + totalCollected.toLocaleString()}</span>
+            </div>
+            <div class="m-hero-f-stat" style="cursor: pointer;" onclick="window.location.hash='#/timetable'" title="View Live Period & Classroom Allocations">
+              <span class="m-hero-f-label">Timetable Slots</span>
+              <span class="m-hero-f-val" style="color: #60A5FA;">Period 3 Live →</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Middle Row: Campus Presence Radar + Touch Bento Grid Quick Actions -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 24px;">
+          <!-- Left: Campus Presence Donut Arc Gauge Card (TPSH Adaptation) -->
+          <div class="m-gauge-card">
+            <div class="m-gauge-header">
+              <div>
+                <h4 class="m-gauge-title">Campus Presence Radar</h4>
+                <span class="m-gauge-sub">Live student occupancy breakdown</span>
+              </div>
+              <span class="m-gauge-badge">${attPercent}% Present</span>
+            </div>
+
+            <div class="m-gauge-visual-wrap">
+              <svg class="m-gauge-svg" viewBox="0 0 200 115">
+                <!-- Full background track -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
+                <!-- 1. Present segment (Green) -->
+                ${lenPresent > 0 ? `
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#BF9A33" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenPresent.toFixed(1)} 251.3" stroke-dashoffset="0"/>
+                ` : ''}
+                <!-- 2. Late segment (Amber) -->
+                ${lenLate > 0 ? `
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#D97706" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenLate.toFixed(1)} 251.3" stroke-dashoffset="${offsetLate.toFixed(1)}"/>
+                ` : ''}
+                <!-- 3. Leave / Pass segment (Blue) -->
+                ${lenLeave > 0 ? `
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2563EB" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenLeave.toFixed(1)} 251.3" stroke-dashoffset="${offsetLeave.toFixed(1)}"/>
+                ` : ''}
+                <!-- 4. Absent segment (Red) -->
+                ${lenAbsent > 0 ? `
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#EF4444" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenAbsent.toFixed(1)} 251.3" stroke-dashoffset="${offsetAbsent.toFixed(1)}"/>
+                ` : ''}
+              </svg>
+              <div class="m-gauge-center-content">
+                <span class="m-gauge-center-val">${attPercent}%</span>
+                <span class="m-gauge-center-lbl">On Campus</span>
+              </div>
+            </div>
+
+            <div class="m-gauge-legend-row">
+              <div class="m-gauge-leg-item">
+                <div class="m-leg-header"><span class="m-leg-dot emerald"></span><span class="m-leg-name">Present</span></div>
+                <span class="m-leg-count">${presentCountCalc}</span>
+              </div>
+              <div class="m-gauge-leg-item">
+                <div class="m-leg-header"><span class="m-leg-dot amber"></span><span class="m-leg-name">Late</span></div>
+                <span class="m-leg-count">${lateStudents}</span>
+              </div>
+              <div class="m-gauge-leg-item">
+                <div class="m-leg-header"><span class="m-leg-dot blue"></span><span class="m-leg-name">Leave</span></div>
+                <span class="m-leg-count">${leaveStudents}</span>
+              </div>
+              <div class="m-gauge-leg-item">
+                <div class="m-leg-header"><span class="m-leg-dot red"></span><span class="m-leg-name">Absent</span></div>
+                <span class="m-leg-count">${absentCountCalc}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Touch-First 2x2 Bento Grid Quick Actions -->
+          <div class="m-section-block" style="margin-bottom: 0;">
+            <div class="m-section-header">
+              <h3 class="m-section-title">Quick Actions</h3>
+              <span class="m-section-tag">Essential Workflows</span>
+            </div>
+
+            <div class="m-actions-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <!-- Admission Tile -->
+              <a href="/admission" target="_blank" class="m-action-tile">
+                <div class="m-action-icon-wrap mint">
+                  <i data-lucide="file-plus" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div class="m-action-meta">
+                  <div class="m-action-name-row">
+                    <span class="m-action-name">Admissions</span>
+                    ${pendingAdmissions > 0 ? `<span class="m-action-badge">${pendingAdmissions}</span>` : ''}
+                  </div>
+                  <span class="m-action-desc">${pendingAdmissions > 0 ? `${pendingAdmissions} awaiting review` : 'Official A4 intake'}</span>
+                </div>
               </a>
-              <a href="#/attendance" class="btn btn-primary">
-                <i data-lucide="scan"></i> Gate Kiosk
+
+              <!-- Attendance Kiosk Tile -->
+              <a href="#/attendance" class="m-action-tile">
+                <div class="m-action-icon-wrap blue">
+                  <i data-lucide="scan" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div class="m-action-meta">
+                  <div class="m-action-name-row">
+                    <span class="m-action-name">Gate Kiosk</span>
+                  </div>
+                  <span class="m-action-desc">Live QR radar scanner</span>
+                </div>
+              </a>
+
+              <!-- Fee Counter Tile -->
+              <a href="#/finance" class="m-action-tile">
+                <div class="m-action-icon-wrap amber">
+                  <i data-lucide="receipt" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div class="m-action-meta">
+                  <div class="m-action-name-row">
+                    <span class="m-action-name">Cash Counter</span>
+                  </div>
+                  <span class="m-action-desc">₹ ${totalDue.toLocaleString()} pending</span>
+                </div>
+              </a>
+
+              <!-- Timetable Slots Tile -->
+              <a href="#/timetable" class="m-action-tile">
+                <div class="m-action-icon-wrap purple">
+                  <i data-lucide="calendar" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div class="m-action-meta">
+                  <div class="m-action-name-row">
+                    <span class="m-action-name">Timetable</span>
+                  </div>
+                  <span class="m-action-desc">Classroom teaching slots</span>
+                </div>
               </a>
             </div>
           </div>
         </div>
 
-        <!-- Section 2: Executive Campus Pulse -->
-        <div class="card" style="margin-bottom: 24px; border: 1.5px solid #16a34a; background: #ffffff; box-shadow: var(--shadow-md);">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);">
-                <i data-lucide="activity" style="width: 22px; height: 22px;"></i>
-              </div>
-              <div>
-                <h2 style="font-size: 1.15rem; font-weight: 800; color: #111827; margin: 0; display: flex; align-items: center; gap: 8px;">
-                  Executive Campus Pulse Briefing
-                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; display: inline-block; animation: badgePulse 2s infinite;"></span>
-                </h2>
-                <div style="font-size: 0.78rem; color: var(--text-secondary);">
-                  Live Institutional Synchronization • Baghait Campus, Tapan
-                </div>
-              </div>
+        <!-- 3. Daily Absentee & Leave Register Horizontal Carousel (TPSH Adaptation) -->
+        <div class="m-section-block">
+          <div class="m-section-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h3 class="m-section-title">Daily Absentee &amp; Leave Register</h3>
+              <span class="m-leave-count-pill">${activeStatusStudents.length}</span>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="badge badge-success"><i data-lucide="wifi"></i> Gate Radar Active</span>
-              <span class="badge badge-info"><i data-lucide="map-pin"></i> 300m Geofence Enforced</span>
-            </div>
+            <a href="#/attendance" class="m-section-link">Attendance Register →</a>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
-            <!-- Turnout -->
-            <div style="background: #F8FAF9; border: 1px solid #E8EDF3; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Student Morning Turnout</div>
-              <div style="display:flex; align-items:baseline; justify-content:space-between; margin: 4px 0;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;">${attPercent}%</div>
-                <span class="badge badge-success" style="font-size:0.7rem;">Normal</span>
-              </div>
-              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 8px;">
-                <strong>${presentStudents || (students.length ? Math.round(students.length * 0.94) : 0)}</strong> present • <span style="color:#ef4444; font-weight:600;">${absentees} absent</span>
-              </div>
-              <div style="height: 5px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
-                <div style="width: ${attPercent}%; height: 100%; background: #16a34a; border-radius: 9999px;"></div>
-              </div>
+          ${activeStatusStudents.length === 0 ? `
+            <div style="padding: 14px 18px; background: #FBF7EE; border: 1.5px solid #F1DFA8; border-radius: 14px; color: #7A611C; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; width: 100%;">
+              <i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: #BF9A33; flex-shrink: 0;"></i>
+              <span>All campus learners accounted for today. Zero unexcused absentees.</span>
             </div>
-
-            <!-- Faculty -->
-            <div style="background: #F8FAF9; border: 1px solid #E8EDF3; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Faculty &amp; Staff Status</div>
-              <div style="display:flex; align-items:baseline; justify-content:space-between; margin: 4px 0;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: #3B82F6;">${staff.length} Active</div>
-                <span class="badge badge-info" style="font-size:0.7rem;">100%</span>
-              </div>
-              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 8px;">
-                Complete instructional period coverage
-              </div>
-              <div style="height: 5px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
-                <div style="width: 100%; height: 100%; background: #3B82F6; border-radius: 9999px;"></div>
-              </div>
+          ` : `
+            <div class="m-residents-scroll">
+              ${activeStatusStudents.map(st => `
+                <a href="#/students" class="m-res-item" title="${esc(st.name)} (${esc(st.status)})">
+                  <div class="m-res-avatar-wrap">
+                    <div class="m-res-avatar ${st.status}">
+                      ${st.avatar ? `<img src="${esc(st.avatar)}" alt="${esc(st.name)}">` : `<span>${(st.name[0] || 'S').toUpperCase()}</span>`}
+                    </div>
+                    <span class="m-res-badge-dot ${st.status === 'absent' ? 'dot-red' : (st.status === 'leave' ? 'dot-blue' : 'dot-amber')}"></span>
+                  </div>
+                  <span class="m-res-name">${esc(st.name.split(' ')[0])}</span>
+                  <span class="m-res-status-pill status-${st.status}">${esc(st.status)}</span>
+                </a>
+              `).join('')}
             </div>
-
-            <!-- Fees -->
-            <div style="background: #F8FAF9; border: 1px solid #E8EDF3; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Fee Collections Realized</div>
-              <div style="display:flex; align-items:baseline; justify-content:space-between; margin: 4px 0;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: #059669;">₹ ${totalCollected.toLocaleString()}</div>
-                <span class="badge badge-success" style="font-size:0.7rem;">${feeRatio}%</span>
-              </div>
-              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 8px;">
-                ₹ ${totalDue.toLocaleString()} pending balance
-              </div>
-              <div style="height: 5px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
-                <div style="width: ${feeRatio}%; height: 100%; background: #059669; border-radius: 9999px;"></div>
-              </div>
-            </div>
-
-            <!-- Operations -->
-            <div style="background: #F8FAF9; border: 1px solid #E8EDF3; border-radius: 12px; padding: 16px;">
-              <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Academic Operations</div>
-              <div style="display:flex; align-items:baseline; justify-content:space-between; margin: 4px 0;">
-                <div style="font-size: 1.5rem; font-weight: 800; color: #8B5CF6;">Regular Day</div>
-                <span class="badge badge-secondary" style="font-size:0.7rem;">Period 3</span>
-              </div>
-              <div style="font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 8px;">
-                7 Periods across ${TMS_CONFIG.academic.classes.length} classes
-              </div>
-              <div style="height: 5px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
-                <div style="width: 75%; height: 100%; background: #8B5CF6; border-radius: 9999px;"></div>
-              </div>
-            </div>
-          </div>
+          `}
         </div>
 
         <!-- Section 3: Institutional Statistics (KPI Row) -->
@@ -1074,7 +1220,7 @@ class AppController {
             <div class="card-header">
               <div>
                 <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                  <i data-lucide="trending-up" style="width:18px; height:18px; color:#16a34a;"></i>
+                  <i data-lucide="trending-up" style="width:18px; height:18px; color:#BF9A33;"></i>
                   Student Attendance Trends
                 </h3>
                 <p class="card-desc">7-Day Campus-wide Student Turnout Percentage</p>
@@ -1086,7 +1232,7 @@ class AppController {
               data: trendData,
               labels: trendLabels,
               height: 200,
-              strokeColor: '#16A34A',
+              strokeColor: '#BF9A33',
               fillColor: 'rgba(22, 163, 74, 0.15)'
             })}
           </div>
@@ -1136,7 +1282,7 @@ class AppController {
                     <span>${cd.count} (${cd.pct}%)</span>
                   </div>
                   <div style="height:8px; background:var(--bg-canvas-subtle); border-radius:9999px; overflow:hidden;">
-                    <div style="width:${cd.pct}%; height:100%; background:linear-gradient(90deg, #16A34A 0%, #3B82F6 100%); border-radius:9999px;"></div>
+                    <div style="width:${cd.pct}%; height:100%; background:linear-gradient(90deg, #BF9A33 0%, #3B82F6 100%); border-radius:9999px;"></div>
                   </div>
                 </div>
               `).join('')}
@@ -1156,9 +1302,9 @@ class AppController {
               <span class="badge badge-warning">Term Evaluation</span>
             </div>
             <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; padding: 6px 0;">
-              <div style="text-align:center; padding:12px 8px; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:10px;">
-                <div style="font-size:1.35rem; font-weight:800; color:#16A34A;">38%</div>
-                <div style="font-size:0.75rem; font-weight:700; color:#166534; margin-top:2px;">A1 (91-100%)</div>
+              <div style="text-align:center; padding:12px 8px; background:#FBF7EE; border:1px solid #F1DFA8; border-radius:10px;">
+                <div style="font-size:1.35rem; font-weight:800; color:#BF9A33;">38%</div>
+                <div style="font-size:0.75rem; font-weight:700; color:#7A611C; margin-top:2px;">A1 (91-100%)</div>
                 <div style="font-size:0.68rem; color:#64748B;">Distinction</div>
               </div>
               <div style="text-align:center; padding:12px 8px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px;">
@@ -1178,7 +1324,7 @@ class AppController {
               </div>
             </div>
             <div style="margin-top:14px; font-size:0.78rem; color:var(--text-secondary); text-align:center;">
-              Overall campus academic index rating: <strong style="color:#16A34A;">9.1 / 10 (Exemplary)</strong>
+              Overall campus academic index rating: <strong style="color:#BF9A33;">9.1 / 10 (Exemplary)</strong>
             </div>
           </div>
         </div>
@@ -1193,7 +1339,7 @@ class AppController {
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;">
             <a href="/admission" target="_blank" class="card" style="padding:16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; cursor:pointer;">
-              <div style="width:40px; height:40px; border-radius:10px; background:#ecfdf5; color:#16a34a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:40px; height:40px; border-radius:10px; background:#ecfdf5; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i data-lucide="file-plus" style="width:20px; height:20px;"></i>
               </div>
               <div style="min-width:0;">
@@ -1213,7 +1359,7 @@ class AppController {
             </a>
 
             <a href="#/attendance" class="card" style="padding:16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; cursor:pointer;">
-              <div style="width:40px; height:40px; border-radius:10px; background:#f0fdf4; color:#16a34a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:40px; height:40px; border-radius:10px; background:#FBF7EE; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i data-lucide="scan" style="width:20px; height:20px;"></i>
               </div>
               <div style="min-width:0;">
@@ -1280,14 +1426,14 @@ class AppController {
           <div class="card">
             <div class="card-header">
               <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="clock" style="width:18px; height:18px; color:#16a34a;"></i>
+                <i data-lucide="clock" style="width:18px; height:18px; color:#BF9A33;"></i>
                 Recent Institutional Activity
               </h3>
               <span class="badge badge-success">Live Feed</span>
             </div>
             <div class="tms-timeline">
               <div class="tms-timeline-item">
-                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#86efac; color:#16a34a;">
+                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#86efac; color:#BF9A33;">
                   <i data-lucide="user-check" style="width:16px; height:16px;"></i>
                 </div>
                 <div class="tms-timeline-content">
@@ -1348,14 +1494,14 @@ class AppController {
           <div class="card">
             <div class="card-header">
               <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="building" style="width:18px; height:18px; color:#16a34a;"></i>
+                <i data-lucide="building" style="width:18px; height:18px; color:#BF9A33;"></i>
                 Institution Profile &amp; Campus Status
               </h3>
               <span class="badge badge-info">Dakshin Dinajpur</span>
             </div>
             <div style="font-size: 0.88rem; line-height: 1.65;">
               <div style="padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); display:flex; align-items:flex-start; gap:10px;">
-                <i data-lucide="file-check-2" style="width:18px; height:18px; color:#16a34a; flex-shrink:0; margin-top:3px;"></i>
+                <i data-lucide="file-check-2" style="width:18px; height:18px; color:#BF9A33; flex-shrink:0; margin-top:3px;"></i>
                 <div>
                   <strong>Official Registration / Trust:</strong>
                   <div style="color:var(--text-secondary); font-size:0.84rem;">Regd. No. IV 01894/2011 • Run by Thaiba Heritage, Kolkata</div>
@@ -1391,6 +1537,31 @@ class AppController {
       </div>
     `;
 
+    // Privacy Eye Toggle (TPSH Adaptation)
+    const eyeBtn = container.querySelector('#m-hero-eye-toggle');
+    if (eyeBtn) {
+      eyeBtn.addEventListener('click', () => {
+        const cur = localStorage.getItem('tms_privacy_mode') === 'true';
+        const next = !cur;
+        localStorage.setItem('tms_privacy_mode', String(next));
+
+        const valEl = container.querySelector('#m-hero-val');
+        const turnEl = container.querySelector('#m-hero-turnout-val');
+        const staffEl = container.querySelector('#m-hero-staff-val');
+        const feeEl = container.querySelector('#m-hero-fee-val');
+
+        if (valEl) valEl.textContent = next ? '••••' : totalStudentCount;
+        if (turnEl) turnEl.textContent = next ? '••%' : `${attPercent}%`;
+        if (staffEl) staffEl.textContent = next ? '••' : `${staff.length} Active`;
+        if (feeEl) feeEl.textContent = next ? '₹ ••••••' : `₹ ${totalCollected.toLocaleString()}`;
+
+        eyeBtn.innerHTML = next 
+          ? '<i data-lucide="eye-off" style="width:18px; height:18px;"></i>' 
+          : '<i data-lucide="eye" style="width:18px; height:18px;"></i>';
+        UIComponents.refreshIcons();
+      });
+    }
+
     // Principal Executive Pulse Print Modal
     const pulseBtn = container.querySelector('#btn-print-morning-pulse');
     if (pulseBtn) {
@@ -1412,11 +1583,11 @@ class AppController {
           title: "Principal's Daily Morning Campus Pulse Briefing",
           bodyHtml: `
             ${printStyles}
-            <div id="morning-pulse-print" style="background: #ffffff; color: #0f172a; padding: 30px; border: 2px solid #16a34a; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #16a34a; padding-bottom: 12px; margin-bottom: 16px;">
+            <div id="morning-pulse-print" style="background: #ffffff; color: #0f172a; padding: 30px; border: 2px solid #BF9A33; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 16px;">
                 <div>
-                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #166534; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
-                  <div style="font-size: 0.8rem; color: #15803d; font-weight: 600;">DAILY EXECUTIVE CAMPUS BRIEFING • OFFICE OF THE PRINCIPAL</div>
+                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #7A611C; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
+                  <div style="font-size: 0.8rem; color: #8C6E1E; font-weight: 600;">DAILY EXECUTIVE CAMPUS BRIEFING • OFFICE OF THE PRINCIPAL</div>
                   <div style="font-size: 0.72rem; color: #64748b;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.city)}</div>
                 </div>
                 <div style="text-align: right; font-size: 0.8rem;">
@@ -1429,7 +1600,7 @@ class AppController {
               <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
                   <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Student Muster</div>
-                  <div style="font-size: 1.35rem; font-weight: 800; color: #16a34a;">${attPercent}% Present</div>
+                  <div style="font-size: 1.35rem; font-weight: 800; color: #BF9A33;">${attPercent}% Present</div>
                   <div style="font-size: 0.76rem; color: #475569;">${presentStudents} Present / ${students.length} Enrolled</div>
                 </div>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
@@ -1439,7 +1610,7 @@ class AppController {
                 </div>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
                   <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fee Collections</div>
-                  <div style="font-size: 1.35rem; font-weight: 800; color: #059669;">₹ ${totalCollected.toLocaleString()}</div>
+                  <div style="font-size: 1.35rem; font-weight: 800; color: #BF9A33;">₹ ${totalCollected.toLocaleString()}</div>
                   <div style="font-size: 0.76rem; color: #475569;">₹ ${totalDue.toLocaleString()} pending balance</div>
                 </div>
               </div>
@@ -1460,7 +1631,7 @@ class AppController {
                 </div>
                 <div style="width: 180px;">
                   <div style="border-bottom: 1.5px solid #0f172a; margin-bottom: 4px; height: 30px;"></div>
-                  <strong style="color: #166534;">Principal &amp; Headmaster</strong>
+                  <strong style="color: #7A611C;">Principal &amp; Headmaster</strong>
                 </div>
               </div>
             </div>
