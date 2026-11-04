@@ -15,76 +15,150 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;">
+<body class="login-split-page">
   <div class="ambient-mesh">
     <div class="mesh-glow-1"></div>
     <div class="mesh-glow-2"></div>
   </div>
 
-  <div style="max-width: 450px; width: 100%; position: relative; z-index: 10;">
-    <div class="card" style="box-shadow: var(--shadow-lg); border-radius: var(--radius-lg); padding: 36px 32px;">
-      
-      <!-- Official School Brand Header -->
-      <div id="login-brand-container" style="text-align: center; margin-bottom: 28px;">
-        <!-- Logo injected by script -->
+  <!-- Left Panel: Desktop Hero Showcase (>= 1024px) -->
+  <aside class="login-split-hero">
+    <div class="login-hero-content">
+      <!-- Institutional Branding -->
+      <div class="login-hero-brand" id="login-brand-desktop">
+        <!-- Logo & School Info injected by script -->
       </div>
 
-      <div style="text-align: center; margin-bottom: 24px;">
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0;">Sign in with your authorized institutional credentials</p>
+      <!-- Welcome Heading & Overview -->
+      <div>
+        <h2 class="login-hero-heading">Empowering Academic Excellence &amp; Campus Leadership</h2>
+        <p class="login-hero-desc">
+          An integrated institutional operating system delivering automated biometric attendance, CBSE lifecycle governance, smart fee ledgering, and secure parent-school communication.
+        </p>
       </div>
 
-      <!-- Login Form -->
-      <form id="tms-login-form">
-        <div class="form-group">
-          <label class="form-label">Email or Username</label>
-          <div style="position: relative;">
-            <input type="text" class="form-input" id="login-email" required placeholder="cmbasith786@gmail.com or parent username" autofocus style="padding-left: 40px;">
-            <i data-lucide="user" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+      <!-- Subtle Highlight Cards -->
+      <div class="login-hero-features">
+        <div class="login-hero-feature-card">
+          <div class="login-hero-feature-icon emerald">
+            <i data-lucide="map-pin"></i>
           </div>
-          <span style="font-size:0.72rem; color:var(--text-subtle);">Parents: sign in using the username printed on your admission form.</span>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" style="margin-bottom: 0;">Password</label>
-            <a href="javascript:void(0)" id="btn-forgot-password" style="font-size: 0.78rem; color: #BF9A33; font-weight: 600;">Forgot Password?</a>
-          </div>
-          <div style="position: relative;">
-            <input type="password" class="form-input" id="login-password" required placeholder="••••••••••••" style="padding-left: 40px;">
-            <i data-lucide="lock" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);"></i>
+          <div class="login-hero-feature-text">
+            <h4>Live Biometric &amp; Campus Geofence</h4>
+            <p>Automated turnout radar, student morning registers, and faculty shifts.</p>
           </div>
         </div>
 
-        <div id="login-error-msg" style="display: none; padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; border-radius: var(--radius-md); font-size: 0.84rem; margin-bottom: 16px;"></div>
-
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem; margin-bottom: 14px;" id="btn-login-submit">
-          <i data-lucide="log-in"></i> Sign In to Portal
-        </button>
-
-        <!-- Divider -->
-        <div style="display: flex; align-items: center; margin: 16px 0; color: var(--text-muted); font-size: 0.78rem;">
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
-          <span style="padding: 0 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle);">or continue with</span>
-          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+        <div class="login-hero-feature-card">
+          <div class="login-hero-feature-icon blue">
+            <i data-lucide="award"></i>
+          </div>
+          <div class="login-hero-feature-text">
+            <h4>CBSE Academic Lifecycle &amp; Reports</h4>
+            <p>CCE curriculum tracking, digital hall tickets, and verified report cards.</p>
+          </div>
         </div>
 
-        <!-- Google Authentication Button -->
-        <button type="button" class="btn btn-secondary" id="btn-google-login" style="width: 100%; padding: 11px; font-size: 0.92rem; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; font-weight: 600; background: #ffffff; border: 1px solid var(--border-color); color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.2s ease;">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Sign In with Google</span>
-        </button>
-      </form>
-
-      <div style="margin-top: 20px; text-align: center; font-size: 0.75rem; color: var(--text-subtle);">
-        THAIBA PUBLIC SCHOOL • Run by Thaiba Heritage, Kolkata
+        <div class="login-hero-feature-card">
+          <div class="login-hero-feature-icon purple">
+            <i data-lucide="shield-check"></i>
+          </div>
+          <div class="login-hero-feature-text">
+            <h4>Guardian &amp; Student Self-Service</h4>
+            <p>Instant fee invoicing, daily homework diary, and secure identity portal.</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- Institutional Trust Footer -->
+    <div class="login-hero-footer">
+      <i data-lucide="shield" style="width: 14px; height: 14px; color: #BF9A33;"></i>
+      <span>Run by : Thaiba Heritage, Kolkata • Affiliated Institutional Campus</span>
+    </div>
+  </aside>
+
+  <!-- Right Panel: Authentication Form Area -->
+  <main class="login-split-form-panel">
+    <!-- Compact Branding for Mobile & Tablet (< 1024px) -->
+    <div class="login-mobile-brand" id="login-brand-container">
+      <!-- Injected by script -->
+    </div>
+
+    <div class="login-card-wrapper">
+      <div class="login-auth-card">
+        <div class="login-card-header">
+          <h2 class="login-card-title">Sign In</h2>
+          <p class="login-card-subtitle">Enter your institutional credentials to access your portal</p>
+        </div>
+
+        <!-- Login Form Area (Swapped dynamically if account is pending approval) -->
+        <div id="login-form-area">
+          <form id="tms-login-form">
+            <div class="login-form-group">
+              <label class="form-label" for="login-email">Email or Username</label>
+              <div class="login-input-wrap">
+                <i data-lucide="user" class="login-input-icon"></i>
+                <input type="text" class="form-input" id="login-email" required placeholder="Enter username or email" autofocus autocomplete="username">
+              </div>
+              <div class="login-helper-text">
+                <i data-lucide="info" class="login-helper-icon"></i>
+                <span>Parents: sign in using the username printed on your admission form.</span>
+              </div>
+            </div>
+
+            <div class="login-form-group">
+              <div class="login-label-row">
+                <label class="form-label" for="login-password">Password</label>
+                <a href="javascript:void(0)" id="btn-forgot-password" class="login-forgot-link">Forgot Password?</a>
+              </div>
+              <div class="login-input-wrap has-toggle">
+                <i data-lucide="lock" class="login-input-icon"></i>
+                <input type="password" class="form-input" id="login-password" required placeholder="••••••••••••" autocomplete="current-password">
+                <button type="button" class="login-password-toggle" id="btn-toggle-login-pass" title="Toggle password visibility" aria-label="Toggle password visibility">
+                  <i data-lucide="eye" id="login-pass-toggle-icon"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="login-error-msg" style="display: none;"></div>
+
+            <button type="submit" class="btn btn-primary login-submit-btn" id="btn-login-submit">
+              <i data-lucide="log-in"></i>
+              <span>Sign In to Portal</span>
+            </button>
+
+            <!-- Divider -->
+            <div class="login-divider">
+              <div class="login-divider-line"></div>
+              <span class="login-divider-text">or continue with</span>
+              <div class="login-divider-line"></div>
+            </div>
+
+            <!-- Google Authentication Button -->
+            <button type="button" class="login-google-btn" id="btn-google-login">
+              <svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Sign In with Google</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="login-footer">
+          <div class="login-footer-text">
+            THAIBA PUBLIC SCHOOL • Run by Thaiba Heritage, Kolkata
+          </div>
+          <div class="login-footer-sub">
+            Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script type="module">
     import { authService } from './auth-service.js';
@@ -100,14 +174,192 @@
     checkMigration();
 
     // Check if session exists (e.g., returning from Google OAuth or active token)
+    let autoPollTimer = null;
+
+    function renderPendingApprovalScreen(u) {
+      const container = document.getElementById('login-form-area');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="text-align: center; animation: fadeIn 0.3s ease;">
+          <div style="width: 68px; height: 68px; margin: 0 auto 16px; border-radius: 50%; background: #fffbeb; border: 2px solid #fde68a; display: flex; align-items: center; justify-content: center; color: #d97706; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+            <i data-lucide="clock-3" style="width: 34px; height: 34px;"></i>
+          </div>
+
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">
+            Awaiting Admin Approval
+          </h2>
+
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 14px; background: #fffbeb; border: 1px solid #fde68a; color: #b45309; border-radius: 20px; font-size: 0.76rem; font-weight: 700; margin-bottom: 18px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);"></span>
+            Pending Role Assignment
+          </div>
+
+          <!-- User Card -->
+          <div style="background: var(--bg-hover, #f8fafc); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: left; display: flex; align-items: center; gap: 12px;">
+            <img src="${u.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}" alt="" style="width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 700; font-size: 0.94rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${u.name || 'Google User'}
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${u.email}
+              </div>
+              <div style="font-size: 0.72rem; color: #0284c7; font-weight: 600; margin-top: 2px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                Signed in with Google
+              </div>
+            </div>
+          </div>
+
+          <!-- Message -->
+          <div style="background: rgba(245, 158, 11, 0.08); border-left: 3.5px solid #f59e0b; padding: 13px; border-radius: 6px; font-size: 0.82rem; color: var(--text-main); line-height: 1.5; text-align: left; margin-bottom: 22px;">
+            <div style="font-weight: 700; color: #b45309; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="shield-alert" style="width: 15px; height: 15px;"></i> Action Required: Super Admin Verification
+            </div>
+            <p style="margin: 0; color: var(--text-muted);">
+              You have successfully signed in through Gmail. To access <strong>THAIBA PUBLIC SCHOOL</strong> Enterprise ERP, the Super Administrator must approve your account and assign your official institutional role (e.g. Teacher, Administration, Finance).
+            </p>
+            <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.78rem;">
+              Please wait until approval is granted, or contact the Super Administrator directly.
+            </p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-primary" id="btn-check-status" style="width: 100%; padding: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i data-lucide="refresh-cw" id="check-icon"></i>
+              <span>Check Approval Status</span>
+            </button>
+            <button class="btn btn-secondary" id="btn-pending-logout" style="width: 100%; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <i data-lucide="log-out"></i>
+              <span>Sign In with Different Account</span>
+            </button>
+          </div>
+
+          <div style="margin-top: 14px; font-size: 0.74rem; color: var(--text-subtle); display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i data-lucide="radio" style="width: 12px; height: 12px; color: #BF9A33;"></i>
+            <span>Real-time polling active (auto-checks every 10s)</span>
+          </div>
+        </div>
+      `;
+      UIComponents.refreshIcons();
+
+      // Check button event
+      const checkBtn = document.getElementById('btn-check-status');
+      if (checkBtn) {
+        checkBtn.addEventListener('click', async () => {
+          checkBtn.disabled = true;
+          const original = checkBtn.innerHTML;
+          checkBtn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Checking with Server...`;
+          UIComponents.refreshIcons();
+
+          const freshUser = await authService.init();
+          if (freshUser && freshUser.role && freshUser.role !== 'pending' && freshUser.role !== 'rejected') {
+            UIComponents.showToast(`Approval granted! Welcome, ${freshUser.name}.`, 'success');
+            setTimeout(() => {
+              navigateApprovedUser(freshUser);
+            }, 600);
+            return;
+          } else if (freshUser && (freshUser.role === 'rejected' || freshUser.isRejected)) {
+            renderRejectedScreen(freshUser);
+            return;
+          }
+
+          UIComponents.showToast('Your account is still awaiting approval by the Super Administrator.', 'info');
+          checkBtn.disabled = false;
+          checkBtn.innerHTML = original;
+          UIComponents.refreshIcons();
+        });
+      }
+
+      // Logout button event
+      const logoutBtn = document.getElementById('btn-pending-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+          if (autoPollTimer) clearInterval(autoPollTimer);
+          await authService.logout();
+          window.location.reload();
+        });
+      }
+
+      // Background auto-polling
+      if (autoPollTimer) clearInterval(autoPollTimer);
+      autoPollTimer = setInterval(async () => {
+        try {
+          const fresh = await authService.init();
+          if (fresh && fresh.role && fresh.role !== 'pending' && fresh.role !== 'rejected') {
+            clearInterval(autoPollTimer);
+            UIComponents.showToast(`Account approved as ${fresh.role.toUpperCase()}! Redirecting...`, 'success');
+            setTimeout(() => {
+              navigateApprovedUser(fresh);
+            }, 800);
+          } else if (fresh && (fresh.role === 'rejected' || fresh.isRejected)) {
+            clearInterval(autoPollTimer);
+            renderRejectedScreen(fresh);
+          }
+        } catch (e) { /* ignore silent poll errors */ }
+      }, 10000);
+    }
+
+    function renderRejectedScreen(u) {
+      if (autoPollTimer) clearInterval(autoPollTimer);
+      const container = document.getElementById('login-form-area');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div style="text-align: center; animation: fadeIn 0.3s ease;">
+          <div style="width: 68px; height: 68px; margin: 0 auto 16px; border-radius: 50%; background: #fef2f2; border: 2px solid #fecaca; display: flex; align-items: center; justify-content: center; color: #dc2626; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+            <i data-lucide="shield-x" style="width: 34px; height: 34px;"></i>
+          </div>
+
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: #dc2626; margin-bottom: 6px;">
+            Access Request Rejected
+          </h2>
+
+          <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 12px; padding: 16px; margin: 18px 0; font-size: 0.85rem; color: var(--text-main); line-height: 1.5; text-align: left;">
+            Access for <strong>${u.email}</strong> was rejected or revoked by the Super Administrator.
+            <div style="margin-top: 8px; color: var(--text-muted); font-size: 0.78rem;">
+              If you believe this is in error, please contact THAIBA PUBLIC SCHOOL administration.
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" id="btn-rejected-return" style="width: 100%; padding: 11px;">
+            <i data-lucide="log-out"></i> Return to Sign In
+          </button>
+        </div>
+      `;
+      UIComponents.refreshIcons();
+
+      const btn = document.getElementById('btn-rejected-return');
+      if (btn) {
+        btn.addEventListener('click', async () => {
+          await authService.logout();
+          window.location.reload();
+        });
+      }
+    }
+
+    function navigateApprovedUser(u) {
+      let redirectUrl = '/#/dashboard';
+      if (u.role === TMS_CONFIG.roles.PARENT) redirectUrl = '/parent';
+      else if (u.role === TMS_CONFIG.roles.STUDENT) redirectUrl = '/student';
+      else if (u.role === TMS_CONFIG.roles.OFFICE_BOY) redirectUrl = '/#/admissions-entry';
+      window.location.href = redirectUrl;
+    }
+
     authService.init().then((user) => {
       if (authService.isAuthenticated()) {
         const u = authService.getCurrentUser() || {};
-        let redirectUrl = 'index.html#/dashboard';
-        if (u.role === TMS_CONFIG.roles.PARENT) redirectUrl = 'parent-portal.html';
-        else if (u.role === TMS_CONFIG.roles.STUDENT) redirectUrl = 'student-portal.html';
-        else if (u.role === TMS_CONFIG.roles.OFFICE_BOY) redirectUrl = 'index.html#/admissions-entry';
-        window.location.href = redirectUrl;
+        if (u.role === 'pending' || u.isPending) {
+          renderPendingApprovalScreen(u);
+          return;
+        }
+        if (u.role === 'rejected' || u.isRejected) {
+          renderRejectedScreen(u);
+          return;
+        }
+        navigateApprovedUser(u);
       }
     });
 
@@ -139,20 +391,63 @@
       } catch (e) { /* ignore */ }
       return `${username}@${TMS_CONFIG.parentEmailDomain}`;
     }
-    document.getElementById('login-brand-container').innerHTML = `
-      <div style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-        ${TMS_LOGO.emblemSvg(64)}
-      </div>
-      <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.04em;">
-        THAIBA PUBLIC SCHOOL
-      </h1>
-      <div style="font-size: 0.75rem; color: #BF9A33; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;">
-        Run by : Thaiba Heritage, Kolkata
-      </div>
-      <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
-        Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011
-      </div>
-    `;
+    // Populate Mobile & Tablet Compact Branding
+    const mobileBrand = document.getElementById('login-brand-container');
+    if (mobileBrand) {
+      mobileBrand.innerHTML = `
+        <div style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+          ${TMS_LOGO.emblemSvg(64)}
+        </div>
+        <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.04em;">
+          THAIBA PUBLIC SCHOOL
+        </h1>
+        <div style="font-size: 0.75rem; color: #BF9A33; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;">
+          Run by : Thaiba Heritage, Kolkata
+        </div>
+        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+          Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011
+        </div>
+      `;
+    }
+
+    // Populate Desktop Left Hero Branding
+    const desktopBrand = document.getElementById('login-brand-desktop');
+    if (desktopBrand) {
+      desktopBrand.innerHTML = `
+        <div class="login-hero-logo">
+          ${TMS_LOGO.emblemSvg(76)}
+        </div>
+        <div class="login-hero-badge">
+          <span class="badge-dot"></span>
+          <span>Official Institutional Portal</span>
+        </div>
+        <h1 class="login-hero-title">
+          THAIBA PUBLIC SCHOOL
+        </h1>
+        <div class="login-hero-sub">
+          Run by : Thaiba Heritage, Kolkata
+        </div>
+        <div class="login-hero-reg">
+          Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011
+        </div>
+      `;
+    }
+
+    // Password Visibility Toggle Interaction
+    const togglePassBtn = document.getElementById('btn-toggle-login-pass');
+    const passInput = document.getElementById('login-password');
+    if (togglePassBtn && passInput) {
+      togglePassBtn.addEventListener('click', () => {
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        const icon = document.getElementById('login-pass-toggle-icon');
+        if (icon) {
+          icon.setAttribute('data-lucide', isPass ? 'eye-off' : 'eye');
+          UIComponents.refreshIcons();
+        }
+      });
+    }
+
     UIComponents.refreshIcons();
 
     const form = document.getElementById('tms-login-form');
@@ -174,18 +469,18 @@
 
       const res = await authService.login(email, pass);
       if (res && res.success) {
-        UIComponents.showToast(`Welcome back, ${res.user.name}!`, 'success');
-        let redirectUrl = 'index.html#/dashboard';
-        if (res.user.role === TMS_CONFIG.roles.PARENT) {
-          redirectUrl = 'parent-portal.html';
-        } else if (res.user.role === TMS_CONFIG.roles.STUDENT) {
-          redirectUrl = 'student-portal.html';
-        } else if (res.user.role === TMS_CONFIG.roles.OFFICE_BOY) {
-          redirectUrl = 'index.html#/admissions-entry';
+        const u = res.user;
+        if (u.role === 'pending' || u.isPending) {
+          renderPendingApprovalScreen(u);
+          return;
         }
-
+        if (u.role === 'rejected' || u.isRejected) {
+          renderRejectedScreen(u);
+          return;
+        }
+        UIComponents.showToast(`Welcome back, ${u.name}!`, 'success');
         setTimeout(() => {
-          window.location.href = redirectUrl;
+          navigateApprovedUser(u);
         }, 400);
       } else {
         errBox.innerText = res.error || 'Authentication failed. Please verify credentials.';
@@ -228,7 +523,7 @@
                       <li style="margin-bottom:6px;">Go to your <strong>Supabase Dashboard</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Providers</strong> &rarr; <strong>Google</strong>.</li>
                       <li style="margin-bottom:6px;">Toggle Google to <strong>Enabled</strong>.</li>
                       <li style="margin-bottom:6px;">Enter your <strong>Google Client ID</strong> and <strong>Client Secret</strong> from Google Cloud Console.</li>
-                      <li style="margin-bottom:6px;">Add the authorized redirect URI: <code class="font-mono" style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem; word-break:break-all;">https://bphjbvvapbefiyacfosm.supabase.co/auth/v1/callback</code></li>
+                      <li style="margin-bottom:6px;">Add the authorized redirect URI: <code class="font-mono" style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem; word-break:break-all;">https://rzcihdpzqrnzcaupjfla.supabase.co/auth/v1/callback</code></li>
                     </ol>
                     <p style="font-size:0.8rem; color:var(--text-subtle); margin:0;">
                       Once enabled, any authorized institutional staff member can sign in directly with their Google Account.
@@ -276,7 +571,7 @@
 
             <!-- Tab 1: Parent & Student Self-Service Verification -->
             <div id="rec-tab-parent" class="rec-tab-content">
-              <div style="padding:10px 14px; background:rgba(191,154,51,0.08); border-left:4px solid #BF9A33; border-radius:6px; margin-bottom:14px; font-size:0.82rem; color:var(--text-main);">
+              <div style="padding:10px 14px; background:rgba(191, 154, 51,0.06); border-left:4px solid #BF9A33; border-radius:6px; margin-bottom:14px; font-size:0.82rem; color:var(--text-main);">
                 <strong>Instant Self-Service Reset for Parents:</strong><br>
                 Verify with your student's Admission No or Application ID and registered mobile number to reset your password immediately.
               </div>
@@ -306,7 +601,7 @@
               </div>
 
               <div id="parent-step-2" style="display:none;">
-                <div id="verified-student-card" style="padding:12px 14px; background:rgba(22,163,74,0.08); border:1px solid rgba(22,163,74,0.25); border-radius:10px; margin-bottom:14px;">
+                <div id="verified-student-card" style="padding:12px 14px; background:rgba(191, 154, 51,0.08); border:1px solid rgba(191, 154, 51,0.25); border-radius:10px; margin-bottom:14px;">
                   <!-- Injected upon successful verification -->
                 </div>
 
@@ -342,7 +637,7 @@
               <div class="form-group" style="margin-bottom:14px;">
                 <label class="form-label">Institutional Email or Staff Username *</label>
                 <div style="position:relative;">
-                  <input type="text" class="form-input" id="inp-forgot-ident" placeholder="e.g. cmbasith786@gmail.com or username" value="${UIComponents.escapeHtml(currentIdent)}" style="padding-left:38px;">
+                  <input type="text" class="form-input" id="inp-forgot-ident" placeholder="Enter username or email" value="${UIComponents.escapeHtml(currentIdent)}" style="padding-left:38px;">
                   <i data-lucide="mail" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted);"></i>
                 </div>
               </div>
@@ -449,7 +744,7 @@
                     <h4 style="margin:2px 0; font-size:1rem; color:#14532d;">${UIComponents.escapeHtml(data.student_name)}</h4>
                     <span style="font-size:0.78rem; color:var(--text-muted);">Grade: <strong>${UIComponents.escapeHtml(data.grade)}</strong> • Username: <code style="font-weight:700;">${UIComponents.escapeHtml(data.username)}</code></span>
                   </div>
-                  <div style="width:34px; height:34px; border-radius:50%; background:#16a34a; color:white; display:flex; align-items:center; justify-content:center;">
+                  <div style="width:34px; height:34px; border-radius:50%; background:#BF9A33; color:white; display:flex; align-items:center; justify-content:center;">
                     <i data-lucide="check" style="width:18px; height:18px;"></i>
                   </div>
                 </div>
@@ -573,7 +868,7 @@
 
         if (res.success) {
           statusBox.style.display = 'block';
-          statusBox.style.background = '#f0fdf4';
+          statusBox.style.background = '#FDFBF7';
           statusBox.style.color = '#166534';
           statusBox.style.border = '1px solid #86efac';
           statusBox.innerHTML = `
@@ -676,15 +971,15 @@
           label.style.color = '#f59e0b';
         } else {
           bar.style.width = '100%';
-          bar.style.background = '#16a34a';
+          bar.style.background = '#BF9A33';
           label.innerText = 'Strong';
-          label.style.color = '#16a34a';
+          label.style.color = '#BF9A33';
         }
 
         if (p2Inp.value) {
           matchInd.style.display = 'block';
           if (val === p2Inp.value) {
-            matchInd.innerHTML = '<span style="color:#16a34a;"><i data-lucide="check"></i> Passwords match</span>';
+            matchInd.innerHTML = '<span style="color:#BF9A33;"><i data-lucide="check"></i> Passwords match</span>';
           } else {
             matchInd.innerHTML = '<span style="color:#ef4444;">Passwords do not match</span>';
           }

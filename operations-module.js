@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Campus Logistics, Library, Transport & Inventory Module
  */
 
@@ -10,34 +10,52 @@ import { auditService } from './audit-service.js';
 export class OperationsModule {
   static async render(container) {
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">Campus Logistics & Operations</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Library circulation, school transport fleet, hostel dormitories, and physical asset inventory.
-            </p>
-          </div>
-          <button class="btn btn-primary" id="btn-issue-book"><i data-lucide="book-open"></i> Issue Library Book</button>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Campus Logistics & Operations',
+          subtitle: 'Library circulation, school transport fleet, hostel dormitories, and physical asset inventory.',
+          icon: 'truck',
+          breadcrumbs: [
+            { label: 'Campus Core' },
+            { label: 'Operations' },
+            { label: 'Logistics' }
+          ],
+          actions: `
+            <button class="btn btn-primary" id="btn-issue-book"><i data-lucide="book-open"></i> Issue Library Book</button>
+          `
+        })}
+
+        <div class="kpi-grid">
+          ${UIComponents.renderKpiCard({ title: 'Library Catalogued Books', value: '—', icon: 'library', color: 'blue', subtitle: 'No Records Available' })}
+          ${UIComponents.renderKpiCard({ title: 'School Bus Fleet', value: '—', icon: 'bus', color: 'emerald', subtitle: 'No Records Available' })}
+          ${UIComponents.renderKpiCard({ title: 'Hostel Residents', value: '—', icon: 'home', color: 'amber', subtitle: 'No Records Available' })}
+          ${UIComponents.renderKpiCard({ title: 'Tracked Campus Assets', value: '—', icon: 'package', color: 'rose', subtitle: 'No Records Available' })}
         </div>
-      </div>
 
-      <div class="kpi-grid">
-        ${UIComponents.renderKpiCard({ title: 'Library Catalogued Books', value: '—', icon: 'library', color: 'blue', subtitle: 'No Records Available' })}
-        ${UIComponents.renderKpiCard({ title: 'School Bus Fleet', value: '—', icon: 'bus', color: 'emerald', subtitle: 'No Records Available' })}
-        ${UIComponents.renderKpiCard({ title: 'Hostel Residents', value: '—', icon: 'home', color: 'amber', subtitle: 'No Records Available' })}
-        ${UIComponents.renderKpiCard({ title: 'Tracked Campus Assets', value: '—', icon: 'package', color: 'rose', subtitle: 'No Records Available' })}
-      </div>
+        <!-- Segmented Pill Tabs Rail -->
+        <div class="tms-tab-rail-wrapper">
+          <div class="tms-segmented-tabs">
+            <button class="tms-tab-pill active ops-tab" data-tab="library">
+              <i data-lucide="book"></i>
+              <span>Library &amp; ISBN Catalogue</span>
+            </button>
+            <button class="tms-tab-pill ops-tab" data-tab="transport">
+              <i data-lucide="bus"></i>
+              <span>Transport &amp; Bus Routes</span>
+            </button>
+            <button class="tms-tab-pill ops-tab" data-tab="hostel">
+              <i data-lucide="home"></i>
+              <span>Hostel &amp; Dormitories</span>
+            </button>
+            <button class="tms-tab-pill ops-tab" data-tab="inventory">
+              <i data-lucide="package"></i>
+              <span>Asset Inventory</span>
+            </button>
+          </div>
+        </div>
 
-      <!-- Navigation Tabs -->
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
-        <button class="btn btn-primary ops-tab" data-tab="library">Library & ISBN Catalogue</button>
-        <button class="btn btn-secondary ops-tab" data-tab="transport">Transport & Bus Routes</button>
-        <button class="btn btn-secondary ops-tab" data-tab="hostel">Hostel & Dormitories</button>
-        <button class="btn btn-secondary ops-tab" data-tab="inventory">Asset Inventory</button>
+        <div id="ops-tab-content"></div>
       </div>
-
-      <div id="ops-tab-content"></div>
     `;
 
     this.bindEvents(container);
@@ -161,11 +179,9 @@ export class OperationsModule {
     container.querySelectorAll('.ops-tab').forEach(btn => {
       btn.addEventListener('click', (e) => {
         container.querySelectorAll('.ops-tab').forEach(b => {
-          b.classList.remove('btn-primary');
-          b.classList.add('btn-secondary');
+          b.classList.remove('active');
         });
-        e.currentTarget.classList.remove('btn-secondary');
-        e.currentTarget.classList.add('btn-primary');
+        e.currentTarget.classList.add('active');
         this.renderTab(e.currentTarget.dataset.tab, container);
       });
     });

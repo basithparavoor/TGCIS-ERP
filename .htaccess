@@ -1,0 +1,55 @@
+# ==============================================================================
+# THAIBA PUBLIC SCHOOL ERP — Apache / LiteSpeed Server Configuration
+# Clean, Professional Extensionless URLs (No .html, No Hyphens)
+# ==============================================================================
+
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# ------------------------------------------------------------------------------
+# 1. 301 Permanent Redirects: Old Hyphenated & Legacy URLs to Clean Professional URLs
+# ------------------------------------------------------------------------------
+RewriteRule ^student-admission-portal(\.html)?$ /admission [R=301,L,NC]
+RewriteRule ^admissions(\.html)?$ /admission [R=301,L,NC]
+
+RewriteRule ^student-portal(\.html)?$ /student [R=301,L,NC]
+RewriteRule ^students(\.html)?$ /student [R=301,L,NC]
+
+RewriteRule ^parent-portal(\.html)?$ /parent [R=301,L,NC]
+RewriteRule ^parents(\.html)?$ /parent [R=301,L,NC]
+
+RewriteRule ^teacher-portal(\.html)?$ /teacher [R=301,L,NC]
+RewriteRule ^teachers(\.html)?$ /teacher [R=301,L,NC]
+RewriteRule ^faculty(\.html)?$ /teacher [R=301,L,NC]
+
+# ------------------------------------------------------------------------------
+# 2. 301 Permanent Redirects: Remove visible .html from URLs
+# (e.g., /admission.html -> /admission, /login.html -> /login)
+# ------------------------------------------------------------------------------
+RewriteCond %{THE_REQUEST} \s/+(.+?)\.html[\s?] [NC]
+RewriteCond %{REQUEST_URI} !^/index\.html$ [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+RewriteRule ^ / [R=301,L]
+
+# ------------------------------------------------------------------------------
+# 3. Clean URL Internal Rewrites: Map /foo to /foo.html silently
+# ------------------------------------------------------------------------------
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^([^\.]+)$ $1.html [L]
+
+# Default document
+DirectoryIndex index.html login.html
+
+# ------------------------------------------------------------------------------
+# 4. Security & Caching Headers
+# ------------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

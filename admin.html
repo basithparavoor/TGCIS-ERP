@@ -20,13 +20,13 @@
     <!-- Portal Header -->
     <header class="app-topbar">
       <div class="topbar-left">
-        <a href="index.html#/dashboard" class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TPS</a>
+        <a href="/#/dashboard" class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TPS</a>
         <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;">
           THAIBA PUBLIC SCHOOL — School Administration Portal
         </div>
       </div>
       <div class="topbar-right">
-        <a href="index.html#/dashboard" class="btn btn-secondary btn-sm"><i data-lucide="layout-dashboard"></i> Main ERP</a>
+        <a href="/#/dashboard" class="btn btn-secondary btn-sm"><i data-lucide="layout-dashboard"></i> Main ERP</a>
         <button class="icon-btn" id="btn-logout" title="Sign Out"><i data-lucide="log-out"></i></button>
       </div>
     </header>
@@ -49,10 +49,14 @@
       checkMigration();
       await authService.init();
       const user = authService.getCurrentUser();
-      const allowed = user && [TMS_CONFIG.roles.ADMIN, TMS_CONFIG.roles.PRINCIPAL].includes(user.role);
+      const allowed = user && (
+        [TMS_CONFIG.roles.ADMIN, TMS_CONFIG.roles.PRINCIPAL, TMS_CONFIG.roles.SUPER_ADMIN].includes(user.role) ||
+        user.isSuperAdmin === true ||
+        (user.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase()
+      );
 
       if (!allowed) {
-        window.location.href = user ? 'index.html#/dashboard' : 'login.html';
+        window.location.href = user ? '/#/dashboard' : '/login';
         return;
       }
 

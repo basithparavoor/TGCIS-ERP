@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — THAIBA PUBLIC SCHOOL Faculty & Staff Workspace (My Work)
  */
 
@@ -17,66 +17,68 @@ export class MyWorkModule {
     const students = await dbService.select('students');
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">Staff Workspace — THAIBA PUBLIC SCHOOL</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Welcome back, <strong>${esc(user.name || 'Faculty Member')}</strong> (${esc(user.department || 'Academics')})
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <div id="geofence-live-status" class="badge badge-success" style="padding: 8px 14px; font-size: 0.82rem;">
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Staff Workspace',
+          subtitle: `Welcome back, ${esc(user.name || 'Faculty Member')} (${esc(user.department || 'Academics')})`,
+          icon: 'briefcase',
+          breadcrumbs: [
+            { label: 'Campus Core' },
+            { label: 'Faculty & Staff' },
+            { label: 'My Workspace' }
+          ],
+          actions: `
+            <div id="geofence-live-status" class="badge badge-success" style="padding: 8px 14px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;">
               <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i> Campus Geofence Active (250m)
             </div>
             <button class="btn btn-primary" id="btn-punch-now"><i data-lucide="fingerprint"></i> Biometric / GPS Punch</button>
+          `
+        })}
+
+        <!-- Quick KPI Row -->
+        <div class="kpi-grid">
+          ${UIComponents.renderKpiCard({ title: 'My Shift Today', value: '—', icon: 'clock', color: 'blue', subtitle: 'No Shift Records' })}
+          ${UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: '—', icon: 'check-circle-2', color: 'emerald', subtitle: 'Not Punched In Yet' })}
+          ${UIComponents.renderKpiCard({ title: 'Teaching Workload', value: '—', icon: 'book-open', color: 'amber', subtitle: 'No Timetable Assigned' })}
+          ${UIComponents.renderKpiCard({ title: 'Pending Tasks', value: `${tasks.filter(t => t.status !== 'Completed').length} Pending`, icon: 'check-square', color: 'rose', subtitle: 'Kanban Action Items' })}
+        </div>
+
+        <!-- Segmented Pill Tabs Rail -->
+        <div class="tms-tab-rail-wrapper">
+          <div class="tms-segmented-tabs" id="mywork-tab-pills">
+            <button class="tms-tab-pill active staff-tab" data-tab="overview">
+              <i data-lucide="layout-dashboard"></i>
+              <span>Overview Hub</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="geofence">
+              <i data-lucide="navigation"></i>
+              <span>GPS &amp; Geofence</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="register">
+              <i data-lucide="user-check"></i>
+              <span>Class Register</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="tasks">
+              <i data-lucide="kanban"></i>
+              <span>Action Board</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="timetable">
+              <i data-lucide="calendar"></i>
+              <span>My Timetable</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="leaves">
+              <i data-lucide="umbrella"></i>
+              <span>Leave Balances</span>
+            </button>
+            <button class="tms-tab-pill staff-tab" data-tab="payslips">
+              <i data-lucide="receipt"></i>
+              <span>Salary &amp; CTC</span>
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Quick KPI Row -->
-      <div class="kpi-grid">
-        ${UIComponents.renderKpiCard({ title: 'My Shift Today', value: '—', icon: 'clock', color: 'blue', subtitle: 'No Shift Records' })}
-        ${UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: '—', icon: 'check-circle-2', color: 'emerald', subtitle: 'Not Punched In Yet' })}
-        ${UIComponents.renderKpiCard({ title: 'Teaching Workload', value: '—', icon: 'book-open', color: 'amber', subtitle: 'No Timetable Assigned' })}
-        ${UIComponents.renderKpiCard({ title: 'Pending Tasks', value: `${tasks.filter(t => t.status !== 'Completed').length} Pending`, icon: 'check-square', color: 'rose', subtitle: 'Kanban Action Items' })}
+        <div id="my-work-tab-content"></div>
       </div>
-
-      <!-- Segmented Pill Tabs Rail -->
-      <div class="tms-tab-rail-wrapper">
-        <div class="tms-segmented-tabs" id="mywork-tab-pills">
-          <button class="tms-tab-pill active staff-tab" data-tab="overview">
-            <i data-lucide="layout-dashboard"></i>
-            <span>Overview Hub</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="geofence">
-            <i data-lucide="navigation"></i>
-            <span>GPS &amp; Geofence</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="register">
-            <i data-lucide="user-check"></i>
-            <span>Class Register</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="tasks">
-            <i data-lucide="kanban"></i>
-            <span>Action Board</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="timetable">
-            <i data-lucide="calendar"></i>
-            <span>My Timetable</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="leaves">
-            <i data-lucide="umbrella"></i>
-            <span>Leave Balances</span>
-          </button>
-          <button class="tms-tab-pill staff-tab" data-tab="payslips">
-            <i data-lucide="receipt"></i>
-            <span>Salary &amp; CTC</span>
-          </button>
-        </div>
-      </div>
-
-      <div id="my-work-tab-content"></div>
     `;
 
     this.bindEvents(container);

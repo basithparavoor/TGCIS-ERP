@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Authentication & Identity Service
  * Strict Production Mode:
  *   - Authenticates exclusively against Supabase Auth.
@@ -48,7 +48,7 @@ class AuthService {
 
       const profile = await this.loadProfile(session.user);
       if (!profile) {
-        // Authenticated but no profile / inactive: deny access.
+        // Authenticated with no profile record at all: deny access.
         await client.auth.signOut();
         this.currentUser = null;
         this.clearCache();
@@ -121,16 +121,38 @@ class AuthService {
       }
     }
 
-    if (!data || data.is_active === false) {
+    // 4. Auto-provision pending profile for new Google / OAuth sign-ins if no profile exists
+    if (!data && email) {
+      const pendingProfile = {
+        id: authUser.id,
+        email: email,
+        name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || (email ? email.split('@')[0] : 'TMS User'),
+        avatar: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || null,
+        role: 'pending',
+        scope: TMS_CONFIG.scopes.OWN_RECORDS,
+        title: 'Pending Google Verification',
+        department: 'Unassigned',
+        is_active: true
+      };
+      try {
+        await client.from('profiles').insert(pendingProfile);
+        data = pendingProfile;
+      } catch (insertErr) {
+        console.warn('Auto-insert pending profile fallback:', insertErr);
+        data = pendingProfile;
+      }
+    }
+
+    if (!data) {
       console.warn('TMS profile lookup failed for user:', authUser.id, email);
       return null;
     }
 
-    return this.normalizeProfile(data);
+    return this.normalizeProfile(data, authUser);
   }
 
-  normalizeProfile(profile) {
-    if (!profile || !profile.role) return null;
+  normalizeProfile(profile, authUser = null) {
+    if (!profile) return null;
 
     const email = (profile.email || '').toLowerCase().trim();
     const isSuperAdmin =
@@ -140,13 +162,24 @@ class AuthService {
       profile.is_super_admin === true ||
       profile.isSuperAdmin === true;
 
+    const isPending = !isSuperAdmin && (profile.role === 'pending' || profile.approval_status === 'pending');
+    const isRejected = !isSuperAdmin && (profile.role === 'rejected' || profile.approval_status === 'rejected' || profile.is_active === false || profile.isActive === false);
+
+    const userAvatar = profile.avatar ||
+      authUser?.user_metadata?.avatar_url ||
+      authUser?.user_metadata?.picture ||
+      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
+
     return {
       id: profile.id,
       email: email,
       name: profile.name || (email ? email.split('@')[0] : 'TMS User'),
-      role: isSuperAdmin ? TMS_CONFIG.roles.SUPER_ADMIN : profile.role,
+      role: isSuperAdmin ? TMS_CONFIG.roles.SUPER_ADMIN : (isRejected ? 'rejected' : (profile.role || 'pending')),
       isSuperAdmin,
-      title: isSuperAdmin ? (profile.title || 'Executive Director & Super Admin') : (profile.title || 'Staff Member'),
+      isPending,
+      isRejected,
+      isActive: !isRejected,
+      title: isSuperAdmin ? (profile.title || 'Executive Director & Super Admin') : (profile.title || (isPending ? 'Pending Approval' : 'Staff Member')),
       scope: isSuperAdmin ? TMS_CONFIG.scopes.SCHOOL_WIDE : (profile.scope || TMS_CONFIG.scopes.OWN_RECORDS),
       department: profile.department || '—',
       assignedClass: profile.assigned_class || null,
@@ -154,8 +187,48 @@ class AuthService {
       phone: profile.phone || '',
       rawTitle: profile.title || '',
       rawDepartment: profile.department || '',
-      avatar: profile.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+      avatar: userAvatar,
+      createdAt: profile.created_at || profile.createdAt || new Date().toISOString()
     };
+  }
+
+  isPending() {
+    return !!this.currentUser && (this.currentUser.role === 'pending' || this.currentUser.isPending === true);
+  }
+
+  isRejected() {
+    return !!this.currentUser && (this.currentUser.role === 'rejected' || this.currentUser.isRejected === true);
+  }
+
+  isApproved() {
+    return this.isAuthenticated() && !this.isPending() && !this.isRejected();
+  }
+
+  async approveUser(userId, { role, scope, title, department }) {
+    const client = dbService.getClient();
+    if (!client) return { success: false, error: 'Database service unavailable' };
+    const updates = {
+      role: role || TMS_CONFIG.roles.TEACHER,
+      scope: scope || TMS_CONFIG.scopes.OWN_RECORDS,
+      title: title || 'Staff Member',
+      department: department || 'General',
+      is_active: true
+    };
+    const { error } = await client.from('profiles').update(updates).eq('id', userId);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  }
+
+  async rejectUser(userId) {
+    const client = dbService.getClient();
+    if (!client) return { success: false, error: 'Database service unavailable' };
+    const updates = {
+      role: 'rejected',
+      is_active: false
+    };
+    const { error } = await client.from('profiles').update(updates).eq('id', userId);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   }
 
   isAuthenticated() {
@@ -443,7 +516,7 @@ class AuthService {
     }
     this.currentUser = null;
     this.clearCache();
-    window.location.href = 'login.html';
+    window.location.href = '/login';
   }
 }
 

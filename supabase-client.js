@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Supabase Data Layer
  * Strict Production Mode: No Hardcoded Demo Seed Data
  *
@@ -102,16 +102,27 @@ class SupabaseDataService {
   }
 
   cleanLegacyDemoData() {
-    // Purge old demo mock flags and hardcoded data
-    if (localStorage.getItem('tms_seeded_v3')) {
-      localStorage.removeItem('tms_seeded_v3');
-      localStorage.removeItem('tms_students');
-      localStorage.removeItem('tms_staff');
-      localStorage.removeItem('tms_invoices');
-      localStorage.removeItem('tms_facilities');
-      localStorage.removeItem('tms_staff_tasks');
-      localStorage.removeItem('tms_attendance_register');
-    }
+    // Purge old demo mock flags, sample data, and hardcoded templates
+    try {
+      const keysToScan = [
+        'tms_seeded_v3',
+        'tms_assignments',
+        'tms_calendar_events',
+        'tms_syllabus_topics',
+        'tms_students',
+        'tms_staff',
+        'tms_invoices',
+        'tms_facilities',
+        'tms_staff_tasks',
+        'tms_attendance_register'
+      ];
+      keysToScan.forEach(k => {
+        const val = localStorage.getItem(k);
+        if (val && (val.includes('hw_1') || val.includes('ev_1') || val.includes('syl-1') || k === 'tms_seeded_v3')) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch (e) { /* ignore */ }
   }
 
   initClient() {

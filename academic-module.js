@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Academic & Curriculum Management Module
  * Comprehensive CRUD Suite: Classes, Sections, Period & Bell Timetable,
  * Teacher Allocation, Academic Sessions, Subject Master & Syllabus Tracker.
@@ -35,25 +35,10 @@ const DEFAULT_PERIODS = [
 ];
 
 const DEFAULT_SESSIONS = [
-  { id: 'sess-2025-26', sessionName: '2025-2026', startDate: '2025-04-01', endDate: '2026-03-31', isCurrent: false, terms: 'Term 1, Term 2, Term 3', status: 'Completed' },
-  { id: 'sess-2026-27', sessionName: '2026-2027', startDate: '2026-04-01', endDate: '2027-03-31', isCurrent: true, terms: 'Term 1 (Summer), Term 2 (Mid-Year), Term 3 (Annual)', status: 'Active' },
-  { id: 'sess-2027-28', sessionName: '2027-2028', startDate: '2027-04-01', endDate: '2028-03-31', isCurrent: false, terms: 'Term 1, Term 2, Term 3', status: 'Upcoming' }
+  { id: 'sess-active', sessionName: TMS_CONFIG.academic.currentYear, startDate: `${TMS_CONFIG.academic.currentYear.split('-')[0]}-04-01`, endDate: `${TMS_CONFIG.academic.currentYear.split('-')[1] || '2026'}-03-31`, isCurrent: true, terms: 'Term 1, Term 2, Term 3', status: 'Active' }
 ];
 
-const DEFAULT_SYLLABUS = [
-  { id: 'syl-1', grade: 'Class 1', subject: 'Mathematics', term: 'Term 1', unitNo: 1, title: 'Numbers up to 50 & Place Values', targetDate: '2026-06-15', completed: true },
-  { id: 'syl-2', grade: 'Class 1', subject: 'Mathematics', term: 'Term 1', unitNo: 2, title: 'Single-Digit Addition & Subtraction', targetDate: '2026-07-30', completed: true },
-  { id: 'syl-3', grade: 'Class 1', subject: 'Mathematics', term: 'Term 1', unitNo: 3, title: 'Shapes, Space & Geometric Patterns', targetDate: '2026-08-30', completed: true },
-  { id: 'syl-4', grade: 'Class 1', subject: 'Mathematics', term: 'Term 2', unitNo: 4, title: 'Measurements, Length & Weight', targetDate: '2026-10-15', completed: false },
-  { id: 'syl-5', grade: 'Class 1', subject: 'Mathematics', term: 'Term 2', unitNo: 5, title: 'Time, Days of Week & Calendar', targetDate: '2026-11-20', completed: false },
-  { id: 'syl-6', grade: 'Class 1', subject: 'Mathematics', term: 'Term 3', unitNo: 6, title: 'Intro to Money & Simple Fractions', targetDate: '2027-01-30', completed: false },
-  { id: 'syl-7', grade: 'Class 1', subject: 'English', term: 'Term 1', unitNo: 1, title: 'Phonics, Vowels & Consonant Blends', targetDate: '2026-06-30', completed: true },
-  { id: 'syl-8', grade: 'Class 1', subject: 'English', term: 'Term 1', unitNo: 2, title: 'Sight Words & Sentence Construction', targetDate: '2026-08-15', completed: true },
-  { id: 'syl-9', grade: 'Class 1', subject: 'English', term: 'Term 2', unitNo: 3, title: 'Short Stories, Reading & Comprehension', targetDate: '2026-10-30', completed: false },
-  { id: 'syl-10', grade: 'Class 1', subject: 'General Science', term: 'Term 1', unitNo: 1, title: 'Living vs Non-Living Things', targetDate: '2026-07-15', completed: true },
-  { id: 'syl-11', grade: 'Class 1', subject: 'General Science', term: 'Term 1', unitNo: 2, title: 'Human Body & 5 Senses', targetDate: '2026-08-30', completed: true },
-  { id: 'syl-12', grade: 'Class 1', subject: 'General Science', term: 'Term 2', unitNo: 3, title: 'Plants, Trees & Green World', targetDate: '2026-10-25', completed: false }
-];
+const DEFAULT_SYLLABUS = [];
 
 export class AcademicModule {
   static async render(container) {
@@ -63,7 +48,10 @@ export class AcademicModule {
       dbService.select('academic_classes'),
       dbService.select('academic_periods'),
       dbService.select('academic_sessions'),
-      dbService.select('syllabus_topics'),
+      dbService.select('app_settings', s => s.key === 'academic_syllabus_topics').then(res => {
+        if (res && res.length && res[0].value) return res[0].value;
+        return dbService.getLocal('syllabus_topics') || [];
+      }).catch(() => dbService.getLocal('syllabus_topics') || []),
       dbService.select('staff_directory')
     ]);
 
@@ -91,22 +79,19 @@ export class AcademicModule {
     const currentSessionObj = this._sessions.find(s => s.isCurrent) || this._sessions[0] || { sessionName: TMS_CONFIG.academic.currentYear };
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
-              <span style="color: #16a34a;"><i data-lucide="book-open"></i></span> Academic Management Gateway
-            </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Manage classes, sections, bell timetable, teacher assignments, academic sessions &amp; curriculum master.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;" id="acad-action-buttons">
-            <button class="btn btn-secondary" id="btn-detect-clashes"><i data-lucide="shield-check"></i> Timetable Clash Audit</button>
-            <button class="btn btn-primary" id="btn-acad-primary-action"><i data-lucide="plus"></i> Add Class</button>
-          </div>
-        </div>
-      </div>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Academic & Curriculum Gateway',
+          subtitle: 'Manage classes, sections, bell timetable, teacher assignments, academic sessions & curriculum master.',
+          breadcrumbs: [{ label: 'Academic & Timetable' }],
+          badge: currentSessionObj.sessionName,
+          actionsHtml: `
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;" id="acad-action-buttons">
+              <button class="btn btn-secondary" id="btn-detect-clashes"><i data-lucide="shield-check"></i> Timetable Clash Audit</button>
+              <button class="btn btn-primary" id="btn-acad-primary-action"><i data-lucide="plus"></i> Add Class</button>
+            </div>
+          `
+        })}
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Active Academic Session', value: currentSessionObj.sessionName, icon: 'calendar', color: 'blue', subtitle: currentSessionObj.status || 'Active' })}
@@ -142,7 +127,8 @@ export class AcademicModule {
       </div>
 
       <div id="acad-tab-content"></div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     this.renderTab(this._currentTab, container);
@@ -639,7 +625,10 @@ export class AcademicModule {
         const topic = this._syllabus.find(s => s.id === id);
         if (topic) {
           topic.completed = !topic.completed;
-          await dbService.upsert('syllabus_topics', topic);
+          dbService.setLocal('syllabus_topics', this._syllabus);
+          try {
+            await dbService.upsert('app_settings', { key: 'academic_syllabus_topics', value: this._syllabus });
+          } catch(e) {}
           UIComponents.showToast(`Unit marked as ${topic.completed ? 'Completed' : 'Pending'}!`, 'success');
           this.renderSyllabusTab(content);
           UIComponents.refreshIcons();
@@ -1374,7 +1363,10 @@ export class AcademicModule {
         };
 
         this._syllabus.push(topicRecord);
-        await dbService.upsert('syllabus_topics', topicRecord);
+        dbService.setLocal('syllabus_topics', this._syllabus);
+        try {
+          await dbService.upsert('app_settings', { key: 'academic_syllabus_topics', value: this._syllabus });
+        } catch(e) {}
         UIComponents.showToast(`Unit "${title}" added to syllabus!`, 'success');
         UIComponents.closeModal();
         this.renderTab('syllabus', this._container);

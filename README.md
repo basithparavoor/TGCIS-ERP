@@ -1,4 +1,4 @@
-﻿# THAIBA PUBLIC SCHOOL — ERP Management & Campus Operations Suite
+# THAIBA PUBLIC SCHOOL — ERP Management & Campus Operations Suite
 
 [![Status](https://img.shields.io/badge/Status-Operational-10b981?style=for-the-badge)](https://thaibaschool.edu.in)
 [![Institution](https://img.shields.io/badge/Institution-THAIBA_MODEL_SCHOOL-3b82f6?style=for-the-badge)](https://thaibaschool.edu.in)
@@ -23,14 +23,14 @@
 
 ```text
 THAIBA PUBLIC SCHOOL ERP/
-├── 🌐 Entry Point Portals
-│   ├── index.html                  # Main ERP Workspace & Hash Router (#/module/tab)
-│   ├── login.html                  # Universal Authentication Gateway
-│   ├── admin.html                  # School Administration & Leadership Suite
-│   ├── teacher-portal.html         # Faculty Portal
-│   ├── student-portal.html         # Student Learner & Timetable Portal
-│   ├── parent-portal.html          # Parent/Guardian Fee & Progress Portal
-│   └── student-admission-portal.html # Public Online Admission & A4 Printout Gateway
+├── 🌐 Clean Professional Portals & Routes
+│   ├── /                           # Main ERP Dashboard (index.html)
+│   ├── /login                      # Universal Authentication Gateway (login.html)
+│   ├── /admission                  # Public Online Admission & A4 Gateway (admission.html)
+│   ├── /student                    # Student Learner & Timetable Portal (student.html)
+│   ├── /parent                     # Parent/Guardian Fee & Progress Portal (parent.html)
+│   ├── /teacher                    # Faculty & Staff Workspace Portal (teacher.html)
+│   └── /admin                      # School Administration Suite (admin.html)
 │
 ├── ⚙️ Core Configuration & Services
 │   ├── config.js                   # Master School Configuration & Supabase Keys

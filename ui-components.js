@@ -119,7 +119,7 @@ export class UIComponents {
     }, 3500);
   }
 
-  static openModal({ title, bodyHtml, footerHtml = '' }) {
+  static openModal({ title, bodyHtml, footerHtml = '', maxWidth = '' }) {
     let overlay = document.getElementById('global-modal-overlay');
     if (!overlay) {
       overlay = document.createElement('div');
@@ -144,6 +144,11 @@ export class UIComponents {
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) this.closeModal();
       });
+    }
+
+    const modalWin = overlay.querySelector('.modal-window');
+    if (modalWin) {
+      modalWin.style.maxWidth = maxWidth || '680px';
     }
 
     document.getElementById('global-modal-title').innerText = title;
@@ -185,19 +190,270 @@ export class UIComponents {
     `;
   }
 
-  static renderKpiCard({ title, value, icon, color = 'blue', subtitle = '' }) {
+  static renderKpiCard({ title, value, icon, color = 'blue', subtitle = '', trend = null, progress = null }) {
+    const esc = this.escapeHtml;
+    let trendHtml = '';
+    if (trend) {
+      const isUp = trend.direction === 'up' || trend.value > 0;
+      const trendColor = isUp ? 'text-success' : 'text-danger';
+      const trendIcon = isUp ? 'trending-up' : 'trending-down';
+      trendHtml = `
+        <div class="kpi-trend ${trendColor}" style="display:inline-flex; align-items:center; gap:3px; font-size:0.75rem; font-weight:700; margin-top:4px;">
+          <i data-lucide="${trendIcon}" style="width:13px; height:13px;"></i>
+          <span>${esc(trend.label || (isUp ? '+' : '') + trend.value + '%')}</span>
+        </div>
+      `;
+    }
+
+    let progressHtml = '';
+    if (progress !== null && progress !== undefined) {
+      const pct = Math.min(100, Math.max(0, Number(progress) || 0));
+      progressHtml = `
+        <div class="kpi-progress-wrap" style="margin-top: 8px;">
+          <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-secondary); margin-bottom:3px; font-weight:600;">
+            <span>Progress</span>
+            <span>${pct}%</span>
+          </div>
+          <div style="height:5px; background:var(--bg-canvas-subtle); border-radius:9999px; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:var(--primary); border-radius:9999px; transition:width 0.8s ease;"></div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
-      <div class="kpi-card">
+      <div class="kpi-card" tabindex="0">
         <div class="kpi-icon kpi-${color}">
           <i data-lucide="${icon}"></i>
         </div>
-        <div class="kpi-meta">
-          <h3>${value}</h3>
-          <p>${title}</p>
-          ${subtitle ? `<span style="font-size: 0.72rem; color: var(--text-subtle);">${subtitle}</span>` : ''}
+        <div class="kpi-meta" style="flex:1; min-width:0;">
+          <h3 class="kpi-value">${esc(value)}</h3>
+          <p class="kpi-title">${esc(title)}</p>
+          ${subtitle ? `<span class="kpi-subtitle" style="font-size: 0.72rem; color: var(--text-secondary);">${esc(subtitle)}</span>` : ''}
+          ${trendHtml}
+          ${progressHtml}
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Render standardized Page Header with title, breadcrumb, subtitle and action buttons.
+   */
+  static renderPageHeader({ title, subtitle = '', breadcrumbs = [], actionsHtml = '', badge = '' }) {
+    const esc = this.escapeHtml;
+    const breadcrumbsHtml = breadcrumbs.length ? `
+      <nav class="tms-breadcrumbs" aria-label="Breadcrumb">
+        <ol style="display:flex; align-items:center; gap:6px; list-style:none; padding:0; margin:0 0 6px 0; font-size:0.78rem; color:var(--text-secondary);">
+          <li><a href="#/dashboard" style="color:var(--text-secondary); font-weight:500; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="home" style="width:13px; height:13px;"></i> TPS ERP</a></li>
+          ${breadcrumbs.map((b, idx) => `
+            <li style="display:inline-flex; align-items:center; gap:6px;">
+              <i data-lucide="chevron-right" style="width:12px; height:12px; opacity:0.5;"></i>
+              ${b.href && idx < breadcrumbs.length - 1 ? `<a href="${esc(b.href)}" style="color:var(--text-secondary); font-weight:500;">${esc(b.label)}</a>` : `<span style="color:var(--text-primary); font-weight:600;">${esc(b.label)}</span>`}
+            </li>
+          `).join('')}
+        </ol>
+      </nav>
+    ` : '';
+
+    return `
+      <div class="tms-page-header" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+          <div>
+            ${breadcrumbsHtml}
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h1 class="tms-page-title" style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); letter-spacing:-0.02em; margin:0;">
+                ${esc(title)}
+              </h1>
+              ${badge ? `<span class="badge badge-success" style="font-size:0.75rem;">${badge}</span>` : ''}
+            </div>
+            ${subtitle ? `<p class="tms-page-subtitle" style="color: var(--text-secondary); font-size: 0.88rem; margin: 4px 0 0 0;">${esc(subtitle)}</p>` : ''}
+          </div>
+          ${actionsHtml ? `<div class="tms-page-actions" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">${actionsHtml}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Render standardized filter toolbar with search, filters and export actions.
+   */
+  static renderToolbar({ searchId = '', searchPlaceholder = 'Search records...', filtersHtml = '', actionsHtml = '' }) {
+    const esc = this.escapeHtml;
+    return `
+      <div class="tms-filter-toolbar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; background:#ffffff; padding:12px 16px; border-radius:12px; border:1px solid var(--border-color); box-shadow:var(--shadow-xs);">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; min-width:260px;">
+          ${searchId ? `
+            <div class="tms-toolbar-search" style="position:relative; min-width:240px; flex:1; max-width:400px;">
+              <i data-lucide="search" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-secondary);"></i>
+              <input type="text" class="form-input" id="${esc(searchId)}" placeholder="${esc(searchPlaceholder)}" style="padding-left:36px; padding-top:8px; padding-bottom:8px; font-size:0.85rem; border-radius:8px;">
+            </div>
+          ` : ''}
+          ${filtersHtml}
+        </div>
+        ${actionsHtml ? `<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">${actionsHtml}</div>` : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Render illustrated Empty State with icon, title, description and call to action.
+   */
+  static renderEmptyState({ icon = 'inbox', title = 'No records found', description = 'There are no records matching your selected filters or criteria.', actionHtml = '' }) {
+    const esc = this.escapeHtml;
+    return `
+      <div class="tms-empty-state" style="padding: 48px 24px; text-align: center; background: #ffffff; border-radius: 16px; border: 1.5px dashed var(--border-color); margin: 16px 0;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(22, 163, 74, 0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+          <i data-lucide="${esc(icon)}" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 6px;">${esc(title)}</h3>
+        <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 440px; margin: 0 auto 16px;">${esc(description)}</p>
+        ${actionHtml ? `<div>${actionHtml}</div>` : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Render modern skeleton loaders for tables and card grids.
+   */
+  static renderSkeletonLoader({ type = 'table', rows = 5, cols = 4 } = {}) {
+    if (type === 'cards') {
+      return `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+          ${Array(rows).fill(0).map(() => `
+            <div class="card tms-skeleton" style="padding: 20px;">
+              <div class="skeleton-line" style="width: 40%; height: 16px; margin-bottom: 12px;"></div>
+              <div class="skeleton-line" style="width: 80%; height: 24px; margin-bottom: 16px;"></div>
+              <div class="skeleton-line" style="width: 60%; height: 12px;"></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="table-responsive" style="background:#fff; border-radius:12px; border:1px solid var(--border-color); padding:16px;">
+        <div class="skeleton-line" style="width: 100%; height: 36px; margin-bottom: 12px; border-radius:6px;"></div>
+        ${Array(rows).fill(0).map(() => `
+          <div style="display:flex; gap:12px; margin-bottom:10px;">
+            ${Array(cols).fill(0).map(() => `<div class="skeleton-line" style="flex:1; height: 20px; border-radius:4px;"></div>`).join('')}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  /**
+   * Render high-precision responsive SVG Area Chart.
+   */
+  static renderAreaChart({ id = 'chart-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, strokeColor = '#BF9A33', fillColor = 'rgba(22, 163, 74, 0.12)', title = '' }) {
+    if (!data || !data.length) return '';
+    const maxVal = Math.max(...data, 1);
+    const minVal = Math.min(...data, 0);
+    const range = (maxVal - minVal) || 1;
+    const width = 600;
+    const chartHeight = height - 40;
+    const padding = 30;
+
+    const points = data.map((val, idx) => {
+      const x = padding + (idx / (data.length - 1 || 1)) * (width - 2 * padding);
+      const y = chartHeight - ((val - minVal) / range) * (chartHeight - 30) + 15;
+      return { x, y, val, label: labels[idx] || `Point ${idx + 1}` };
+    });
+
+    const pathD = points.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '');
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${chartHeight} L ${points[0].x} ${chartHeight} Z`;
+
+    const gradId = `grad-${id}`;
+
+    return `
+      <div class="tms-svg-chart-wrap" id="${id}" style="width:100%; overflow:hidden;">
+        ${title ? `<div style="font-weight:700; font-size:0.85rem; color:var(--text-primary); margin-bottom:10px;">${this.escapeHtml(title)}</div>` : ''}
+        <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto; overflow:visible;" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="${gradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.32" />
+              <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="${padding}" y1="15" x2="${width - padding}" y2="15" stroke="#E8EDF3" stroke-dasharray="4 4" stroke-width="1" />
+          <line x1="${padding}" y1="${chartHeight / 2}" x2="${width - padding}" y2="${chartHeight / 2}" stroke="#E8EDF3" stroke-dasharray="4 4" stroke-width="1" />
+          <line x1="${padding}" y1="${chartHeight}" x2="${width - padding}" y2="${chartHeight}" stroke="#E8EDF3" stroke-width="1.5" />
+
+          <!-- Filled area -->
+          <path d="${areaD}" fill="url(#${gradId})" />
+
+          <!-- Line -->
+          <path d="${pathD}" fill="none" stroke="${strokeColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+          <!-- Dots & Labels -->
+          ${points.map(p => `
+            <g class="chart-point-group" tabindex="0">
+              <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#ffffff" stroke="${strokeColor}" stroke-width="2.5" style="transition:transform 0.15s ease; cursor:pointer;" />
+              <text x="${p.x}" y="${chartHeight + 20}" text-anchor="middle" font-size="11" font-weight="600" fill="#64748B">${this.escapeHtml(p.label)}</text>
+              <title>${p.label}: ${p.val}</title>
+            </g>
+          `).join('')}
+        </svg>
+      </div>
+    `;
+  }
+
+  /**
+   * Render high-precision responsive SVG Bar Chart.
+   */
+  static renderBarChart({ id = 'bar-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, color = '#BF9A33', title = '', valuePrefix = '', valueSuffix = '' }) {
+    if (!data || !data.length) return '';
+    const maxVal = Math.max(...data, 1);
+    const width = 600;
+    const chartHeight = height - 40;
+    const padding = 20;
+    const barWidth = Math.max(16, Math.min(44, ((width - 2 * padding) / data.length) * 0.6));
+    const gap = (width - 2 * padding) / data.length;
+
+    return `
+      <div class="tms-svg-chart-wrap" id="${id}" style="width:100%; overflow:hidden;">
+        ${title ? `<div style="font-weight:700; font-size:0.85rem; color:var(--text-primary); margin-bottom:10px;">${this.escapeHtml(title)}</div>` : ''}
+        <svg viewBox="0 0 ${width} ${height}" style="width:100%; height:auto;" preserveAspectRatio="none">
+          <!-- Baseline -->
+          <line x1="${padding}" y1="${chartHeight}" x2="${width - padding}" y2="${chartHeight}" stroke="#E8EDF3" stroke-width="1.5" />
+          
+          ${data.map((val, idx) => {
+            const barH = (val / maxVal) * (chartHeight - 30);
+            const x = padding + idx * gap + (gap - barWidth) / 2;
+            const y = chartHeight - barH;
+            return `
+              <g class="chart-bar-group" tabindex="0">
+                <rect x="${x}" y="${y}" width="${barWidth}" height="${barH}" rx="4" fill="${color}" style="transition:all 0.2s ease; cursor:pointer; opacity:0.9;" />
+                <text x="${x + barWidth / 2}" y="${y - 6}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#111827">${valuePrefix}${val.toLocaleString()}${valueSuffix}</text>
+                <text x="${x + barWidth / 2}" y="${chartHeight + 18}" text-anchor="middle" font-size="11" font-weight="600" fill="#64748B">${this.escapeHtml(labels[idx] || '')}</text>
+                <title>${labels[idx]}: ${valuePrefix}${val.toLocaleString()}${valueSuffix}</title>
+              </g>
+            `;
+          }).join('')}
+        </svg>
+      </div>
+    `;
+  }
+
+  /**
+   * Animate a numeric counter from 0 or start to target.
+   */
+  static animateCounter(el, target, duration = 800, prefix = '', suffix = '') {
+    if (!el) return;
+    const start = 0;
+    const startTime = performance.now();
+    const update = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(start + (target - start) * ease);
+      el.innerText = `${prefix}${current.toLocaleString()}${suffix}`;
+      if (progress < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
   }
 
   /**
@@ -234,7 +490,7 @@ export class UIComponents {
       let confirmBtnClass = 'btn-danger';
 
       if (type === 'primary' || type === 'info' || type === 'success') {
-        iconColor = '#16a34a';
+        iconColor = '#BF9A33';
         iconBg = 'rgba(22, 163, 74, 0.1)';
         iconBorder = 'rgba(22, 163, 74, 0.2)';
         confirmBtnClass = 'btn-primary';
@@ -308,7 +564,7 @@ export class UIComponents {
       overlay.id = 'tms-confirm-overlay';
       overlay.className = 'tms-confirm-overlay';
 
-      let iconColor = '#16a34a';
+      let iconColor = '#BF9A33';
       let iconBg = 'rgba(22, 163, 74, 0.1)';
       let iconBorder = 'rgba(22, 163, 74, 0.2)';
 

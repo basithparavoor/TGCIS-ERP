@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Digital Homework & Class Assignment Diary Module
  * Daily Homework Logs, Submission Deadlines, WhatsApp Broadcast & Printable A4 Diary Sheets
  */
@@ -9,6 +9,7 @@ import { UIComponents } from './ui-components.js';
 import { auditService } from './audit-service.js';
 import { WhatsAppService } from './whatsapp-service.js';
 import { TMS_LOGO } from './logo.js';
+import { exportPdf, formatPdfFilename } from './export-utils.js';
 
 export class HomeworkModule {
   static async render(container) {
@@ -18,22 +19,6 @@ export class HomeworkModule {
     this._students = (await dbService.select('students')) || [];
     this._staff = (await dbService.select('staff_directory')) || [];
 
-    // Pre-populate sample assignments if empty
-    if (!this._assignments.length) {
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-      const nextWeek = new Date(Date.now() + 86400000 * 4).toISOString().slice(0, 10);
-
-      const defaults = [
-        { id: 'hw_1', grade: 'Grade 5', section: 'A', subject: 'Mathematics', title: 'Fractions & Decimals Exercise 4.2', description: 'Complete textbook questions 1 to 15 in homework notebook. Show all intermediate calculation steps.', due_date: tomorrow, assigned_by: 'Mr. Rahman', status: 'active' },
-        { id: 'hw_2', grade: 'Grade 5', section: 'A', subject: 'English', title: 'Poem Comprehension & Vocabulary Drill', description: 'Read Chapter 3: "The Silver Arrow". Answer comprehension questions A and B on page 42.', due_date: tomorrow, assigned_by: 'Ms. Fatima', status: 'active' },
-        { id: 'hw_3', grade: 'Grade 7', section: 'B', subject: 'General Science', title: 'Plant Cell Structure Diagram Project', description: 'Draw and label a neat diagram of a plant cell on A4 chart paper showing chloroplast and cell wall.', due_date: nextWeek, assigned_by: 'Dr. Ali', status: 'active' }
-      ];
-
-      for (const hw of defaults) {
-        await dbService.insert('assignments', hw);
-      }
-      this._assignments = (await dbService.select('assignments')) || [];
-    }
 
     this._selectedGrade = this._selectedGrade || 'all';
     this._selectedSubject = this._selectedSubject || 'all';
@@ -58,22 +43,17 @@ export class HomeworkModule {
     const dueTodayCount = this._assignments.filter(a => a.due_date === todayStr).length;
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
-              <span style="color: #16a34a;"><i data-lucide="book-open"></i></span> Digital Homework &amp; Assignment Diary
-            </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Daily coursework tracking, submission deadlines, 1-click WhatsApp broadcast to parent groups, and A4 printable diary sheets.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-secondary" id="btn-print-hw-sheet"><i data-lucide="printer"></i> Print Weekly Homework Sheet (A4)</button>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Digital Homework & Assignment Diary',
+          subtitle: 'Daily coursework tracking, submission deadlines, 1-click WhatsApp broadcast to parent groups, and A4 printable diary sheets.',
+          breadcrumbs: [{ label: 'Homework Diary' }],
+          badge: 'Daily Log',
+          actionsHtml: `
+            <button class="btn btn-secondary" id="btn-print-hw-sheet"><i data-lucide="printer"></i> Weekly Sheet (A4)</button>
             <button class="btn btn-primary" id="btn-post-new-hw"><i data-lucide="plus"></i> Post Assignment</button>
-          </div>
-        </div>
-      </div>
+          `
+        })}
 
       <!-- KPI Summary -->
       <div class="kpi-grid">
@@ -161,7 +141,8 @@ export class HomeworkModule {
           `}
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     UIComponents.refreshIcons();
@@ -396,7 +377,7 @@ export class HomeworkModule {
       bodyHtml,
       footerHtml: `
         <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Close</button>
-        <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i> Print Homework Sheet (A4)</button>
+        <button class="btn btn-primary" id="btn-print-hw-pdf"><i data-lucide="printer"></i> Print / Save PDF Roster</button>
       `
     });
 

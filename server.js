@@ -37,6 +37,45 @@ function send(res, status, body) {
   res.end(body);
 }
 
+const REDIRECTS = {
+  '/student-admission-portal': '/admission',
+  '/student-admission-portal.html': '/admission',
+  '/admissions': '/admission',
+  '/admissions.html': '/admission',
+  '/admission.html': '/admission',
+  '/student-portal': '/student',
+  '/student-portal.html': '/student',
+  '/students': '/student',
+  '/students.html': '/student',
+  '/student.html': '/student',
+  '/parent-portal': '/parent',
+  '/parent-portal.html': '/parent',
+  '/parents': '/parent',
+  '/parents.html': '/parent',
+  '/parent.html': '/parent',
+  '/teacher-portal': '/teacher',
+  '/teacher-portal.html': '/teacher',
+  '/teachers': '/teacher',
+  '/teachers.html': '/teacher',
+  '/teacher.html': '/teacher',
+  '/faculty': '/teacher',
+  '/faculty.html': '/teacher',
+  '/login.html': '/login',
+  '/admin.html': '/admin',
+  '/index.html': '/'
+};
+
+const ROUTE_ALIASES = {
+  '/': '/index.html',
+  '/dashboard': '/index.html',
+  '/login': '/login.html',
+  '/admin': '/admin.html',
+  '/admission': '/admission.html',
+  '/student': '/student.html',
+  '/parent': '/parent.html',
+  '/teacher': '/teacher.html'
+};
+
 const server = http.createServer((req, res) => {
   // Only allow read-only GET/HEAD requests.
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -44,14 +83,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  let reqUrl = req.url.split('?')[0].split('#')[0];
-  if (reqUrl === '/' || reqUrl === '') reqUrl = '/login.html';
+  const urlParts = req.url.split('?');
+  let pathname = urlParts[0].split('#')[0];
+  const query = urlParts[1] ? `?${urlParts[1]}` : '';
 
   // Reject null bytes outright.
-  if (reqUrl.indexOf('\0') !== -1) {
+  if (pathname.indexOf('\0') !== -1) {
     send(res, 400, '400 Bad Request');
     return;
   }
+
+  // Normalize trailing slash (except root)
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    pathname = pathname.slice(0, -1);
+  }
+
+  const lowerPath = pathname.toLowerCase();
+
+  // Canonical 301 redirects for legacy URLs and .html extensions to professional URLs
+  if (REDIRECTS[lowerPath]) {
+    res.writeHead(301, {
+      'Location': `${REDIRECTS[lowerPath]}${query}`,
+      ...SECURITY_HEADERS
+    });
+    res.end();
+    return;
+  }
+
+  // Route clean URLs internally to the corresponding HTML file
+  let reqUrl = ROUTE_ALIASES[lowerPath] || pathname;
 
   // Decode once, then resolve and confine to ROOT (prevents path traversal).
   let decoded;

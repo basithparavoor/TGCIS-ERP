@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Admission Service
  * Drives the customizable admission form, fee selection, UPI payment reference,
  * the application lifecycle (submit -> verify -> approve/reject), parent
@@ -363,11 +363,21 @@ class AdmissionService {
   }
 
   async getSignedUrl(bucket, path, expiresIn = 3600) {
+    if (!path) return null;
+    if (typeof path === 'string' && (path.startsWith('data:') || path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://'))) {
+      return path;
+    }
     const client = dbService.getClient();
-    if (!client || !path) return null;
+    if (!client) return null;
     try {
       const { data, error } = await client.storage.from(bucket).createSignedUrl(path, expiresIn);
-      if (error) return null;
+      if (error) {
+        try {
+          const pub = client.storage.from(bucket).getPublicUrl(path);
+          if (pub && pub.data && pub.data.publicUrl) return pub.data.publicUrl;
+        } catch (_) {}
+        return null;
+      }
       return data ? data.signedUrl : null;
     } catch (e) {
       return null;
@@ -551,6 +561,44 @@ class AdmissionService {
     };
   }
 
+  async getApplication(id) {
+    if (!id) return null;
+    try {
+      const rows = await dbService.select('admissions_applications', { eq: { id } });
+      if (rows && rows.length) return rows[0];
+    } catch (_) {}
+    const all = await this.listApplications();
+    return all.find((a) => a.id === id || a.appId === id) || null;
+  }
+
+  async updateApplication(id, { values = {}, status, paymentStatus, remarks }) {
+    const existing = await this.getApplication(id);
+    const prevPayload = (existing && existing.payload) ? existing.payload : {};
+    const updatedPayload = { ...prevPayload, ...values };
+
+    const guardianName =
+      updatedPayload.fatherName || updatedPayload.guardianName || updatedPayload.motherName || (existing && existing.guardianName) || 'Parent / Guardian';
+
+    const patch = {
+      studentName: updatedPayload.candidateName || (existing && existing.studentName),
+      grade: updatedPayload.applyingClass || (existing && existing.grade),
+      guardianName,
+      phone: updatedPayload.phone || (existing && existing.phone),
+      email: updatedPayload.email || (existing && existing.email),
+      dob: updatedPayload.dob || (existing && existing.dob),
+      gender: updatedPayload.gender || (existing && existing.gender),
+      address: [updatedPayload.village, updatedPayload.po, updatedPayload.ps, updatedPayload.district, updatedPayload.pin].filter(Boolean).join(', ') || (existing && existing.address),
+      payload: updatedPayload
+    };
+
+    if (status !== undefined) patch.status = status;
+    if (paymentStatus !== undefined) patch.paymentStatus = paymentStatus;
+    if (remarks !== undefined) patch.remarks = remarks;
+
+    const res = await dbService.update('admissions_applications', id, patch);
+    return res;
+  }
+
   async verifyApplication(id, { status, remarks = '' }) {
     return dbService.update('admissions_applications', id, {
       status,
@@ -589,9 +637,68 @@ class AdmissionService {
 
   /* ---------------- Credentials (admin) ---------------- */
 
-  async getCredentials(applicationId) {
+  async getCredentials(applicationOrId) {
+    if (!applicationOrId) return null;
+    const appId = typeof applicationOrId === 'string' ? applicationOrId : applicationOrId?.id;
+    const appUsername = typeof applicationOrId === 'object' ? (applicationOrId?.parentUsername || '') : '';
+    const appEmail = typeof applicationOrId === 'object' ? (applicationOrId?.parentEmail || '') : '';
+    const formNo = typeof applicationOrId === 'object' ? (applicationOrId?.appId || applicationOrId?.id || '') : '';
+
     const rows = await dbService.select('parent_credentials');
-    return rows.find((r) => r.applicationId === applicationId) || null;
+    let found = rows.find((r) => r.applicationId === appId);
+    if (!found && appUsername) {
+      found = rows.find((r) => r.username && r.username.toLowerCase() === appUsername.toLowerCase());
+    }
+    if (!found && appEmail) {
+      found = rows.find((r) => r.email && r.email.toLowerCase() === appEmail.toLowerCase());
+    }
+    if (!found && formNo) {
+      const cleanDigits = String(formNo).replace(/\D/g, '').slice(-6);
+      if (cleanDigits) {
+        found = rows.find((r) => r.username && r.username.includes(cleanDigits));
+      }
+    }
+    return found || null;
+  }
+
+  /**
+   * Get existing credentials or provision guaranteed credentials for an application
+   * so that every admission printout and portal login tracking always has valid credentials.
+   */
+  async getOrCreateCredentials(app) {
+    if (!app) return null;
+    let cred = await this.getCredentials(app);
+    if (cred) return cred;
+
+    const formNo = app.appId || app.id || this.generateFormNo();
+    const built = this.buildCredentials(formNo);
+    try {
+      const credentialRow = await dbService.insert('parent_credentials', {
+        id: `cred-${built.username}`,
+        applicationId: app.id,
+        username: built.username,
+        email: built.email,
+        password: built.password,
+        userId: app.parentUserId || null,
+        studentId: null,
+        status: 'Active'
+      });
+      await dbService.update('admissions_applications', app.id, {
+        parentUsername: built.username,
+        parentEmail: built.email
+      });
+      try {
+        await dbService.upsert('login_aliases', {
+          id: `alias-${built.username.toLowerCase()}`,
+          username: built.username.toLowerCase(),
+          email: built.email.toLowerCase(),
+          role: 'parent'
+        });
+      } catch (e) { /* ignore */ }
+      return credentialRow || built;
+    } catch (e) {
+      return built;
+    }
   }
 
   /**

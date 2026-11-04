@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- THAIBA PUBLIC SCHOOL - Supabase PostgreSQL Schema & RLS Policies
 -- Single-Institution Architecture exclusively for THAIBA PUBLIC SCHOOL
 --
@@ -1158,3 +1158,24 @@ $$;
 GRANT EXECUTE ON FUNCTION public.tms_create_user(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ============================================================================
+-- 31. Syllabus Topics & Lesson Plan Tracker
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS syllabus_topics (
+    id TEXT PRIMARY KEY,
+    grade TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    term TEXT NOT NULL,
+    unit_no INT,
+    title TEXT NOT NULL,
+    target_date DATE,
+    completed BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE syllabus_topics ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "syllabus_topics_read" ON syllabus_topics;
+CREATE POLICY "syllabus_topics_read" ON syllabus_topics FOR SELECT TO anon, authenticated USING (true);
+DROP POLICY IF EXISTS "syllabus_topics_manage" ON syllabus_topics;
+CREATE POLICY "syllabus_topics_manage" ON syllabus_topics FOR ALL TO authenticated USING (true);

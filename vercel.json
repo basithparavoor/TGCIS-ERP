@@ -1,0 +1,30 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/student-admission-portal(.html)?", "destination": "/admission", "permanent": true },
+    { "source": "/admissions(.html)?", "destination": "/admission", "permanent": true },
+    { "source": "/admission.html", "destination": "/admission", "permanent": true },
+    { "source": "/student-portal(.html)?", "destination": "/student", "permanent": true },
+    { "source": "/students(.html)?", "destination": "/student", "permanent": true },
+    { "source": "/student.html", "destination": "/student", "permanent": true },
+    { "source": "/parent-portal(.html)?", "destination": "/parent", "permanent": true },
+    { "source": "/parents(.html)?", "destination": "/parent", "permanent": true },
+    { "source": "/parent.html", "destination": "/parent", "permanent": true },
+    { "source": "/teacher-portal(.html)?", "destination": "/teacher", "permanent": true },
+    { "source": "/teachers(.html)?", "destination": "/teacher", "permanent": true },
+    { "source": "/faculty(.html)?", "destination": "/teacher", "permanent": true },
+    { "source": "/teacher.html", "destination": "/teacher", "permanent": true },
+    { "source": "/login.html", "destination": "/login", "permanent": true },
+    { "source": "/admin.html", "destination": "/admin", "permanent": true },
+    { "source": "/index.html", "destination": "/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/admission", "destination": "/admission.html" },
+    { "source": "/student", "destination": "/student.html" },
+    { "source": "/parent", "destination": "/parent.html" },
+    { "source": "/teacher", "destination": "/teacher.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/admin", "destination": "/admin.html" }
+  ]
+}

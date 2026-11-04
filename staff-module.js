@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Staff & Human Resources Module
  *
  * Registry of every employee plus full lifecycle management:
@@ -72,21 +72,17 @@ export class StaffModule {
     const payrollTotal = staff.reduce((sum, s) => sum + (parseFloat(s.basicPay) || 0), 0);
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">Staff &amp; Human Resources</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Faculty registry, departments, designations, employment contracts and login credentials.
-              Appointing a staff member also creates their username &amp; password and adds them to Users &amp; Roles.
-            </p>
-          </div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Staff & Human Resources',
+          subtitle: 'Faculty registry, departments, designations, employment contracts and login credentials.',
+          breadcrumbs: [{ label: 'Staff & HR' }],
+          badge: `${staff.length} Employees`,
+          actionsHtml: `
             <button class="btn btn-secondary" id="btn-export-staff"><i data-lucide="file-spreadsheet"></i> Export CSV</button>
             ${canManage ? '<button class="btn btn-primary" id="btn-add-staff"><i data-lucide="user-plus"></i> Appoint New Staff</button>' : ''}
-          </div>
-        </div>
-      </div>
+          `
+        })}
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Total Faculty & Staff', value: `${staff.length}`, icon: 'briefcase', color: 'blue', subtitle: 'Permanent & Contracted' })}
@@ -171,7 +167,8 @@ export class StaffModule {
           </table>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container, canManage);
     UIComponents.refreshIcons();
@@ -566,19 +563,56 @@ export class StaffModule {
       }
     });
     document.getElementById('cred-print').addEventListener('click', () => {
-      exportPdf(`Staff-Login-${username || 'staff'}`, `
-        <div class="doc-title">${esc(TMS_CONFIG.institution.name)}</div>
-        <div class="doc-sub">Staff Portal Login Slip</div>
-        <table>
-          <tbody>
-            <tr><th style="text-align:left;">Name</th><td>${esc(name)}</td></tr>
-            <tr><th style="text-align:left;">Username</th><td>${esc(username)}</td></tr>
-            <tr><th style="text-align:left;">Password</th><td>${esc(password)}</td></tr>
-            <tr><th style="text-align:left;">Sign-in e-mail</th><td>${esc(email)}</td></tr>
-          </tbody>
-        </table>
-        <p style="margin-top:14px; font-size:11px;">Keep this slip confidential and change the password after the first sign-in.</p>
-      `);
+      const filename = `TMS_Staff_Login_${(username || 'staff').replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+      const portalUrl = (typeof window !== 'undefined' && window.location.origin) ? `${window.location.origin}/login` : 'https://www.thaibagarden.com/login';
+      const body = `
+        <div style="border: 1.5px solid #16a34a; background: #f0fdf4; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #bbf7d0; padding-bottom: 6px; margin-bottom: 10px;">
+            <div style="font-size: 12px; font-weight: 800; color: #166534; text-transform: uppercase;">
+              🔐 Faculty &amp; Staff Authorized Portal Access Slip
+            </div>
+            <span class="badge badge-success" style="font-size: 9px;">CONFIDENTIAL</span>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px;">
+            <tbody>
+              <tr>
+                <th style="width: 28%; padding: 6px 10px; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1;">Staff Member Name</th>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1;"><strong>${esc(name || '—')}</strong></td>
+              </tr>
+              <tr>
+                <th style="padding: 6px 10px; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1;">Sign-In Username</th>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1;"><strong class="font-mono" style="font-size: 13px; color: #15803d; background: #fff; padding: 2px 8px; border: 1px solid #86efac; border-radius: 4px;">${esc(username)}</strong></td>
+              </tr>
+              <tr>
+                <th style="padding: 6px 10px; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1;">Temporary Password</th>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1;"><strong class="font-mono" style="font-size: 13px; color: #0f172a; background: #fff; padding: 2px 8px; border: 1px solid #86efac; border-radius: 4px;">${esc(password)}</strong></td>
+              </tr>
+              <tr>
+                <th style="padding: 6px 10px; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1;">Sign-in Email</th>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-family: monospace;">${esc(email)}</td>
+              </tr>
+              <tr>
+                <th style="padding: 6px 10px; text-align: left; background: #f8fafc; border: 1px solid #cbd5e1;">Portal Access URL</th>
+                <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-family: monospace; color: #15803d;"><strong>${esc(portalUrl)}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="font-size: 9px; color: #475569; line-height: 1.4; background: #ffffff; padding: 8px 12px; border: 1px dashed #cbd5e1; border-radius: 6px;">
+            <strong>Security Notice:</strong> Keep these credentials strictly confidential. Sign in to update your security settings. All administrative operations are logged in the campus audit trail.
+          </div>
+        </div>
+      `;
+      exportPdf(filename, body, {
+        filename,
+        title: 'Staff Portal Authentication Credential Slip',
+        subtitle: `Issued To: ${name || 'Staff'}`,
+        badge: 'Confidential Issue',
+        showHeader: true,
+        showFooter: true,
+        signatures: ['Authorized Administrator', 'Staff Member Acknowledgement']
+      });
     });
     UIComponents.refreshIcons();
   }

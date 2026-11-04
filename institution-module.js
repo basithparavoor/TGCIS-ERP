@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Campus Facilities & Infrastructure Module
  * Single-Institution Architecture exclusively for TMS
  */
@@ -20,15 +20,14 @@ export class InstitutionModule {
     const totalSeating = facilities.reduce((sum, f) => sum + (parseInt(f.capacity, 10) || 0), 0);
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">Campus Infrastructure &amp; Facilities</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Building directory, laboratory spaces, seating capacities, and maintenance log for THAIBA PUBLIC SCHOOL.</p>
-          </div>
-          <button class="btn btn-primary" id="btn-add-facility"><i data-lucide="plus-circle"></i> Add Facility / Room</button>
-        </div>
-      </div>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Campus Infrastructure & Facilities',
+          subtitle: 'Building directory, laboratory spaces, seating capacities, and maintenance log for THAIBA PUBLIC SCHOOL.',
+          breadcrumbs: [{ label: 'Campus Facilities' }],
+          badge: `${facilities.length} Spaces`,
+          actionsHtml: '<button class="btn btn-primary" id="btn-add-facility"><i data-lucide="plus-circle"></i> Add Facility / Room</button>'
+        })}
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Academic Blocks', value: `${academicBlocks}`, icon: 'building', color: 'blue' })}
@@ -91,7 +90,8 @@ export class InstitutionModule {
           </table>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     UIComponents.refreshIcons();

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Student Lifecycle, Admissions & Identity Module
  */
 
@@ -7,7 +7,7 @@ import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
 import { auditService } from './audit-service.js';
 import { PermissionEngine, CAPABILITIES } from './permission-engine.js';
-import { downloadCsv } from './export-utils.js';
+import { downloadCsv, formatPdfFilename } from './export-utils.js';
 import { TMS_LOGO } from './logo.js';
 import { admissionService } from './admission-service.js';
 
@@ -25,22 +25,21 @@ export class StudentModule {
     const clearanceValue = totalBilled > 0 ? `${((totalCollected / totalBilled) * 100).toFixed(1)}%` : '—';
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">Student Lifecycle & Directory</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Student information system, admissions pipeline, guardian records, and printable biometric ID cards.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap:wrap;">
-            <button class="btn btn-secondary" id="btn-infirmary-roster"><i data-lucide="cross"></i> Medical &amp; Infirmary Roster</button>
-            <button class="btn btn-secondary" id="btn-bulk-print-id-cards"><i data-lucide="printer"></i> Bulk Print PVC ID Cards</button>
-            <a href="student-admission-portal.html" target="_blank" class="btn btn-secondary"><i data-lucide="file-text"></i> Admission Form (A4)</a>
-            ${canManage ? `<button class="btn btn-primary" id="btn-new-admission"><i data-lucide="user-plus"></i> New Enrollment</button>` : ''}
-          </div>
-        </div>
-      </div>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Student Lifecycle & Directory',
+          subtitle: 'Student information system, admissions pipeline, guardian records, and printable biometric ID cards.',
+          breadcrumbs: [{ label: 'Student Directory' }],
+          badge: `${students.length} Enrolled`,
+          actionsHtml: `
+            <button class="btn btn-secondary" id="btn-infirmary-roster"><i data-lucide="cross"></i> Medical Roster</button>
+            <button class="btn btn-secondary" id="btn-bulk-print-id-cards"><i data-lucide="printer"></i> Bulk Print PVC ID</button>
+            <a href="/admission" target="_blank" class="btn btn-secondary"><i data-lucide="file-text"></i> Admission Form (A4)</a>
+            ${canManage ? `
+            <button class="btn btn-secondary" id="btn-bulk-import-students"><i data-lucide="file-up"></i> Bulk Import (CSV)</button>
+            <button class="btn btn-primary" id="btn-new-admission"><i data-lucide="user-plus"></i> New Enrollment</button>` : ''}
+          `
+        })}
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Total Enrolled Students', value: `${students.length}`, icon: 'users', color: 'blue', subtitle: TMS_CONFIG.academic.currentYear })}
@@ -72,12 +71,34 @@ export class StudentModule {
         </div>
 
         ${canManage ? `
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
-          <button class="btn btn-secondary btn-sm" id="btn-students-select-all"><i data-lucide="check-square"></i> Select All</button>
-          <button class="btn btn-secondary btn-sm" id="btn-students-clear">Clear</button>
-          <button class="btn btn-secondary btn-sm" id="btn-students-bulk-activate"><i data-lucide="check-circle"></i> Set Active</button>
-          <button class="btn btn-secondary btn-sm" id="btn-students-bulk-export"><i data-lucide="download"></i> Export Selected</button>
-          <button class="btn btn-secondary btn-sm" id="btn-students-bulk-delete" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Selected (<span id="students-selected-count">0</span>)</button>
+        <div class="bulk-actions-toolbar" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:10px;">
+          <div style="font-weight:700; font-size:0.85rem; display:flex; align-items:center; gap:6px; margin-right:4px;">
+            <i data-lucide="check-square" style="width:16px; height:16px; color:#2563eb;"></i>
+            <span><span id="students-selected-count">0</span> Selected</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-select-all">Select All</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-clear">Clear</button>
+          
+          <span style="height:18px; width:1px; background:var(--border-color); margin:0 4px;"></span>
+
+          <button type="button" class="btn btn-primary btn-sm" id="btn-students-bulk-edit" title="Batch edit any data field across selected students">
+            <i data-lucide="sliders"></i> Bulk Edit Fields
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-bulk-class" title="Reassign Grade / Class & Section">
+            <i data-lucide="arrow-up-right"></i> Move Class
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-bulk-status" title="Batch change enrollment status">
+            <i data-lucide="shield-check"></i> Status
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-bulk-roll" title="Renumber roll numbers sequentially">
+            <i data-lucide="list-ordered"></i> Auto Roll
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-bulk-export" title="Export all fields of selected students">
+            <i data-lucide="download"></i> Export CSV
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-students-bulk-delete" style="color:#ef4444;" title="Delete selected students">
+            <i data-lucide="trash-2"></i> Delete
+          </button>
         </div>` : ''}
 
         <!-- Cards View (Default on Mobile, zero side scroll) -->
@@ -194,7 +215,8 @@ export class StudentModule {
           </table>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     UIComponents.refreshIcons();
@@ -443,17 +465,44 @@ export class StudentModule {
         this.deleteStudents(rows, container);
       });
     }
-    const bulkActivate = container.querySelector('#btn-students-bulk-activate');
-    if (bulkActivate) {
-      bulkActivate.addEventListener('click', async () => {
+    const bulkImportBtn = container.querySelector('#btn-bulk-import-students');
+    if (bulkImportBtn) {
+      bulkImportBtn.addEventListener('click', () => StudentModule.openBulkImportModal(container));
+    }
+
+    const bulkEditBtn = container.querySelector('#btn-students-bulk-edit');
+    if (bulkEditBtn) {
+      bulkEditBtn.addEventListener('click', () => {
         const rows = selectedStudents();
-        if (!rows.length) { UIComponents.showToast('Select at least one student.', 'warning'); return; }
-        for (const s of rows) {
-          // eslint-disable-next-line no-await-in-loop
-          await dbService.update('students', s.id, { status: 'Active' });
-        }
-        UIComponents.showToast(`${rows.length} student(s) set to Active.`, 'success');
-        await StudentModule.render(container);
+        if (!rows.length) { UIComponents.showToast('Please select at least one student.', 'warning'); return; }
+        StudentModule.openBulkEditModal(rows, container);
+      });
+    }
+
+    const bulkClassBtn = container.querySelector('#btn-students-bulk-class');
+    if (bulkClassBtn) {
+      bulkClassBtn.addEventListener('click', () => {
+        const rows = selectedStudents();
+        if (!rows.length) { UIComponents.showToast('Please select at least one student.', 'warning'); return; }
+        StudentModule.openBulkClassModal(rows, container);
+      });
+    }
+
+    const bulkStatusBtn = container.querySelector('#btn-students-bulk-status');
+    if (bulkStatusBtn) {
+      bulkStatusBtn.addEventListener('click', () => {
+        const rows = selectedStudents();
+        if (!rows.length) { UIComponents.showToast('Please select at least one student.', 'warning'); return; }
+        StudentModule.openBulkStatusModal(rows, container);
+      });
+    }
+
+    const bulkRollBtn = container.querySelector('#btn-students-bulk-roll');
+    if (bulkRollBtn) {
+      bulkRollBtn.addEventListener('click', () => {
+        const rows = selectedStudents();
+        if (!rows.length) { UIComponents.showToast('Please select at least one student.', 'warning'); return; }
+        StudentModule.openBulkRollModal(rows, container);
       });
     }
     const bulkExport = container.querySelector('#btn-students-bulk-export');
@@ -482,55 +531,84 @@ export class StudentModule {
     if (newAdmBtn) {
       newAdmBtn.addEventListener('click', () => {
         UIComponents.openModal({
-          title: 'Enroll New Student — THAIBA PUBLIC SCHOOL',
+          title: 'Enroll Student — New or Previous Years',
+          maxWidth: '720px',
           bodyHtml: `
             <form id="form-enroll-student">
+              <div style="margin-bottom:14px; padding:12px 14px; background:rgba(37,99,235,0.06); border:1.5px solid rgba(37,99,235,0.25); border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <div style="font-weight:700; font-size:0.88rem; color:#1e40af; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="history" style="width:16px;height:16px;"></i> Previous Year / Already Admitted Student?
+                  </div>
+                  <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Check this to manually enter their original historical Admission Number and Roll Number.</div>
+                </div>
+                <label style="display:inline-flex; align-items:center; cursor:pointer; gap:6px; font-weight:700; font-size:0.85rem; color:#1e40af;">
+                  <input type="checkbox" id="adm-is-historical" style="width:18px; height:18px; cursor:pointer;">
+                  <span>Manual Admission No</span>
+                </label>
+              </div>
+
+              <div id="historical-fields-container" style="display:none; margin-bottom:14px; padding:12px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-weight:700; color:#1e40af;">Original Admission Number *</label>
+                    <input class="form-input font-mono" id="adm-manual-no" placeholder="e.g. TMS/2022/045 or 1042">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Original Roll Number</label>
+                    <input class="form-input font-mono" id="adm-manual-roll" placeholder="e.g. 14">
+                  </div>
+                </div>
+              </div>
+
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
                 <div class="form-group">
-                  <label class="form-label">Full Name</label>
+                  <label class="form-label">Full Name *</label>
                   <input class="form-input" id="adm-fullname" required placeholder="e.g. Adil Mansoor">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Date of Birth</label>
-                  <input type="date" class="form-input" id="adm-dob" required>
+                  <input type="date" class="form-input" id="adm-dob">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Gender</label>
                   <select class="form-select" id="adm-gender">
                     <option>Male</option>
                     <option>Female</option>
+                    <option>Other</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Blood Group</label>
                   <select class="form-select" id="adm-blood">
+                    <option value="">Not Recorded</option>
                     <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
                     <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Class / Grade</label>
+                  <label class="form-label">Current Grade / Class *</label>
                   <select class="form-select" id="adm-grade">
                     ${TMS_CONFIG.academic.classes.map(c => `<option value="${c}">${c}</option>`).join('')}
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Section</label>
+                  <label class="form-label">Section *</label>
                   <select class="form-select" id="adm-section">
                     <option>A</option><option>B</option><option>C</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Guardian Name</label>
-                  <input class="form-input" id="adm-guardian" required placeholder="Father / Mother Name">
+                  <label class="form-label">Guardian / Father Name</label>
+                  <input class="form-input" id="adm-guardian" placeholder="Father / Mother Name">
                 </div>
                 <div class="form-group">
                   <label class="form-label">Guardian Phone</label>
-                  <input class="form-input" id="adm-phone" required placeholder="+91 98470 00000">
+                  <input class="form-input" id="adm-phone" placeholder="+91 98300 00000">
                 </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Residential Address</label>
+              <div class="form-group" style="margin-top:10px;">
+                <label class="form-label">Residential Address / Village</label>
                 <textarea class="form-textarea" id="adm-address" rows="2" placeholder="Full residential address"></textarea>
               </div>
             </form>
@@ -541,36 +619,57 @@ export class StudentModule {
           `
         });
 
+        const histCb = document.getElementById('adm-is-historical');
+        const histContainer = document.getElementById('historical-fields-container');
+        if (histCb && histContainer) {
+          histCb.addEventListener('change', () => {
+            histContainer.style.display = histCb.checked ? 'block' : 'none';
+          });
+        }
+
         document.getElementById('btn-save-enrollment').addEventListener('click', async () => {
-          const fullName = document.getElementById('adm-fullname').value;
+          const fullName = document.getElementById('adm-fullname').value.trim();
           const dob = document.getElementById('adm-dob').value;
           const gender = document.getElementById('adm-gender').value;
           const bloodGroup = document.getElementById('adm-blood').value;
           const grade = document.getElementById('adm-grade').value;
           const section = document.getElementById('adm-section').value;
-          const guardianName = document.getElementById('adm-guardian').value;
-          const guardianPhone = document.getElementById('adm-phone').value;
-          const address = document.getElementById('adm-address').value;
+          const guardianName = document.getElementById('adm-guardian').value.trim();
+          const guardianPhone = document.getElementById('adm-phone').value.trim();
+          const address = document.getElementById('adm-address').value.trim();
 
           if (!fullName) {
             UIComponents.showToast('Please enter student full name', 'warning');
             return;
           }
 
-          const existing = await dbService.select('students');
-          const maxSeq = existing.reduce((max, s) => {
-            const m = String(s.admissionNo || '').match(/(\d+)\s*$/);
-            return m ? Math.max(max, parseInt(m[1], 10)) : max;
-          }, 0);
-          const nextSeq = maxSeq + 1;
-          const admissionNo = `TMS/${new Date().getFullYear()}/${nextSeq.toString().padStart(3, '0')}`;
-          const rollNo = nextSeq.toString().padStart(2, '0');
+          const isHistorical = document.getElementById('adm-is-historical')?.checked;
+          let admissionNo = '';
+          let rollNo = '';
+
+          if (isHistorical) {
+            admissionNo = document.getElementById('adm-manual-no')?.value.trim();
+            rollNo = document.getElementById('adm-manual-roll')?.value.trim();
+            if (!admissionNo) {
+              UIComponents.showToast('Please enter the historical admission number.', 'warning');
+              return;
+            }
+          } else {
+            const existing = await dbService.select('students');
+            const maxSeq = existing.reduce((max, s) => {
+              const m = String(s.admissionNo || '').match(/(\d+)\s*$/);
+              return m ? Math.max(max, parseInt(m[1], 10)) : max;
+            }, 0);
+            const nextSeq = maxSeq + 1;
+            admissionNo = `TMS/${new Date().getFullYear()}/${nextSeq.toString().padStart(3, '0')}`;
+            rollNo = nextSeq.toString().padStart(2, '0');
+          }
 
           const newStudent = await dbService.insert('students', {
             admissionNo,
             rollNo,
             fullName,
-            dob,
+            dob: dob || null,
             gender,
             bloodGroup,
             grade,
@@ -587,9 +686,9 @@ export class StudentModule {
             return;
           }
 
-          await auditService.log('STUDENT_ENROLLED', 'ACADEMIC', { admissionNo, fullName, grade }, newStudent.id);
+          await auditService.log('STUDENT_ENROLLED', 'ACADEMIC', { admissionNo, fullName, grade, isHistorical: !!isHistorical }, newStudent.id);
           UIComponents.closeModal();
-          UIComponents.showToast(`Student ${fullName} enrolled with ID ${admissionNo}!`, 'success');
+          UIComponents.showToast(`Student ${fullName} enrolled (${admissionNo})!`, 'success');
           StudentModule.render(container);
         });
       });
@@ -1063,7 +1162,7 @@ export class StudentModule {
           <!DOCTYPE html>
           <html>
           <head>
-            <title>ID Card — ${s.fullName}</title>
+            <title>${formatPdfFilename("Student_ID_Card", `${s.admissionNo || ""}_${s.fullName}`.replace(/\s+/g, "_"))}</title>
             <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
             <style>
               body { margin: 20px; background: #fff; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1168,7 +1267,7 @@ export class StudentModule {
           <!DOCTYPE html>
           <html>
           <head>
-            <title>TMS Student ID Cards — Batch Print</title>
+            <title>${formatPdfFilename("Student_ID_Cards_Batch", (select ? select.value : "All"))}</title>
             <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
             <style>
               body { margin: 10px; background: #fff; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -1282,6 +1381,659 @@ export class StudentModule {
 
     UIComponents.refreshIcons();
   }
+
+  /* ================================================================== */
+  /* BULK ACTIONS FOR ALL DATA FIELDS & IMPORT TOOLS                    */
+  /* ================================================================== */
+
+  /**
+   * Universal Bulk Edit: Update any selected data fields across multiple students
+   */
+  static openBulkEditModal(rows, container) {
+    const esc = UIComponents.escapeHtml;
+    const bodyHtml = `
+      <div style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:14px;">
+        Batch update selected fields for <strong>${rows.length}</strong> student(s). Check the box next to any field you wish to update; unchecked fields will remain unchanged.
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px; max-height:60vh; overflow-y:auto; padding-right:4px;">
+        <!-- Class / Grade -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-grade" style="width:16px; height:16px;">
+            <span>Update Class / Grade</span>
+          </label>
+          <select class="form-select form-select-sm" id="bulk-fld-grade" disabled style="width:100%;">
+            ${TMS_CONFIG.academic.classes.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Section -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-section" style="width:16px; height:16px;">
+            <span>Update Section</span>
+          </label>
+          <select class="form-select form-select-sm" id="bulk-fld-section" disabled style="width:100%;">
+            ${TMS_CONFIG.academic.sections.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Status -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-status" style="width:16px; height:16px;">
+            <span>Update Enrollment Status</span>
+          </label>
+          <select class="form-select form-select-sm" id="bulk-fld-status" disabled style="width:100%;">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+            <option value="On Leave">On Leave</option>
+            <option value="Transferred">Transferred</option>
+            <option value="Alumni">Alumni / Graduated</option>
+          </select>
+        </div>
+
+        <!-- Blood Group -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-blood" style="width:16px; height:16px;">
+            <span>Update Blood Group</span>
+          </label>
+          <select class="form-select form-select-sm" id="bulk-fld-blood" disabled style="width:100%;">
+            <option value="">Not Recorded</option>
+            <option value="A+">A+</option><option value="A-">A-</option>
+            <option value="B+">B+</option><option value="B-">B-</option>
+            <option value="O+">O+</option><option value="O-">O-</option>
+            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+          </select>
+        </div>
+
+        <!-- Gender -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-gender" style="width:16px; height:16px;">
+            <span>Update Gender</span>
+          </label>
+          <select class="form-select form-select-sm" id="bulk-fld-gender" disabled style="width:100%;">
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <!-- Address / Village -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-address" style="width:16px; height:16px;">
+            <span>Update Residential Address / Village</span>
+          </label>
+          <input class="form-input form-input-sm" id="bulk-fld-address" disabled placeholder="e.g. Vill: Harirampur, PO: Malda">
+        </div>
+
+        <!-- Emergency Hospital / Physician Contact -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-emergency" style="width:16px; height:16px;">
+            <span>Update Emergency Hospital / Clinic Phone</span>
+          </label>
+          <input class="form-input form-input-sm font-mono" id="bulk-fld-emergency" disabled placeholder="e.g. +91 98300 12345">
+        </div>
+
+        <!-- Medical Alerts / Allergies -->
+        <div style="padding:10px 14px; background:var(--bg-subtle, #f8fafc); border:1px solid var(--border-color); border-radius:8px;">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:700; cursor:pointer; margin-bottom:6px;">
+            <input type="checkbox" id="chk-bulk-allergies" style="width:16px; height:16px;">
+            <span>Update Known Allergies / Health Alert Note</span>
+          </label>
+          <input class="form-input form-input-sm" id="bulk-fld-allergies" disabled placeholder="e.g. Asthma, Penicillin allergy">
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk-edit"><i data-lucide="check"></i> Apply to ${rows.length} Students</button>
+    `;
+
+    UIComponents.openModal({
+      title: `Bulk Edit Data Fields (${rows.length} Students Selected)`,
+      bodyHtml,
+      footerHtml,
+      maxWidth: '680px'
+    });
+
+    // Wire up checkbox toggles
+    const pairs = [
+      ['chk-bulk-grade', 'bulk-fld-grade'],
+      ['chk-bulk-section', 'bulk-fld-section'],
+      ['chk-bulk-status', 'bulk-fld-status'],
+      ['chk-bulk-blood', 'bulk-fld-blood'],
+      ['chk-bulk-gender', 'bulk-fld-gender'],
+      ['chk-bulk-address', 'bulk-fld-address'],
+      ['chk-bulk-emergency', 'bulk-fld-emergency'],
+      ['chk-bulk-allergies', 'bulk-fld-allergies']
+    ];
+
+    pairs.forEach(([chkId, fldId]) => {
+      const chk = document.getElementById(chkId);
+      const fld = document.getElementById(fldId);
+      if (chk && fld) {
+        chk.addEventListener('change', () => { fld.disabled = !chk.checked; });
+      }
+    });
+
+    document.getElementById('btn-save-bulk-edit').addEventListener('click', async () => {
+      const patch = {};
+      if (document.getElementById('chk-bulk-grade')?.checked) patch.grade = document.getElementById('bulk-fld-grade').value;
+      if (document.getElementById('chk-bulk-section')?.checked) patch.section = document.getElementById('bulk-fld-section').value;
+      if (document.getElementById('chk-bulk-status')?.checked) patch.status = document.getElementById('bulk-fld-status').value;
+      if (document.getElementById('chk-bulk-blood')?.checked) patch.bloodGroup = document.getElementById('bulk-fld-blood').value;
+      if (document.getElementById('chk-bulk-gender')?.checked) patch.gender = document.getElementById('bulk-fld-gender').value;
+      if (document.getElementById('chk-bulk-address')?.checked) patch.address = document.getElementById('bulk-fld-address').value.trim();
+      if (document.getElementById('chk-bulk-emergency')?.checked) patch.emergency_hospital_phone = document.getElementById('bulk-fld-emergency').value.trim();
+      if (document.getElementById('chk-bulk-allergies')?.checked) patch.allergies = document.getElementById('bulk-fld-allergies').value.trim();
+
+      const keys = Object.keys(patch);
+      if (!keys.length) {
+        UIComponents.showToast('Please check at least one field to update.', 'warning');
+        return;
+      }
+
+      const saveBtn = document.getElementById('btn-save-bulk-edit');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i data-lucide="loader" class="animate-spin"></i> Applying updates...';
+
+      let count = 0;
+      for (const s of rows) {
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.update('students', s.id, patch);
+        count++;
+      }
+
+      await auditService.log('STUDENTS_BULK_UPDATED', 'ACADEMIC', { studentCount: count, fields: keys });
+      UIComponents.closeModal();
+      UIComponents.showToast(`Updated ${keys.join(', ')} for ${count} student(s)!`, 'success');
+      StudentModule.render(container);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Fast Class & Section reassign modal (Promotion / Section Transfer)
+   */
+  static openBulkClassModal(rows, container) {
+    const esc = UIComponents.escapeHtml;
+    const bodyHtml = `
+      <div style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:14px;">
+        Reassign class grade and section for <strong>${rows.length}</strong> selected student(s).
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Target Class / Grade</label>
+          <select class="form-select" id="bulk-reassign-grade">
+            ${TMS_CONFIG.academic.classes.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Target Section</label>
+          <select class="form-select" id="bulk-reassign-section">
+            ${TMS_CONFIG.academic.sections.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk-class"><i data-lucide="check"></i> Reassign ${rows.length} Students</button>
+    `;
+
+    UIComponents.openModal({
+      title: `Move Class & Section (${rows.length} Students)`,
+      bodyHtml,
+      footerHtml
+    });
+
+    document.getElementById('btn-save-bulk-class').addEventListener('click', async () => {
+      const grade = document.getElementById('bulk-reassign-grade').value;
+      const section = document.getElementById('bulk-reassign-section').value;
+      for (const s of rows) {
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.update('students', s.id, { grade, section });
+      }
+      await auditService.log('STUDENTS_CLASS_PROMOTED', 'ACADEMIC', { studentCount: rows.length, grade, section });
+      UIComponents.closeModal();
+      UIComponents.showToast(`Moved ${rows.length} student(s) to ${grade} - ${section}.`, 'success');
+      StudentModule.render(container);
+    });
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Fast Status change modal (Active, Inactive, Transferred, Alumni)
+   */
+  static openBulkStatusModal(rows, container) {
+    const bodyHtml = `
+      <div style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:14px;">
+        Update enrollment status for <strong>${rows.length}</strong> selected student(s).
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-weight:700;">New Status</label>
+        <select class="form-select" id="bulk-reassign-status">
+          <option value="Active">Active (Regular Student)</option>
+          <option value="Inactive">Inactive (Suspended / Paused)</option>
+          <option value="On Leave">On Leave</option>
+          <option value="Transferred">Transferred (TC Issued)</option>
+          <option value="Alumni">Alumni (Graduated / Passed Out)</option>
+        </select>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk-status"><i data-lucide="check"></i> Update Status</button>
+    `;
+
+    UIComponents.openModal({
+      title: `Change Status (${rows.length} Students)`,
+      bodyHtml,
+      footerHtml
+    });
+
+    document.getElementById('btn-save-bulk-status').addEventListener('click', async () => {
+      const status = document.getElementById('bulk-reassign-status').value;
+      for (const s of rows) {
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.update('students', s.id, { status });
+      }
+      await auditService.log('STUDENTS_STATUS_CHANGED', 'ACADEMIC', { studentCount: rows.length, status });
+      UIComponents.closeModal();
+      UIComponents.showToast(`Status updated to "${status}" for ${rows.length} student(s).`, 'success');
+      StudentModule.render(container);
+    });
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Auto-Sequence Roll Numbers: Renumbers roll numbers 1, 2, 3...
+   */
+  static openBulkRollModal(rows, container) {
+    const bodyHtml = `
+      <div style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:14px;">
+        Renumber roll numbers sequentially across <strong>${rows.length}</strong> selected student(s).
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Starting Roll Number</label>
+          <input type="number" class="form-input font-mono" id="bulk-roll-start" value="1" min="1" style="width:100%;">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Format Style</label>
+          <select class="form-select" id="bulk-roll-format">
+            <option value="pad">Two Digits (01, 02, 03...)</option>
+            <option value="plain">Normal (1, 2, 3...)</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <label style="display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:0.84rem; cursor:pointer;">
+          <input type="checkbox" id="bulk-roll-sort-alpha" checked style="width:16px; height:16px;">
+          <span>Sort students alphabetically by Full Name before numbering</span>
+        </label>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-bulk-roll"><i data-lucide="check"></i> Renumber Roll Numbers</button>
+    `;
+
+    UIComponents.openModal({
+      title: `Auto-Sequence Roll Numbers (${rows.length} Students)`,
+      bodyHtml,
+      footerHtml
+    });
+
+    document.getElementById('btn-save-bulk-roll').addEventListener('click', async () => {
+      const startNum = parseInt(document.getElementById('bulk-roll-start').value, 10) || 1;
+      const isPad = document.getElementById('bulk-roll-format').value === 'pad';
+      const sortAlpha = document.getElementById('bulk-roll-sort-alpha').checked;
+
+      let list = [...rows];
+      if (sortAlpha) {
+        list.sort((a, b) => (a.fullName || '').localeCompare(b.fullName || ''));
+      }
+
+      for (let i = 0; i < list.length; i++) {
+        const num = startNum + i;
+        const rollNo = isPad ? num.toString().padStart(2, '0') : num.toString();
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.update('students', list[i].id, { rollNo });
+      }
+
+      await auditService.log('STUDENTS_ROLL_SEQUENCED', 'ACADEMIC', { studentCount: list.length, startNum });
+      UIComponents.closeModal();
+      UIComponents.showToast(`Assigned roll numbers (${startNum} - ${startNum + list.length - 1}) across ${list.length} student(s).`, 'success');
+      StudentModule.render(container);
+    });
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * RFC4180-compliant CSV Parser handling quotes, commas, and line breaks
+   */
+  static parseCsv(text) {
+    const lines = [];
+    let row = [''];
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      const next = text[i + 1];
+      if (c === '"') {
+        if (inQuotes && next === '"') {
+          row[row.length - 1] += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (c === ',' && !inQuotes) {
+        row.push('');
+      } else if ((c === '\r' || c === '\n') && !inQuotes) {
+        if (c === '\r' && next === '\n') i++;
+        if (row.length > 1 || row[0] !== '') lines.push(row);
+        row = [''];
+      } else {
+        row[row.length - 1] += c;
+      }
+    }
+    if (row.length > 1 || row[0] !== '') lines.push(row);
+    return lines;
+  }
+
+  /**
+   * Download CSV Import Template
+   */
+  static downloadImportTemplate() {
+    const header = [
+      'Admission No',
+      'Roll No',
+      'Full Name',
+      'Grade',
+      'Section',
+      'Gender',
+      'DOB',
+      'Guardian Name',
+      'Guardian Phone',
+      'Blood Group',
+      'Address',
+      'Status',
+      'Allergies'
+    ];
+    const sample1 = [
+      'TMS/2022/012',
+      '01',
+      'Aayan Khan',
+      'Grade 4',
+      'A',
+      'Male',
+      '2015-04-12',
+      'Tariq Khan',
+      '+91 98311 00001',
+      'O+',
+      'Malda Town',
+      'Active',
+      'None'
+    ];
+    const sample2 = [
+      'TMS/2023/045',
+      '02',
+      'Fatima Zahra',
+      'Grade 2',
+      'B',
+      'Female',
+      '2017-08-23',
+      'Irfan Zahra',
+      '+91 98311 00002',
+      'A+',
+      'Harirampur',
+      'Active',
+      'Asthma'
+    ];
+    downloadCsv('TMS_Students_Import_Template.csv', [header, sample1, sample2]);
+    UIComponents.showToast('Import template downloaded.', 'success');
+  }
+
+  /**
+   * Bulk CSV Import Modal: Parse, validate, preview, and batch-insert historical records
+   */
+  static openBulkImportModal(container) {
+    const bodyHtml = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.86rem; color:var(--text-secondary); margin-bottom:12px;">
+          Import students who took admission in previous years or fresh batches from an Excel/CSV spreadsheet.
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding:10px 14px; background:rgba(37,99,235,0.06); border:1px solid #bfdbfe; border-radius:8px;">
+          <div>
+            <div style="font-weight:700; font-size:0.86rem; color:#1e40af;">Need the standard format?</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">Download the sample template with pre-filled headers and examples.</div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-dl-import-template">
+            <i data-lucide="download"></i> Download CSV Template
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <label class="form-label" style="font-weight:700;">Select or Drag CSV File (.csv)</label>
+        <input type="file" id="bulk-import-file-input" accept=".csv,text/csv" class="form-input" style="padding:10px;">
+      </div>
+
+      <div id="import-preview-area" style="display:none;">
+        <div id="import-stats-bar" style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;"></div>
+        <div style="font-weight:700; font-size:0.85rem; margin-bottom:6px;">Preview First 10 Records:</div>
+        <div class="table-responsive" style="max-height:260px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px;">
+          <table class="tms-table" style="font-size:0.78rem;" id="import-preview-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Admission No</th>
+                <th>Full Name</th>
+                <th>Grade & Section</th>
+                <th>Roll</th>
+                <th>Guardian</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+            <tbody id="import-preview-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Cancel</button>
+      <button class="btn btn-primary" id="btn-confirm-bulk-import" disabled><i data-lucide="upload-cloud"></i> Import Students</button>
+    `;
+
+    UIComponents.openModal({
+      title: 'Bulk Import Students (Previous Years / New Batches)',
+      bodyHtml,
+      footerHtml,
+      maxWidth: '850px'
+    });
+
+    document.getElementById('btn-dl-import-template').addEventListener('click', () => {
+      StudentModule.downloadImportTemplate();
+    });
+
+    let parsedStudentsToImport = [];
+
+    const fileInput = document.getElementById('bulk-import-file-input');
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const text = await file.text();
+      const rows = StudentModule.parseCsv(text);
+      if (rows.length < 2) {
+        UIComponents.showToast('CSV file is empty or missing headers.', 'warning');
+        return;
+      }
+
+      const headers = rows[0].map(h => (h || '').toLowerCase().trim());
+      const findIdx = (keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
+
+      const idxAdm = findIdx(['admission no', 'adm no', 'admission', 'id']);
+      const idxRoll = findIdx(['roll', 'roll no']);
+      const idxName = findIdx(['full name', 'name', 'student name']);
+      const idxGrade = findIdx(['grade', 'class']);
+      const idxSec = findIdx(['section', 'sec']);
+      const idxGender = findIdx(['gender', 'sex']);
+      const idxDob = findIdx(['dob', 'date of birth', 'birth']);
+      const idxGuard = findIdx(['guardian name', 'parent name', 'father', 'guardian']);
+      const idxPhone = findIdx(['guardian phone', 'phone', 'contact', 'mobile']);
+      const idxBlood = findIdx(['blood group', 'blood']);
+      const idxAddr = findIdx(['address', 'village', 'city']);
+      const idxStatus = findIdx(['status']);
+      const idxAllergies = findIdx(['allergies', 'medical']);
+
+      const existingStudents = await dbService.select('students');
+      const existingAdmNos = new Set(existingStudents.map(s => String(s.admissionNo || '').toLowerCase().trim()));
+
+      parsedStudentsToImport = [];
+      let duplicateCount = 0;
+      let missingCount = 0;
+
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r.length || (r.length === 1 && !r[0].trim())) continue;
+
+        let admNo = idxAdm !== -1 ? (r[idxAdm] || '').trim() : '';
+        const name = idxName !== -1 ? (r[idxName] || '').trim() : '';
+        const grade = idxGrade !== -1 ? (r[idxGrade] || '').trim() : 'Grade 1';
+        const sec = idxSec !== -1 ? (r[idxSec] || '').trim() : 'A';
+        const roll = idxRoll !== -1 ? (r[idxRoll] || '').trim() : '';
+        const gender = idxGender !== -1 ? (r[idxGender] || '').trim() : 'Male';
+        const dob = idxDob !== -1 ? (r[idxDob] || '').trim() : null;
+        const guard = idxGuard !== -1 ? (r[idxGuard] || '').trim() : '';
+        const phone = idxPhone !== -1 ? (r[idxPhone] || '').trim() : '';
+        const blood = idxBlood !== -1 ? (r[idxBlood] || '').trim() : '';
+        const address = idxAddr !== -1 ? (r[idxAddr] || '').trim() : '';
+        const status = idxStatus !== -1 ? (r[idxStatus] || '').trim() || 'Active' : 'Active';
+        const allergies = idxAllergies !== -1 ? (r[idxAllergies] || '').trim() : '';
+
+        // If no admission no provided, assign temporary sequential ID
+        if (!admNo) {
+          admNo = `TMS-IMP-${Date.now().toString(36).toUpperCase()}-${i}`;
+        }
+
+        let isDuplicate = existingAdmNos.has(admNo.toLowerCase());
+        let isInvalid = !name || !grade;
+
+        if (isDuplicate) duplicateCount++;
+        if (isInvalid) missingCount++;
+
+        parsedStudentsToImport.push({
+          admissionNo: admNo,
+          rollNo: roll,
+          fullName: name,
+          grade,
+          section: sec,
+          gender,
+          dob,
+          guardianName: guard,
+          guardianPhone: phone,
+          bloodGroup: blood,
+          address,
+          status,
+          allergies,
+          isDuplicate,
+          isInvalid
+        });
+      }
+
+      const validList = parsedStudentsToImport.filter(p => !p.isInvalid && !p.isDuplicate);
+      const previewArea = document.getElementById('import-preview-area');
+      const statsBar = document.getElementById('import-stats-bar');
+      const tbody = document.getElementById('import-preview-tbody');
+      const confirmBtn = document.getElementById('btn-confirm-bulk-import');
+
+      if (previewArea) previewArea.style.display = 'block';
+      if (statsBar) {
+        statsBar.innerHTML = `
+          <span class="badge badge-success" style="font-size:0.82rem; padding:4px 10px;">✓ ${validList.length} Ready to Import</span>
+          ${duplicateCount ? `<span class="badge badge-warning" style="font-size:0.82rem; padding:4px 10px;">⚠ ${duplicateCount} Duplicate Admission Nos</span>` : ''}
+          ${missingCount ? `<span class="badge badge-danger" style="font-size:0.82rem; padding:4px 10px;">✕ ${missingCount} Incomplete Rows</span>` : ''}
+        `;
+      }
+
+      if (tbody) {
+        tbody.innerHTML = parsedStudentsToImport.slice(0, 10).map(p => `
+          <tr>
+            <td>
+              ${p.isInvalid ? '<span class="badge badge-danger">Missing Name</span>'
+                : p.isDuplicate ? '<span class="badge badge-warning">Duplicate ID</span>'
+                : '<span class="badge badge-success">Valid</span>'}
+            </td>
+            <td class="font-mono">${UIComponents.escapeHtml(p.admissionNo)}</td>
+            <td style="font-weight:600;">${UIComponents.escapeHtml(p.fullName)}</td>
+            <td>${UIComponents.escapeHtml(p.grade)} - ${UIComponents.escapeHtml(p.section)}</td>
+            <td class="font-mono">${UIComponents.escapeHtml(p.rollNo || '—')}</td>
+            <td>${UIComponents.escapeHtml(p.guardianName || '—')}</td>
+            <td class="font-mono">${UIComponents.escapeHtml(p.guardianPhone || '—')}</td>
+          </tr>
+        `).join('');
+      }
+
+      if (confirmBtn) {
+        confirmBtn.disabled = validList.length === 0;
+        confirmBtn.innerHTML = `<i data-lucide="upload-cloud"></i> Import ${validList.length} Valid Students`;
+        UIComponents.refreshIcons();
+      }
+    });
+
+    document.getElementById('btn-confirm-bulk-import').addEventListener('click', async () => {
+      const validList = parsedStudentsToImport.filter(p => !p.isInvalid && !p.isDuplicate);
+      if (!validList.length) return;
+
+      const btn = document.getElementById('btn-confirm-bulk-import');
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" class="animate-spin"></i> Importing batch...';
+
+      let successCount = 0;
+      for (const p of validList) {
+        const record = {
+          admissionNo: p.admissionNo,
+          rollNo: p.rollNo,
+          fullName: p.fullName,
+          grade: p.grade,
+          section: p.section,
+          gender: p.gender,
+          dob: p.dob || null,
+          guardianName: p.guardianName,
+          guardianPhone: p.guardianPhone,
+          bloodGroup: p.bloodGroup,
+          address: p.address,
+          status: p.status,
+          allergies: p.allergies
+        };
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.insert('students', record);
+        successCount++;
+      }
+
+      await auditService.log('STUDENTS_BULK_IMPORTED', 'ACADEMIC', { importedCount: successCount });
+      UIComponents.closeModal();
+      UIComponents.showToast(`Successfully imported ${successCount} student(s) into database!`, 'success');
+      StudentModule.render(container);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
 }
+
 
 export default StudentModule;

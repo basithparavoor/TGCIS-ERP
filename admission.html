@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Admission Portal — THAIBA PUBLIC SCHOOL</title>
+  <link rel="icon" type="image/png" href="./tps-logo.png">
+  <link rel="apple-touch-icon" href="./tps-logo.png">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#BF9A33">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="TPS ERP">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body style="min-height: 100vh; padding: 24px 16px; background-color: var(--bg-canvas);">
+  <div class="ambient-mesh">
+    <div class="mesh-glow-1"></div>
+    <div class="mesh-glow-2"></div>
+  </div>
+
+  <div class="admission-portal-wrapper">
+
+    <!-- Top Action Nav -->
+    <div class="admission-top-nav no-print">
+      <a href="/login" class="btn btn-secondary btn-sm">
+        <i data-lucide="arrow-left"></i> Authorized Staff Login
+      </a>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <span id="entry-by-badge" class="badge badge-success" style="display: none;"></span>
+        <button class="btn btn-secondary btn-sm" id="btn-show-guidelines" style="display: none;">
+          <i data-lucide="book-open"></i> Guidelines &amp; Video Walkthrough
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-show-fees" style="display: none;">
+          <i data-lucide="receipt"></i> Fee Structure
+        </button>
+      </div>
+    </div>
+
+    <!-- Official Notice Banner (Conditional) -->
+    <div id="admission-notice-slot" class="no-print" style="display: none; margin-bottom: 18px;"></div>
+
+    <!-- Institutional Brand Header Card -->
+    <div class="admission-hero-card no-print">
+      <div class="admission-hero-brand">
+        <div id="portal-emblem-container" class="admission-hero-emblem"></div>
+        <div class="admission-hero-info">
+          <div class="admission-hero-badge">
+            <span class="badge-dot"></span>
+            <span>Official Institutional Online Admission Portal</span>
+          </div>
+          <h1 id="dyn-form-title" class="admission-hero-title">
+            Admission Application Form
+          </h1>
+          <div class="admission-hero-sub">
+            <span id="dyn-form-subtitle">Run by : Thaiba Heritage, Kolkata</span>
+            <span>•</span>
+            <span>Academic Session: <strong id="dyn-session-text" class="session-pill">2027 - 2028</strong></span>
+          </div>
+          <div class="admission-hero-reg">
+            Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011 • CBSE Affiliated Curriculum
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-by-Step Admission Wizard Stepper -->
+    <div class="admission-progress-wrapper no-print" id="wizard-progress-card">
+      <!-- Desktop Horizontal Stepper (>= 768px) -->
+      <nav class="wizard-desktop-stepper" id="wiz-desktop-stepper" aria-label="Application Progress Stepper"></nav>
+
+      <!-- Mobile Compact Stepper (< 768px) -->
+      <div class="wizard-mobile-stepper" id="wiz-mobile-stepper">
+        <div class="wizard-mobile-bar-top">
+          <span class="wizard-mobile-badge" id="wiz-mobile-badge">Step 1 of 5</span>
+          <div class="wizard-mobile-jump-wrap">
+            <select class="wizard-mobile-select" id="wiz-mobile-select" aria-label="Jump to completed section">
+              <option value="">Jump to step ▾</option>
+            </select>
+          </div>
+        </div>
+        <div class="wizard-mobile-current-title" id="wiz-mobile-title">Student Information</div>
+        <div class="wizard-mobile-track">
+          <div class="wizard-mobile-fill" id="wiz-mobile-fill" style="width: 20%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Admission Wizard Grid -->
+    <div class="admission-layout-grid no-print" id="interactive-form-card">
+
+      <!-- Main Column: Step Panes -->
+      <div class="admission-main-column">
+        <form id="tms-admission-form" novalidate onsubmit="return false;">
+          <div id="dynamic-wizard-panes"></div>
+        </form>
+      </div>
+
+      <!-- Side Column: Supplementary Information -->
+      <aside class="admission-side-column">
+        <!-- Dedicated Video Walkthrough Card (Shown when video is configured) -->
+        <div class="admission-side-card" id="side-video-card" style="display: none; padding: 14px;">
+          <div class="admission-side-card-header" style="margin-bottom: 10px;">
+            <i data-lucide="play-circle" class="side-card-icon emerald"></i>
+            <h4 id="side-video-title">Video Walkthrough</h4>
+          </div>
+          <div id="side-video-container"></div>
+          <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
+            Watch this quick institutional guide to fill and complete your application without mistakes.
+          </p>
+        </div>
+
+        <!-- Quick Guidance Card -->
+        <div class="admission-side-card">
+          <div class="admission-side-card-header">
+            <i data-lucide="help-circle" class="side-card-icon emerald"></i>
+            <h4>Application Guidance</h4>
+          </div>
+          <p class="admission-side-card-text" id="side-guidance-text">
+            Review the official admission rules, walkthrough video, and instructions for the current academic session.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="side-btn-guidelines" style="width: 100%; justify-content: center;">
+              <i data-lucide="book-open"></i> Guidelines &amp; Video Walkthrough
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="side-btn-fees" style="width: 100%; justify-content: center; display: none;">
+              <i data-lucide="receipt"></i> Session Fee Schedule
+            </button>
+          </div>
+        </div>
+
+        <!-- Document Checklist Card -->
+        <div class="admission-side-card">
+          <div class="admission-side-card-header">
+            <i data-lucide="clipboard-check" class="side-card-icon blue"></i>
+            <h4>Verification Checklist</h4>
+          </div>
+          <p class="admission-side-card-text" style="margin-bottom: 12px;">
+            Please carry self-attested photocopies of these documents during document verification:
+          </p>
+          <ul class="admission-side-checklist">
+            <li><i data-lucide="check" class="check-icon"></i> <span>Candidate Birth Certificate</span></li>
+            <li><i data-lucide="check" class="check-icon"></i> <span>Candidate / Guardian Aadhaar Card</span></li>
+            <li><i data-lucide="check" class="check-icon"></i> <span>Previous Marksheet / Transfer Certificate (if applicable)</span></li>
+            <li><i data-lucide="check" class="check-icon"></i> <span>3 Recent Passport Photographs</span></li>
+          </ul>
+        </div>
+
+        <!-- Campus Helpline Card -->
+        <div class="admission-side-card">
+          <div class="admission-side-card-header">
+            <i data-lucide="phone-call" class="side-card-icon green"></i>
+            <h4>Admission Help Desk</h4>
+          </div>
+          <div class="admission-helpline-contacts">
+            <a href="tel:+918653382851" class="helpline-link"><i data-lucide="phone"></i> +91 8653382851</a>
+            <a href="tel:+918167782851" class="helpline-link"><i data-lucide="phone"></i> +91 8167782851</a>
+          </div>
+          <div class="admission-helpline-addr">
+            <i data-lucide="map-pin"></i> Baghait, Tapan, Dakshin Dinajpur, WB
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- SUBMISSION SUCCESS SCREEN -->
+    <div class="admission-section-card no-print" id="admission-success-card" style="display: none;">
+      <div style="text-align: center; padding: 24px 12px;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #DCFCE7; color: #BF9A33; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 0 8px rgba(191, 154, 51, 0.12);">
+          <i data-lucide="check" style="width: 40px; height: 40px; stroke-width: 3;"></i>
+        </div>
+        <div class="admission-hero-badge" style="margin: 0 auto 10px auto;">
+          <span class="badge-dot"></span> Registration Confirmed
+        </div>
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #111827; margin: 4px 0 8px;">
+          Application Submitted Successfully!
+        </h2>
+        <p style="font-size: 0.92rem; color: #64748B; max-width: 540px; margin: 0 auto 20px; line-height: 1.5;">
+          Your admission application has been registered in the official <strong>THAIBA PUBLIC SCHOOL</strong> system. Please note your application number below.
+        </p>
+
+        <!-- Key Particulars Summary -->
+        <div style="display: inline-flex; flex-wrap: wrap; gap: 14px; justify-content: center; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; font-size: 0.92rem;">
+          <div><strong>Application No :</strong> <span class="font-mono" id="succ-form-no" style="color: #BF9A33; font-weight: 800; font-size: 1.05rem;">—</span></div>
+          <div style="color: #CBD5E1;">•</div>
+          <div><strong>Candidate :</strong> <span id="succ-name" style="font-weight: 700;">—</span></div>
+          <div style="color: #CBD5E1;">•</div>
+          <div><strong>Applying for :</strong> <span id="succ-class" style="font-weight: 700;">—</span></div>
+          <div style="color: #CBD5E1;">•</div>
+          <div><strong>Date :</strong> <span id="succ-date" class="font-mono">—</span></div>
+        </div>
+
+        <!-- Credentials Card -->
+        <div id="succ-credentials-box" class="card" style="max-width: 600px; margin: 0 auto 24px; text-align: left; background: #FFFBEB; border: 1.5px solid #FCD34D;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: #92400E; font-size: 0.95rem;">
+              <i data-lucide="key" style="width: 18px; height: 18px;"></i> Parent Portal Login Credentials
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-succ-copy-creds">
+              <i data-lucide="copy"></i> Copy
+            </button>
+          </div>
+          <p style="font-size: 0.8rem; color: #78350F; margin-bottom: 10px;">
+            Use these credentials to log in to the student portal to track admission status and download the Admit Card anytime.
+          </p>
+          <div style="background: #ffffff; padding: 10px 14px; border-radius: 8px; font-family: monospace; font-size: 0.88rem; display: flex; flex-wrap: wrap; gap: 16px; border: 1px solid #FDE68A;">
+            <div>User: <strong id="succ-cred-user" style="color: #0f172a;">—</strong></div>
+            <div>Password: <strong id="succ-cred-pass" style="color: #0f172a;">—</strong></div>
+            <div>Portal: <a id="succ-cred-url" href="/login" target="_blank" style="color: #BF9A33; text-decoration: underline;">Portal Login</a></div>
+          </div>
+        </div>
+
+        <!-- Next Steps Instructions -->
+        <div style="max-width: 600px; margin: 0 auto 26px; text-align: left; background: #ffffff; border: 1px solid #E2E8F0; border-radius: 12px; padding: 18px 22px;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; color: #111827; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="list-checks" style="width: 18px; height: 18px; color: #BF9A33;"></i> Next Steps for Admission Test
+          </h4>
+          <ol style="font-size: 0.84rem; color: #475569; padding-left: 20px; line-height: 1.6; margin: 0;">
+            <li>Print or download your <strong>Admit Card</strong> containing your entrance test details.</li>
+            <li>Carry 2 passport-size photographs and self-attested photocopies of birth certificate &amp; Aadhaar card on test day.</li>
+            <li>Present the Tear-Off Admit Card slip at the exam hall: <em>THAIBA PUBLIC SCHOOL, Baghait, Tapan</em>.</li>
+            <li>For any queries or schedule updates, contact helpline: <strong>+91 8653382851</strong>.</li>
+          </ol>
+        </div>
+
+        <!-- Actions -->
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" id="btn-succ-view-admit" style="font-size: 1rem; padding: 12px 28px;">
+            <i data-lucide="printer"></i> View &amp; Print Admit Card
+          </button>
+          <button type="button" class="btn btn-secondary" id="btn-succ-new-form" style="font-size: 0.95rem;">
+            <i data-lucide="plus-circle"></i> Submit Another Application
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRINTABLE A4 PREVIEW & TEAR-OFF ADMIT CARD -->
+    <div id="a4-document-wrapper" style="display: none;">
+      <div class="no-print" style="margin-bottom: 20px; text-align: center; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" onclick="window.print()" style="font-size: 1rem; padding: 12px 28px;">
+          <i data-lucide="printer"></i> Print / Save as PDF
+        </button>
+        <button class="btn btn-secondary" id="btn-back-to-form">
+          <i data-lucide="arrow-left"></i> Back to Portal
+        </button>
+      </div>
+
+      <!-- Credentials highlight (screen only) -->
+      <div class="card no-print" id="credentials-screen-card" style="margin-bottom: 18px; border-left: 4px solid #f59e0b; display: none;"></div>
+
+      <div class="a4-preview-container" id="printable-a4-area">
+        <div id="a4-header-slot"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; font-size: 12px;">
+          <div style="flex: 1;">
+            <strong>Form No :</strong> <span class="font-mono" id="a4-form-no" style="font-size: 14px; font-weight: 800; border-bottom: 1px dotted #000; padding: 0 10px;">—</span>
+          </div>
+          <div style="flex: 2; text-align: center;">
+            <h2 id="a4-form-title" style="font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0; text-decoration: underline;">
+              Admission Application Form
+            </h2>
+            <div style="font-size: 11.5px; font-weight: 700; margin-top: 2px;">
+              Academic Session : <span id="a4-session-text">2027 - 2028</span>
+            </div>
+          </div>
+          <div style="width: 130px; text-align: right; font-size: 9px;">
+            <div id="a4-photo" style="width: 100px; height: 124px; border: 1.5px solid #000; margin-left: auto; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8.5px; line-height: 1.25; background: #fafafa; overflow: hidden;">
+              Affix recent<br>passport-size<br>photograph
+            </div>
+            <div id="a4-entry-by" style="margin-top: 4px; font-size: 9px;"></div>
+          </div>
+        </div>
+
+        <div id="a4-details-slot"></div>
+
+        <div id="a4-credentials-slot"></div>
+
+        <div id="a4-fee-slot"></div>
+
+        <div style="margin-bottom: 12px;">
+          <div style="font-size: 11px; font-weight: 800; text-align: center; text-decoration: underline;">Declaration</div>
+          <p style="font-size: 9.5px; text-align: justify; margin: 3px 0 20px;">
+            I hereby declare that all information furnished above are true and correct to the best of my knowledge and belief.
+          </p>
+          <table style="width: 100%; font-size: 10.5px;">
+            <tr>
+              <td style="width: 30%;">
+                Date : <span id="a4-date">—</span><br>
+                Place : <span id="a4-place">Tapan</span>
+              </td>
+              <td style="width: 35%; text-align: center;">
+                _________________________<br>
+                <strong>Signature of the Student</strong>
+              </td>
+              <td style="width: 35%; text-align: right;">
+                _________________________<br>
+                <strong>Signature of the Guardian</strong>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="perforated-cut">
+          <span class="cut-label">✂ - - - - - - - - - - - - - - - TEAR OFF ADMIT CARD SLIP FOR ADMISSION TEST - - - - - - - - - - - - - - - ✂</span>
+        </div>
+
+        <!-- Tear-Off Slip: ADMIT CARD -->
+        <div style="border: 2px solid #000; border-radius: 4px; padding: 12px; position: relative; background: #ffffff;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div style="width: 70px;"></div>
+            <div style="flex: 1; text-align: center;">
+              <div style="display: inline-block; padding: 2px 10px; background: #000; color: #fff; border-radius: 3px; margin-bottom: 4px;">
+                <h3 id="admit-slip-title" style="font-size: 13px; font-weight: 800; text-transform: uppercase; margin: 0; letter-spacing: 0.05em;">
+                  ADMIT CARD — ENTRANCE &amp; VERIFICATION
+                </h3>
+              </div>
+              <div id="admit-slip-school" style="font-size: 12px; font-weight: 800; color: #000;">THAIBA PUBLIC SCHOOL</div>
+              <div id="admit-slip-address" style="font-size: 9px; color: #333;">Baghait, Tapan, Dakshin Dinajpur • Contact : +91 8653382851, +91 8167782851</div>
+            </div>
+            <div id="admit-photo" style="width: 85px; height: 105px; border: 1.5px solid #000; display: flex; align-items: center; justify-content: center; font-size: 8px; text-align: center; background: #fafafa; margin-left: 10px; overflow: hidden; flex-shrink: 0;">
+              Passport size photo
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 10.5px; margin-top: 4px;">
+            <div><strong>Form No. :</strong> <span id="admit-form-no" class="font-mono" style="font-weight: 800; font-size: 12px;">—</span></div>
+            <div><strong>Application Portal :</strong> <span class="font-mono" style="font-weight: 700;">Online Portal</span></div>
+          </div>
+
+          <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 6px; border: 1.5px solid #000;">
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px; width: 30%;"><strong>Student Name :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px; font-weight: 800;" id="admit-name">—</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Father / Guardian :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px;" id="admit-father">—</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Address :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px;" id="admit-address">—</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Contact No. :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px;" id="admit-contact">—</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Applying for class :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px; font-weight: 800;" id="admit-class">—</td>
+            </tr>
+            <tr style="background: #FDFBF7;">
+              <td style="border: 1.5px solid #BF9A33; padding: 5px 8px; font-weight: 800; color: #166534;"><strong>Portal Login :</strong></td>
+              <td style="border: 1.5px solid #BF9A33; padding: 5px 8px; font-weight: 700;">
+                User: <strong class="font-mono" id="admit-username" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #86efac; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
+                Pass: <strong class="font-mono" id="admit-password" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #86efac; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
+                <span class="font-mono" style="color: #8C6E1E; font-size: 9px;">www.thaibagarden.com</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Admission Test Centre :</strong></td>
+              <td style="border: 1px solid #000; padding: 5px 8px;" id="admit-slip-centre">THAIBA PUBLIC SCHOOL, Baghait, Tapan, Dakshin Dinajpur</td>
+            </tr>
+          </table>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 24px; font-size: 10px;">
+            <div style="text-align: center;">
+              __________________________<br>
+              <strong>Signature of Authority</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { TMS_CONFIG } from './config.js';
+    import { auditService } from './audit-service.js';
+    import { UIComponents } from './ui-components.js';
+    import { TMS_LOGO } from './logo.js';
+    import { authService } from './auth-service.js';
+    import { admissionService, DEFAULT_INSTRUCTIONS, DEFAULT_POPUP_INSTRUCTIONS, renderVideoPlayerHtml, getEmbedVideoUrl } from './admission-service.js';
+    import { brandingService } from './branding-service.js';
+    import { checkMigration } from './migration-check.js';
+
+    const esc = (v) => UIComponents.escapeHtml(v);
+
+    UIComponents.initTheme();
+    brandingService.refresh().then(() => {
+      const emblem = document.getElementById('portal-emblem-container');
+      if (emblem) emblem.innerHTML = TMS_LOGO.emblemSvg(56);
+      const a4Hdr = document.getElementById('a4-header-slot');
+      if (a4Hdr) a4Hdr.innerHTML = TMS_LOGO.printHeaderSvg();
+    });
+    checkMigration();
+    UIComponents.refreshIcons();
+    const emblemInit = document.getElementById('portal-emblem-container');
+    if (emblemInit) emblemInit.innerHTML = TMS_LOGO.emblemSvg(56);
+    const a4HdrInit = document.getElementById('a4-header-slot');
+    if (a4HdrInit) a4HdrInit.innerHTML = TMS_LOGO.printHeaderSvg();
+
+    let settings = null;
+    let fields = [];
+    let fees = [];
+    let staffUser = null;
+    let lastResult = null;
+
+    // Wizard state
+    const wizard = {
+      currentStep: 1,
+      totalSteps: 5,
+      stepMeta: [], // [{ id, stepNo, title, shortTitle, icon, fields }]
+      completedSteps: new Set(),
+      isSubmitting: false,
+      photoDataUrl: null
+    };
+    window.wizard = wizard;
+
+    function fieldInputHtml(f) {
+      const id = `fld-${f.fieldKey}`;
+      const req = f.required ? 'required' : '';
+      const ph = esc(f.placeholder || '');
+      const type = f.fieldType || 'text';
+      let control = '';
+      const isFullWidth = type === 'textarea' || type === 'file' || (f.fieldKey === 'village');
+
+      if (type === 'textarea') {
+        control = `<textarea class="form-input" id="${id}" rows="2" placeholder="${ph}" ${req}></textarea>`;
+      } else if (type === 'select') {
+        const opts = (f.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+        control = `<select class="form-select" id="${id}" ${req}><option value="">— Select ${esc(f.label)} —</option>${opts}</select>`;
+      } else if (type === 'checkbox') {
+        control = `<label style="display:flex;gap:8px;align-items:center;font-size:0.88rem;cursor:pointer;"><input type="checkbox" id="${id}" class="admission-checkbox"> ${esc(f.helpText || f.label)}</label>`;
+      } else if (type === 'file') {
+        control = `
+          <div class="file-upload-dropzone" style="border: 1.5px dashed var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; background: var(--bg-subtle); display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="document.getElementById('${id}').click()">
+            <i data-lucide="upload-cloud" style="width:24px;height:24px;color:#BF9A33;flex-shrink:0;"></i>
+            <div style="flex:1;min-width:0;">
+              <input type="file" id="${id}" accept="image/*,.pdf" ${req} style="display:none;">
+              <div style="font-size:0.84rem;font-weight:600;color:var(--text-main);">Click to browse document</div>
+              <span class="file-name" data-for="${id}" style="font-size:0.75rem;color:var(--text-subtle);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">PDF, JPG, or PNG up to 2 MB</span>
+            </div>
+          </div>
+          <span class="file-preview" data-for="${id}"></span>
+        `;
+      } else {
+        control = `<input type="${type}" class="form-input${type === 'tel' || type === 'number' ? ' font-mono' : ''}" id="${id}" placeholder="${ph}" ${req}>`;
+      }
+
+      return `
+        <div class="form-group${isFullWidth ? ' full-width' : ''}">
+          <label class="form-label" for="${id}">${esc(f.label)} ${f.required ? '<span style="color:#dc2626;">*</span>' : ''}</label>
+          ${control}
+          ${f.helpText && type !== 'checkbox' && type !== 'file' ? `<span style="font-size:0.72rem;color:var(--text-subtle);margin-top:3px;display:block;">${esc(f.helpText)}</span>` : ''}
+        </div>`;
+    }
+
+    /** Build wizard structure strictly from Admin-Configured Sections & Fields */
+    function renderWizard() {
+      const container = document.getElementById('dynamic-wizard-panes');
+      if (!container) return;
+
+      // STRICT REQUIREMENT: Only ask the questions set in the admin page!
+      const activeFields = fields.filter(f => f.isActive !== false);
+
+      // Group active fields strictly by admin section
+      const sectionMap = new Map();
+      activeFields.forEach(f => {
+        const s = (f.section || 'General Information').trim();
+        if (!sectionMap.has(s)) sectionMap.set(s, []);
+        sectionMap.get(s).push(f);
+      });
+
+      wizard.stepMeta = [];
+      let stepCounter = 0;
+
+      // Add each admin-configured section as a wizard step
+      sectionMap.forEach((secFields, secName) => {
+        stepCounter += 1;
+        let icon = 'clipboard-list';
+        const sLower = secName.toLowerCase();
+        if (sLower.includes('student') || sLower.includes('candidate') || sLower.includes('personal')) icon = 'user';
+        else if (sLower.includes('parent') || sLower.includes('guardian') || sLower.includes('family')) icon = 'users';
+        else if (sLower.includes('contact') || sLower.includes('address') || sLower.includes('residential')) icon = 'map-pin';
+        else if (sLower.includes('academic') || sLower.includes('school') || sLower.includes('education')) icon = 'graduation-cap';
+        else if (sLower.includes('doc') || sLower.includes('photo')) icon = 'file-text';
+
+        let shortTitle = secName;
+        if (shortTitle.length > 18) {
+          shortTitle = shortTitle.split(' ')[0] + ' ' + (shortTitle.split(' ')[1] || '');
+        }
+
+        wizard.stepMeta.push({
+          id: `sec-${stepCounter}`,
+          sectionName: secName,
+          title: secName,
+          shortTitle: shortTitle.trim(),
+          icon,
+          fields: secFields
+        });
+      });
+
+      // CONDITIONAL FEE STRUCTURE: DONT SHOW IF TURNED OFF BY ADMIN
+      const showFees = settings && settings.showFeeStructure === true && Array.isArray(fees) && fees.length > 0;
+      if (showFees) {
+        stepCounter += 1;
+        wizard.stepMeta.push({
+          id: 'fees',
+          title: 'Fee Structure & Schedule',
+          shortTitle: 'Fees',
+          icon: 'receipt',
+          isFeesStep: true
+        });
+      }
+
+      // Application Details & Declaration Step
+      stepCounter += 1;
+      wizard.stepMeta.push({
+        id: 'declaration',
+        title: 'Application Details & Declaration',
+        shortTitle: 'Declaration',
+        icon: 'shield-check',
+        isDeclarationStep: true
+      });
+
+      // Review & Submit Step
+      stepCounter += 1;
+      wizard.stepMeta.push({
+        id: 'review',
+        title: 'Review & Submit',
+        shortTitle: 'Review',
+        icon: 'file-check-2',
+        isReviewStep: true
+      });
+
+      wizard.totalSteps = wizard.stepMeta.length;
+      wizard.stepMeta.forEach((m, idx) => { m.stepNo = idx + 1; });
+
+      // Render step panes HTML
+      let panesHtml = '';
+      let photoFieldRef = null;
+
+      wizard.stepMeta.forEach((meta) => {
+        const sNo = meta.stepNo;
+        const isFirst = sNo === 1;
+        const isLast = sNo === wizard.totalSteps;
+
+        let contentHtml = '';
+
+        if (meta.isFeesStep) {
+          const totalMandatory = fees.filter(f => f.mandatory).reduce((acc, f) => acc + Number(f.amount || 0), 0);
+          contentHtml = `
+            <div class="wizard-fee-container">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                <div>
+                  <h4 style="font-size:1.05rem; font-weight:800; color:#111827; margin:0;">Official Approved Fee Schedule</h4>
+                  <span style="font-size:0.8rem; color:#64748B;">Academic Session: <strong>${esc(settings.session || '2027 - 2028')}</strong></span>
+                </div>
+                <span class="badge badge-success" style="font-size:0.78rem;">Administrative Transparency</span>
+              </div>
+              <div class="wizard-fee-table-wrap">
+                <table class="wizard-fee-table">
+                  <thead>
+                    <tr>
+                      <th>Fee Component</th>
+                      <th>Type</th>
+                      <th>Description</th>
+                      <th style="text-align:right;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${fees.map(f => `
+                      <tr>
+                        <td style="font-weight:700; color:#111827;">${esc(f.name)}</td>
+                        <td>
+                          <span class="badge ${f.mandatory ? 'badge-primary' : 'badge-secondary'}" style="font-size:0.72rem;">
+                            ${f.mandatory ? 'Mandatory' : 'Optional'}
+                          </span>
+                        </td>
+                        <td style="color:#64748B; font-size:0.85rem;">${esc(f.description || '—')}</td>
+                        <td style="text-align:right; font-weight:800; font-family:monospace; font-size:0.95rem; color:#8C6E1E;">
+                          ₹${Number(f.amount || 0).toLocaleString('en-IN')}
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background:#F8FAFC; font-weight:800;">
+                      <td colspan="3" style="text-align:right; padding:12px 14px;">Estimated Total (Mandatory Components):</td>
+                      <td style="text-align:right; padding:12px 14px; color:#BF9A33; font-size:1.1rem; font-family:monospace;">
+                        ₹${totalMandatory.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="wizard-fee-notes">
+                <i data-lucide="info" style="width:18px;height:18px;color:#2563EB;flex-shrink:0;margin-top:2px;"></i>
+                <div>
+                  <strong>Institutional Payment Guidance:</strong> Fee settlement is carried out upon entrance verification and provisional admission confirmation at the institutional accounts counter or via official school portal. No online payment gateway is connected here.
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (meta.isDeclarationStep) {
+          contentHtml = `
+            <div style="margin-bottom:22px;">
+              <h4 style="font-size:0.95rem; font-weight:700; color:#111827; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <i data-lucide="map-pin" style="width:18px;height:18px;color:#BF9A33;"></i> Application Particulars
+              </h4>
+              <div class="wizard-app-details-grid">
+                <div class="form-group">
+                  <label class="form-label" for="dec-app-date">Application Date <span style="color:#dc2626;">*</span></label>
+                  <input type="date" class="form-input font-mono" id="dec-app-date" required>
+                  <span style="font-size:0.72rem;color:var(--text-subtle);margin-top:3px;display:block;">Date of submission</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dec-app-place">Place of Application <span style="color:#dc2626;">*</span></label>
+                  <input type="text" class="form-input" id="dec-app-place" placeholder="Enter the place from which this application is being submitted" value="Tapan" required>
+                  <span style="font-size:0.72rem;color:var(--text-subtle);margin-top:3px;display:block;">City, town or village of applicant</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="admission-declaration-box">
+              <label class="admission-declaration-label">
+                <input type="checkbox" id="declaration-check" required class="admission-checkbox">
+                <span>
+                  <strong>Declaration:</strong> I hereby declare that all information furnished above are true and correct to the best of my knowledge and belief. I agree to abide by the rules, code of conduct, and academic discipline of <strong>THAIBA PUBLIC SCHOOL</strong>. I understand that any false statement or concealed information may lead to cancellation of admission.
+                </span>
+              </label>
+            </div>
+          `;
+        } else if (meta.isReviewStep) {
+          contentHtml = `<div id="wizard-review-content"></div>`;
+        } else {
+          // Regular Admin Configured Section
+          const secFields = meta.fields || [];
+          const photoField = secFields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+          const otherFields = secFields.filter(f => f !== photoField);
+
+          let photoHtml = '';
+          if (photoField) {
+            photoFieldRef = photoField;
+            photoHtml = `
+              <div style="background:#F8FAFC; border:1px solid var(--border-color); border-radius:12px; padding:18px; margin-bottom:22px; display:flex; flex-direction:column; align-items:center;">
+                <h4 style="font-size:0.95rem; font-weight:700; color:#111827; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                  <i data-lucide="camera" style="width:18px;height:18px;color:#BF9A33;"></i> ${esc(photoField.label)} <span style="font-size:0.75rem;color:var(--text-subtle);font-weight:400;">(Appears on Admit Card)</span>
+                </h4>
+                <div id="student-photo-panel" style="width:100%; max-width:320px;"></div>
+              </div>
+            `;
+          }
+
+          contentHtml = `
+            ${photoHtml}
+            <div class="admission-fields-grid">
+              ${otherFields.map(fieldInputHtml).join('')}
+            </div>
+          `;
+        }
+
+        // Navigation Footer
+        let navFooter = '';
+        if (isLast) {
+          navFooter = `
+            <div class="wizard-nav-footer">
+              <button type="button" class="btn btn-secondary btn-wizard-prev" data-target-step="${sNo - 1}">
+                <i data-lucide="arrow-left"></i> Previous
+              </button>
+              <button type="button" class="btn btn-primary admission-submit-btn" id="btn-submit-admission" style="min-width:240px;">
+                <i data-lucide="check-circle-2"></i> Submit Application &amp; Generate A4 Form
+              </button>
+            </div>
+          `;
+        } else {
+          navFooter = `
+            <div class="wizard-nav-footer">
+              ${!isFirst ? `
+                <button type="button" class="btn btn-secondary btn-wizard-prev" data-target-step="${sNo - 1}">
+                  <i data-lucide="arrow-left"></i> Previous
+                </button>
+              ` : '<div></div>'}
+              <button type="button" class="btn btn-primary btn-wizard-next" data-target-step="${sNo + 1}">
+                Next: ${wizard.stepMeta[sNo] ? wizard.stepMeta[sNo].shortTitle : 'Proceed'} <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          `;
+        }
+
+        panesHtml += `
+          <div class="admission-section-card wizard-pane ${sNo === 1 ? 'active' : ''}" id="wiz-step-pane-${sNo}">
+            <div class="admission-section-header">
+              <div class="admission-section-badge">${String(sNo).padStart(2, '0')}</div>
+              <div>
+                <h3 class="admission-section-title">${esc(meta.title)}</h3>
+                <p class="admission-section-desc">Step ${sNo} of ${wizard.totalSteps}</p>
+              </div>
+            </div>
+            ${contentHtml}
+            ${navFooter}
+          </div>
+        `;
+      });
+
+      container.innerHTML = panesHtml;
+
+      // Initialize Application Date to today
+      const dateEl = document.getElementById('dec-app-date');
+      if (dateEl && !dateEl.value) {
+        dateEl.value = new Date().toISOString().split('T')[0];
+      }
+
+      // Initialize Photo Upload Component if photo field exists
+      if (photoFieldRef) {
+        renderPhotoPanel(photoFieldRef);
+      }
+
+      // File preview listeners for document fields
+      container.querySelectorAll('input[type="file"]').forEach((inp) => {
+        if (photoFieldRef && inp.id === `fld-${photoFieldRef.fieldKey}`) return;
+        inp.addEventListener('change', () => {
+          const nameEl = container.querySelector(`.file-name[data-for="${inp.id}"]`);
+          const prevEl = container.querySelector(`.file-preview[data-for="${inp.id}"]`);
+          const file = inp.files && inp.files[0];
+          if (!file) {
+            if (nameEl) nameEl.innerText = 'PDF, JPG, or PNG up to 2 MB';
+            if (prevEl) prevEl.innerHTML = '';
+            return;
+          }
+          if (nameEl) nameEl.innerText = `Selected: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+          if (prevEl && file.type.startsWith('image/')) {
+            const url = URL.createObjectURL(file);
+            prevEl.innerHTML = `<img src="${url}" alt="preview" style="max-width:84px; max-height:104px; border:1px solid var(--border-color); border-radius:6px; margin-top:8px; display:block;">`;
+          } else if (prevEl) {
+            prevEl.innerHTML = '';
+          }
+        });
+      });
+
+      // Bind Previous & Next buttons
+      container.querySelectorAll('.btn-wizard-next').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = Number(btn.dataset.targetStep);
+          if (validateStep(wizard.currentStep)) {
+            wizard.completedSteps.add(wizard.currentStep);
+            wizardGoToStep(target);
+          }
+        });
+      });
+
+      container.querySelectorAll('.btn-wizard-prev').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = Number(btn.dataset.targetStep);
+          wizardGoToStep(target);
+        });
+      });
+
+      const finalSubmitBtn = document.getElementById('btn-submit-admission');
+      if (finalSubmitBtn) {
+        finalSubmitBtn.addEventListener('click', wizardFinalSubmit);
+      }
+
+      // Initial Stepper Render
+      updateSteppers();
+      UIComponents.refreshIcons();
+    }
+
+    /** Prominent passport-photo capture block */
+    function renderPhotoPanel(photo) {
+      const panel = document.getElementById('student-photo-panel');
+      if (!panel) return;
+
+      panel.innerHTML = `
+        <div id="photo-drop" class="admission-photo-dropzone" title="Click or Drag &amp; Drop Passport Photo">
+          <div id="photo-placeholder" class="admission-photo-placeholder">
+            <i data-lucide="camera" style="width:32px;height:32px;display:block;margin:0 auto 8px;color:#BF9A33;"></i>
+            <strong>Passport Photo</strong><br>
+            <span style="font-size:0.68rem;color:var(--text-subtle);">Click or drag file here</span>
+          </div>
+          <img id="photo-preview-img" class="admission-photo-preview" alt="Student Photograph" ${wizard.photoDataUrl ? `src="${wizard.photoDataUrl}" style="display:block;"` : ''}>
+        </div>
+
+        <input type="file" id="fld-${photo.fieldKey}" accept="image/*" ${photo.required ? 'required' : ''} style="display:none;">
+        <span class="file-name font-mono" data-for="fld-${photo.fieldKey}" style="font-size:0.74rem;color:var(--text-subtle);display:block;margin:6px 0;text-align:center;"></span>
+
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="photo-pick"><i data-lucide="upload"></i> Upload</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="photo-remove" style="color:#ef4444;"><i data-lucide="trash-2"></i> Clear</button>
+        </div>
+        <p style="font-size:0.72rem;color:var(--text-subtle);margin-top:10px;line-height:1.4;text-align:center;">
+          ${esc(photo.helpText || 'Recent passport-size photo, JPG or PNG up to 2 MB. Appears on form and admit card.')}
+        </p>
+      `;
+
+      const input = panel.querySelector(`#fld-${photo.fieldKey}`);
+      const drop = panel.querySelector('#photo-drop');
+      const img = panel.querySelector('#photo-preview-img');
+      const placeholder = panel.querySelector('#photo-placeholder');
+      const nameEl = panel.querySelector(`.file-name[data-for="fld-${photo.fieldKey}"]`);
+
+      if (wizard.photoDataUrl && placeholder) {
+        placeholder.style.display = 'none';
+      }
+
+      const clearPreview = () => {
+        img.style.display = 'none';
+        img.removeAttribute('src');
+        if (placeholder) placeholder.style.display = 'block';
+        if (input) input.value = '';
+        if (nameEl) nameEl.innerText = '';
+        wizard.photoDataUrl = null;
+      };
+
+      drop.addEventListener('click', () => input.click());
+      panel.querySelector('#photo-pick').addEventListener('click', () => input.click());
+      panel.querySelector('#photo-remove').addEventListener('click', clearPreview);
+
+      // Drag and drop events
+      ['dragenter', 'dragover'].forEach(eventName => {
+        drop.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          drop.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        drop.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          drop.classList.remove('dragover');
+        });
+      });
+      drop.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+          input.files = dt.files;
+          input.dispatchEvent(new Event('change'));
+        }
+      });
+
+      input.addEventListener('change', () => {
+        const file = input.files && input.files[0];
+        if (!file) { clearPreview(); return; }
+        if (nameEl) nameEl.innerText = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            wizard.photoDataUrl = e.target.result;
+            img.src = wizard.photoDataUrl;
+            img.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        } else {
+          clearPreview();
+        }
+      });
+
+      UIComponents.refreshIcons();
+    }
+
+    /** Update Desktop and Mobile Stepper Components */
+    function updateSteppers() {
+      // 1. Desktop Stepper
+      const desktop = document.getElementById('wiz-desktop-stepper');
+      if (desktop) {
+        let dHtml = '';
+        wizard.stepMeta.forEach((meta, idx) => {
+          const sNo = meta.stepNo;
+          const isActive = sNo === wizard.currentStep;
+          const isCompleted = wizard.completedSteps.has(sNo) && !isActive;
+          const isUpcoming = !isActive && !isCompleted;
+
+          const nodeClass = `wizard-step-node ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''} ${isUpcoming ? 'upcoming' : ''}`;
+          const circleContent = isCompleted ? '<i data-lucide="check" style="width:14px;height:14px;"></i>' : sNo;
+
+          dHtml += `
+            <div class="${nodeClass}" data-step="${sNo}">
+              <div class="wizard-step-circle">${circleContent}</div>
+              <div class="wizard-step-title">${esc(meta.shortTitle)}</div>
+            </div>
+          `;
+
+          if (idx < wizard.stepMeta.length - 1) {
+            const lineCompleted = wizard.completedSteps.has(sNo);
+            dHtml += `<div class="wizard-step-line ${lineCompleted ? 'completed' : ''}"></div>`;
+          }
+        });
+        desktop.innerHTML = dHtml;
+
+        desktop.querySelectorAll('.wizard-step-node.completed').forEach(node => {
+          node.addEventListener('click', () => {
+            const s = Number(node.dataset.step);
+            wizardGoToStep(s);
+          });
+        });
+      }
+
+      // 2. Mobile Stepper
+      const mBadge = document.getElementById('wiz-mobile-badge');
+      if (mBadge) mBadge.innerText = `Step ${wizard.currentStep} of ${wizard.totalSteps}`;
+
+      const curMeta = wizard.stepMeta[wizard.currentStep - 1] || {};
+      const mTitle = document.getElementById('wiz-mobile-title');
+      if (mTitle) mTitle.innerText = curMeta.title || 'Application Step';
+
+      const mFill = document.getElementById('wiz-mobile-fill');
+      if (mFill) {
+        const pct = Math.round((wizard.currentStep / wizard.totalSteps) * 100);
+        mFill.style.width = `${pct}%`;
+      }
+
+      const mSelect = document.getElementById('wiz-mobile-select');
+      if (mSelect) {
+        let optHtml = '<option value="">Jump to step ▾</option>';
+        wizard.stepMeta.forEach((m) => {
+          if (m.stepNo === wizard.currentStep) {
+            optHtml += `<option value="${m.stepNo}" disabled selected>• Step ${m.stepNo}: ${esc(m.shortTitle)} (Current)</option>`;
+          } else if (wizard.completedSteps.has(m.stepNo)) {
+            optHtml += `<option value="${m.stepNo}">✓ Step ${m.stepNo}: ${esc(m.shortTitle)}</option>`;
+          }
+        });
+        mSelect.innerHTML = optHtml;
+        mSelect.onchange = () => {
+          const val = Number(mSelect.value);
+          if (val) wizardGoToStep(val);
+        };
+      }
+
+      UIComponents.refreshIcons();
+    }
+
+    /** Navigate to a specific wizard step */
+    function wizardGoToStep(stepIdx) {
+      if (stepIdx < 1 || stepIdx > wizard.totalSteps) return;
+
+      const container = document.getElementById('dynamic-wizard-panes');
+      if (!container) return;
+
+      container.querySelectorAll('.wizard-pane').forEach(p => p.classList.remove('active'));
+
+      const targetPane = document.getElementById(`wiz-step-pane-${stepIdx}`);
+      if (targetPane) {
+        targetPane.classList.add('active');
+      }
+
+      wizard.currentStep = stepIdx;
+      updateSteppers();
+
+      // If opening Review step, build the summary
+      const reviewMeta = wizard.stepMeta.find(m => m.isReviewStep);
+      if (reviewMeta && reviewMeta.stepNo === stepIdx) {
+        renderReviewStep();
+      }
+
+      // Smooth scroll to top of form card
+      const formCard = document.getElementById('interactive-form-card');
+      if (formCard) {
+        formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      UIComponents.refreshIcons();
+    }
+
+    window.wizardGoToStep = wizardGoToStep;
+
+    /** Validate all inputs within a given step pane */
+    function validateStep(stepIdx) {
+      const stepPane = document.getElementById(`wiz-step-pane-${stepIdx}`);
+      if (!stepPane) return true;
+
+      stepPane.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+      stepPane.querySelectorAll('.field-error-msg').forEach(el => el.remove());
+
+      let isValid = true;
+      let firstInvalidEl = null;
+
+      const requiredInputs = stepPane.querySelectorAll('input[required], select[required], textarea[required]');
+      requiredInputs.forEach(input => {
+        let empty = false;
+        if (input.type === 'checkbox') {
+          empty = !input.checked;
+        } else if (input.type === 'file') {
+          empty = input.files && input.files.length === 0 && !wizard.photoDataUrl;
+        } else {
+          empty = !input.value || !input.value.trim();
+        }
+
+        if (empty) {
+          isValid = false;
+          input.classList.add('is-invalid');
+          const err = document.createElement('span');
+          err.className = 'field-error-msg';
+          err.innerText = input.type === 'checkbox' ? 'Please check this box to proceed' : 'This field is required';
+          input.parentElement.appendChild(err);
+          if (!firstInvalidEl) firstInvalidEl = input;
+        } else if (input.type === 'email' && input.value.trim()) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(input.value.trim())) {
+            isValid = false;
+            input.classList.add('is-invalid');
+            const err = document.createElement('span');
+            err.className = 'field-error-msg';
+            err.innerText = 'Please enter a valid email address';
+            input.parentElement.appendChild(err);
+            if (!firstInvalidEl) firstInvalidEl = input;
+          }
+        } else if (input.type === 'tel' && input.value.trim()) {
+          const digits = input.value.replace(/\D/g, '');
+          if (digits.length < 10) {
+            isValid = false;
+            input.classList.add('is-invalid');
+            const err = document.createElement('span');
+            err.className = 'field-error-msg';
+            err.innerText = 'Please enter a valid 10-digit phone number';
+            input.parentElement.appendChild(err);
+            if (!firstInvalidEl) firstInvalidEl = input;
+          }
+        }
+      });
+
+      if (!isValid && firstInvalidEl) {
+        firstInvalidEl.focus();
+        firstInvalidEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        UIComponents.showToast('Please complete all required fields in this step.', 'warning');
+      }
+
+      return isValid;
+    }
+
+    /** Validate all steps across the entire form before final submit */
+    function validateAllSteps() {
+      for (let s = 1; s < wizard.totalSteps; s++) {
+        if (!validateStep(s)) {
+          wizardGoToStep(s);
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /** Render the Review & Submit summary screen strictly from Admin Sections */
+    function renderReviewStep() {
+      const reviewContainer = document.getElementById('wizard-review-content');
+      if (!reviewContainer) return;
+
+      const values = readValues();
+      const activeFields = fields.filter(f => f.isActive !== false);
+
+      let html = '';
+      let secIndex = 0;
+
+      // Iterate through admin sections in wizard
+      wizard.stepMeta.forEach((meta) => {
+        if (meta.isFeesStep || meta.isDeclarationStep || meta.isReviewStep) return;
+
+        secIndex += 1;
+        const secFields = meta.fields || [];
+        const photoField = secFields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+        const otherFields = secFields.filter(f => f !== photoField);
+
+        html += `
+          <div class="wizard-review-card">
+            <div class="wizard-review-header">
+              <h4 class="wizard-review-title"><i data-lucide="${meta.icon || 'folder'}" style="width:18px;height:18px;color:#BF9A33;"></i> ${secIndex}. ${esc(meta.title)}</h4>
+              <button type="button" class="btn-wizard-edit" onclick="wizardGoToStep(${meta.stepNo})">
+                <i data-lucide="edit-3"></i> Edit
+              </button>
+            </div>
+            ${photoField ? `
+              <div style="display:flex; gap:16px; align-items:flex-start; margin-bottom:14px; flex-wrap:wrap;">
+                <div style="width:72px; height:90px; border:1px solid #CBD5E1; border-radius:6px; background:#F8FAFC; overflow:hidden; display:flex; align-items:center; justify-content:center; text-align:center; font-size:0.65rem; color:#64748B; flex-shrink:0;">
+                  ${wizard.photoDataUrl
+                    ? `<img src="${wizard.photoDataUrl}" alt="Photo" style="width:100%;height:100%;object-fit:cover;">`
+                    : 'No Photo'}
+                </div>
+                <div class="wizard-review-grid" style="flex:1;">
+                  ${otherFields.map(f => `
+                    <div class="wizard-review-item">
+                      <span class="wizard-review-label">${esc(f.label)}</span>
+                      <span class="wizard-review-val">${esc(values[f.fieldKey] || '—')}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : `
+              <div class="wizard-review-grid">
+                ${secFields.map(f => {
+                  const isFile = (f.fieldType || 'text') === 'file';
+                  let displayVal = '—';
+                  if (isFile) {
+                    const inp = document.getElementById(`fld-${f.fieldKey}`);
+                    displayVal = inp && inp.files && inp.files[0] ? inp.files[0].name : 'Not attached';
+                  } else {
+                    displayVal = values[f.fieldKey] || '—';
+                  }
+                  return `
+                    <div class="wizard-review-item">
+                      <span class="wizard-review-label">${esc(f.label)}</span>
+                      <span class="wizard-review-val">${esc(displayVal)}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      });
+
+      // Fee Structure Summary Card (ONLY IF ENABLED BY ADMIN)
+      const feesStep = wizard.stepMeta.find(m => m.isFeesStep);
+      if (feesStep && settings.showFeeStructure === true) {
+        const totalMandatory = fees.filter(f => f.mandatory).reduce((acc, f) => acc + Number(f.amount || 0), 0);
+        html += `
+          <div class="wizard-review-card">
+            <div class="wizard-review-header">
+              <h4 class="wizard-review-title"><i data-lucide="receipt" style="width:18px;height:18px;color:#BF9A33;"></i> Approved Fee Schedule</h4>
+              <button type="button" class="btn-wizard-edit" onclick="wizardGoToStep(${feesStep.stepNo})">
+                <i data-lucide="edit-3"></i> Edit
+              </button>
+            </div>
+            <div style="font-size:0.86rem; color:#475569;">
+              Session <strong>${esc(settings.session || '2027 - 2028')}</strong> • Estimated Total Mandatory Fee: <strong style="color:#8C6E1E; font-family:monospace; font-size:0.98rem;">₹${totalMandatory.toLocaleString('en-IN')}</strong>
+            </div>
+          </div>
+        `;
+      }
+
+      // Application Details & Declaration Status Card
+      const dateVal = values.applicationDate || '—';
+      const placeVal = values.applicationPlace || '—';
+      const decChecked = document.getElementById('declaration-check')?.checked;
+      const decStep = wizard.stepMeta.find(m => m.isDeclarationStep);
+
+      html += `
+        <div class="wizard-review-card">
+          <div class="wizard-review-header">
+            <h4 class="wizard-review-title"><i data-lucide="shield-check" style="width:18px;height:18px;color:#BF9A33;"></i> Application Details &amp; Declaration</h4>
+            <button type="button" class="btn-wizard-edit" onclick="wizardGoToStep(${decStep ? decStep.stepNo : wizard.totalSteps - 1})">
+              <i data-lucide="edit-3"></i> Edit
+            </button>
+          </div>
+          <div class="wizard-review-grid">
+            <div class="wizard-review-item">
+              <span class="wizard-review-label">Application Date</span>
+              <span class="wizard-review-val font-mono">${esc(dateVal)}</span>
+            </div>
+            <div class="wizard-review-item">
+              <span class="wizard-review-label">Place of Application</span>
+              <span class="wizard-review-val">${esc(placeVal)}</span>
+            </div>
+            <div class="wizard-review-item">
+              <span class="wizard-review-label">Legal Declaration</span>
+              <span class="wizard-review-val" style="color:${decChecked ? '#8C6E1E' : '#dc2626'};">
+                ${decChecked ? '✓ Formally Affirmed &amp; Accepted' : '⚠ Not Yet Accepted'}
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      reviewContainer.innerHTML = html;
+      UIComponents.refreshIcons();
+    }
+
+    function readValues() {
+      const values = {};
+      const activeFields = fields.filter(f => f.isActive !== false);
+
+      activeFields.forEach((f) => {
+        const type = f.fieldType || 'text';
+        if (type === 'file') return;
+        const el = document.getElementById(`fld-${f.fieldKey}`);
+        if (!el) return;
+        if (type === 'checkbox') values[f.fieldKey] = el.checked ? 'Yes' : 'No';
+        else values[f.fieldKey] = (el.value || '').trim();
+      });
+
+      // Application Date and Place
+      const dateEl = document.getElementById('dec-app-date');
+      if (dateEl) values.applicationDate = dateEl.value;
+      const placeEl = document.getElementById('dec-app-place');
+      if (placeEl) values.applicationPlace = (placeEl.value || '').trim();
+
+      return values;
+    }
+
+    async function uploadAttachments(values, formNo) {
+      const folder = `admissions/${String(formNo).replace(/[^A-Za-z0-9]/g, '-')}`;
+      const activeFiles = fields.filter(f => f.isActive !== false && (f.fieldType || 'text') === 'file');
+
+      for (const f of activeFiles) {
+        const input = document.getElementById(`fld-${f.fieldKey}`);
+        const file = input && input.files && input.files[0];
+        if (!file) { values[f.fieldKey] = ''; continue; }
+        const path = `${folder}/${f.fieldKey}-${Date.now()}-${admissionService.sanitizeFileName(file.name)}`;
+        try {
+          const res = await admissionService.uploadFile('admissions', path, file);
+          values[f.fieldKey] = res.publicUrl || res.path || path;
+        } catch (e) {
+          console.warn(`Upload failed for ${f.fieldKey}: ${e.message}`);
+          values[f.fieldKey] = '';
+        }
+      }
+    }
+
+    function a4DetailsHtml(values) {
+      const activeFields = fields.filter(f => f.isActive !== false);
+      const sectionMap = new Map();
+      activeFields.forEach(f => {
+        const s = (f.section || 'General Information').trim();
+        if (!sectionMap.has(s)) sectionMap.set(s, []);
+        sectionMap.get(s).push(f);
+      });
+
+      let html = '';
+      sectionMap.forEach((list, secName) => {
+        html += `<div style="font-size:12px;font-weight:800;text-decoration:underline;margin:8px 0 4px;">${esc(secName)} :</div>
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px;">`;
+        list.forEach((f) => {
+          if (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))) return;
+          const val = values[f.fieldKey];
+          const isFile = (f.fieldType || 'text') === 'file';
+          const shown = isFile
+            ? (val ? String(val).split('/').pop() : 'Not attached')
+            : (val ? esc(val) : '—');
+          html += `<tr>
+            <td style="width:38%;padding:3px 0;"><strong>${esc(f.label)}${f.required ? ' <span style="color:red;">*</span>' : ''} :</strong></td>
+            <td style="padding:3px 0;"><span style="border-bottom:1px solid #000;display:inline-block;min-width:60%;font-weight:600;">${shown}</span></td>
+          </tr>`;
+        });
+        html += '</table>';
+      });
+
+      return html;
+    }
+
+    function a4CredentialsHtml(creds) {
+      if (!creds || !creds.username) return '';
+      return `
+        <div style="border:1.5px solid #000; border-radius:4px; padding:6px 10px; margin:8px 0; font-size:10.5px; background:#fafafa;">
+          <strong>Student / Parent Portal Login Credentials:</strong><br>
+          <span style="font-family:monospace;">User: ${esc(creds.username)} &nbsp;|&nbsp; Password: ${esc(creds.password)}</span> &nbsp;|&nbsp;
+          <span>Portal: ${esc(creds.portalUrl || window.location.origin + '/login')}</span>
+        </div>`;
+    }
+
+    function a4FeeHtml(app) {
+      return '';
+    }
+
+    function pick(obj, keys, fallback = '—') {
+      for (const k of keys) {
+        if (obj && obj[k]) return obj[k];
+      }
+      return fallback;
+    }
+
+    function populateA4(result) {
+      const values = result.values;
+      document.getElementById('a4-form-no').innerText = result.formNo;
+      document.getElementById('admit-form-no').innerText = result.formNo;
+      document.getElementById('a4-details-slot').innerHTML = a4DetailsHtml(values);
+      document.getElementById('a4-credentials-slot').innerHTML = a4CredentialsHtml(result.credentials);
+      document.getElementById('a4-fee-slot').innerHTML = a4FeeHtml(result.application || {});
+
+      // Synchronize Application Date & Place
+      const dateFormatted = values.applicationDate
+        ? new Date(values.applicationDate).toLocaleDateString('en-GB')
+        : new Date().toLocaleDateString('en-GB');
+      document.getElementById('a4-date').innerText = dateFormatted;
+
+      const placeEl = document.getElementById('a4-place');
+      if (placeEl) placeEl.innerText = values.applicationPlace || 'Tapan';
+
+      document.getElementById('a4-entry-by').innerText = result.entryBy ? `Entered by: ${result.entryBy}` : '';
+
+      const name = pick(values, ['candidateName', 'studentName', 'name']);
+      const father = pick(values, ['fatherName', 'guardianName', 'motherName']);
+      const village = pick(values, ['village', 'address'], '');
+      const pin = pick(values, ['pin'], '');
+      document.getElementById('admit-name').innerText = name;
+      document.getElementById('admit-father').innerText = father;
+      document.getElementById('admit-address').innerText = `${village} ${pin ? '- ' + pin : ''}`.trim() || '—';
+      document.getElementById('admit-contact').innerText = pick(values, ['phone', 'guardianPhone', 'mobile']);
+      document.getElementById('admit-class').innerText = pick(values, ['applyingClass', 'grade', 'class']);
+
+      if (result.credentials) {
+        document.getElementById('admit-username').innerText = result.credentials.username;
+        document.getElementById('admit-password').innerText = result.credentials.password;
+      }
+    }
+
+    async function applyA4Photo(values) {
+      const photoField = fields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+      const photoKey = photoField ? photoField.fieldKey : 'photo';
+      const photoUrl = values[photoKey];
+      const a4Photo = document.getElementById('a4-photo');
+      const admitPhoto = document.getElementById('admit-photo');
+
+      const src = photoUrl || wizard.photoDataUrl;
+      if (src) {
+        if (a4Photo) a4Photo.innerHTML = `<img src="${src}" alt="photo" style="width:100%;height:100%;object-fit:cover;">`;
+        if (admitPhoto) admitPhoto.innerHTML = `<img src="${src}" alt="photo" style="width:100%;height:100%;object-fit:cover;">`;
+      }
+    }
+
+    /** Final submission trigger with full validation and duplicate protection */
+    async function wizardFinalSubmit(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      if (wizard.isSubmitting) return;
+
+      // Cross-step validation
+      if (!validateAllSteps()) return;
+
+      const decCheck = document.getElementById('declaration-check');
+      if (!decCheck || !decCheck.checked) {
+        const decMeta = wizard.stepMeta.find(m => m.isDeclarationStep);
+        if (decMeta) wizardGoToStep(decMeta.stepNo);
+        UIComponents.showToast('Please check the declaration box before submitting.', 'warning');
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-submit-admission');
+      wizard.isSubmitting = true;
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Submitting Application...';
+      }
+
+      try {
+        const values = readValues();
+        const preFormNo = admissionService.generateFormNo();
+        await uploadAttachments(values, preFormNo);
+
+        const result = await admissionService.submitApplication({
+          values,
+          selectedFeeIds: [],
+          paymentMode: '',
+          paymentRef: '',
+          submittedBy: staffUser,
+          formNo: preFormNo
+        });
+
+        if (result.application && result.application._syncError) {
+          throw new Error(result.application._syncError);
+        }
+
+        const formNo = result.application.appId;
+        await auditService.log('ONLINE_ADMISSION_REGISTERED', 'ADMISSIONS', {
+          formNo,
+          student: values.candidateName || values.studentName || 'Applicant',
+          grade: values.applyingClass || values.grade || '',
+          submittedBy: staffUser ? staffUser.name : 'Public'
+        }, formNo);
+
+        lastResult = { ...result, values, formNo, entryBy: staffUser ? staffUser.name : null };
+        populateA4(lastResult);
+        await applyA4Photo(values);
+
+        // Display Success Confirmation View
+        document.getElementById('interactive-form-card').style.display = 'none';
+        document.getElementById('wizard-progress-card').style.display = 'none';
+
+        const succCard = document.getElementById('admission-success-card');
+        if (succCard) {
+          document.getElementById('succ-form-no').innerText = formNo;
+          document.getElementById('succ-name').innerText = values.candidateName || values.studentName || 'Applicant';
+          document.getElementById('succ-class').innerText = values.applyingClass || values.grade || '—';
+          document.getElementById('succ-date').innerText = values.applicationDate
+            ? new Date(values.applicationDate).toLocaleDateString('en-GB')
+            : new Date().toLocaleDateString('en-GB');
+
+          if (result.credentials) {
+            document.getElementById('succ-cred-user').innerText = result.credentials.username;
+            document.getElementById('succ-cred-pass').innerText = result.credentials.password;
+            const credUrlEl = document.getElementById('succ-cred-url');
+            if (credUrlEl && result.credentials.portalUrl) credUrlEl.href = result.credentials.portalUrl;
+          }
+
+          succCard.style.display = 'block';
+          window.scrollTo(0, 0);
+        }
+
+        UIComponents.showToast(`Application ${formNo} registered successfully!`, 'success');
+        if (result.accountError) {
+          UIComponents.showToast(`Parent portal login note: ${result.accountError}`, 'warning');
+        }
+
+      } catch (err) {
+        console.error(err);
+        UIComponents.showToast(`Submission failed: ${err.message}`, 'danger');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="check-circle-2"></i> Submit Application &amp; Generate A4 Form';
+        }
+      } finally {
+        wizard.isSubmitting = false;
+        UIComponents.refreshIcons();
+      }
+    }
+
+    function renderPortalHeader() {
+      const formTitle = settings.formTitle || 'Admission Application Form';
+      const formSubtitle = settings.formSubtitle || 'Run by : Thaiba Heritage, Kolkata';
+      const sessionText = settings.session || '—';
+
+      const elDynTitle = document.getElementById('dyn-form-title');
+      if (elDynTitle) elDynTitle.innerText = formTitle;
+
+      const elDynSub = document.getElementById('dyn-form-subtitle');
+      if (elDynSub) elDynSub.innerText = formSubtitle;
+
+      const elDynSess = document.getElementById('dyn-session-text');
+      if (elDynSess) elDynSess.innerText = sessionText;
+
+      const elA4Title = document.getElementById('a4-form-title');
+      if (elA4Title) elA4Title.innerText = formTitle;
+
+      const elA4Sess = document.getElementById('a4-session-text');
+      if (elA4Sess) elA4Sess.innerText = sessionText;
+
+      // Notice Banner
+      if (settings.showNotice && settings.noticeText) {
+        const slot = document.getElementById('admission-notice-slot');
+        if (slot) {
+          slot.innerHTML = `
+            <div style="background:#FFFBEB; border:1px solid #FCD34D; border-left:4px solid #F59E0B; border-radius:10px; padding:12px 16px; display:flex; align-items:flex-start; gap:12px;">
+              <i data-lucide="bell-ring" style="width:20px; height:20px; color:#D97706; flex-shrink:0; margin-top:2px;"></i>
+              <div style="font-size:0.88rem; color:#92400E; line-height:1.5;">
+                <strong>Institutional Announcement:</strong> ${esc(settings.noticeText)}
+              </div>
+            </div>
+          `;
+          slot.style.display = 'block';
+        }
+      }
+
+      // SHOW THE VIDEO IN SIDEBAR
+      const videoUrl = settings.instructionVideoUrl || settings.guideVideoUrl || '';
+      if (videoUrl && settings.showInstructionVideo !== false) {
+        const sideVideoCard = document.getElementById('side-video-card');
+        const sideVideoContainer = document.getElementById('side-video-container');
+        const sideVideoTitle = document.getElementById('side-video-title');
+
+        if (sideVideoCard && sideVideoContainer) {
+          if (sideVideoTitle) sideVideoTitle.innerText = settings.instructionVideoTitle || 'Admission Video Guide';
+          sideVideoContainer.innerHTML = renderVideoPlayerHtml(videoUrl, settings.instructionVideoTitle || 'How to Fill Admission Form', settings.instructionVideoRatio || 'auto');
+          sideVideoCard.style.display = 'block';
+        }
+      }
+
+      // Fee structure button visibility in Top Nav and Sidebar
+      const showFees = settings.showFeeStructure === true && Array.isArray(fees) && fees.length > 0;
+      const btnFees = document.getElementById('btn-show-fees');
+      if (btnFees) {
+        btnFees.style.display = showFees ? 'inline-flex' : 'none';
+      }
+      const sideBtnFees = document.getElementById('side-btn-fees');
+      if (sideBtnFees) {
+        sideBtnFees.style.display = showFees ? 'inline-flex' : 'none';
+      }
+
+      const sideGuidanceText = document.getElementById('side-guidance-text');
+      if (sideGuidanceText) {
+        sideGuidanceText.innerText = showFees
+          ? 'Review the official admission rules, walkthrough video, fee structure, and guidelines for the current session.'
+          : 'Review the official admission rules, walkthrough video, and instructions for the current academic session.';
+      }
+
+      // Show guidelines button in top nav
+      const btnGuidelines = document.getElementById('btn-show-guidelines');
+      if (btnGuidelines) {
+        btnGuidelines.style.display = 'inline-flex';
+      }
+    }
+
+    function openGuidelinesModal() {
+      const instructions = (settings.instructions && settings.instructions.length)
+        ? settings.instructions
+        : DEFAULT_INSTRUCTIONS;
+      const videoUrl = settings.instructionVideoUrl || settings.guideVideoUrl || '';
+
+      const itemsHtml = instructions.map(t => `<li style="padding:7px 0; border-bottom:1px solid var(--border-color); display:flex; gap:10px;"><i data-lucide="check-circle-2" style="width:16px;height:16px;color:#BF9A33;flex-shrink:0;margin-top:2px;"></i> <span style="font-size:0.88rem; line-height:1.5;">${esc(t)}</span></li>`).join('');
+
+      let videoSectionHtml = '';
+      if (videoUrl && settings.showInstructionVideo !== false) {
+        videoSectionHtml = renderVideoPlayerHtml(videoUrl, settings.instructionVideoTitle || 'How to Fill Admission Application Form', settings.instructionVideoRatio || 'auto');
+      }
+
+      const bodyHtml = `
+        <div style="font-size:0.9rem; color:var(--text-main); line-height:1.5;">
+          ${videoSectionHtml}
+          <h4 style="font-size:0.95rem; font-weight:800; margin:16px 0 10px 0; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="list-checks" style="width:18px;height:18px;color:#BF9A33;"></i> Official Admission Guidelines
+          </h4>
+          <ul style="list-style:none; padding:0; margin:0 0 16px 0;">${itemsHtml}</ul>
+        </div>
+      `;
+
+      UIComponents.openModal({
+        title: 'Admission Guidelines & Video Walkthrough',
+        bodyHtml,
+        maxWidth: '660px'
+      });
+      UIComponents.refreshIcons();
+    }
+
+    function openFeeStructureModal() {
+      if (!settings || settings.showFeeStructure !== true) return;
+
+      let feesList = fees;
+      if (!feesList || !feesList.length) {
+        feesList = [
+          { name: 'Registration Fee', amount: 200, mandatory: true, description: 'Non-refundable registration fee' },
+          { name: 'Admission Fee', amount: 2500, mandatory: true, description: 'One-time admission charge' },
+          { name: 'Tuition Fee (1st month)', amount: 1200, mandatory: false, description: 'First month tuition' }
+        ];
+      }
+
+      const rows = feesList.map(f => `
+        <tr>
+          <td style="padding:8px 12px; border-bottom:1px solid var(--border-color); font-weight:600;">${esc(f.name)}</td>
+          <td style="padding:8px 12px; border-bottom:1px solid var(--border-color);"><span class="badge ${f.mandatory ? 'badge-primary' : 'badge-secondary'}" style="font-size:0.7rem;">${f.mandatory ? 'Mandatory' : 'Optional'}</span></td>
+          <td style="padding:8px 12px; border-bottom:1px solid var(--border-color); color:var(--text-subtle); font-size:0.8rem;">${esc(f.description || '—')}</td>
+          <td style="padding:8px 12px; border-bottom:1px solid var(--border-color); text-align:right; font-family:var(--font-mono); font-weight:700;">₹${Number(f.amount || 0).toLocaleString('en-IN')}</td>
+        </tr>
+      `).join('');
+
+      const totalMandatory = feesList.filter(f => f.mandatory).reduce((acc, f) => acc + Number(f.amount || 0), 0);
+
+      const bodyHtml = `
+        <div>
+          <p style="font-size:0.86rem; color:var(--text-subtle); margin-bottom:12px;">
+            Official approved fee breakdown for <strong>THAIBA PUBLIC SCHOOL</strong> for Session ${esc(settings.session || '2027 - 2028')}.
+          </p>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.86rem;">
+              <thead>
+                <tr style="background:var(--bg-subtle); text-align:left;">
+                  <th style="padding:8px 12px;">Component</th>
+                  <th style="padding:8px 12px;">Type</th>
+                  <th style="padding:8px 12px;">Notes</th>
+                  <th style="padding:8px 12px; text-align:right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+              <tfoot>
+                <tr style="background:var(--bg-subtle); font-weight:700;">
+                  <td colspan="3" style="padding:8px 12px; text-align:right;">Total Mandatory:</td>
+                  <td style="padding:8px 12px; text-align:right; color:#BF9A33; font-family:var(--font-mono);">₹${totalMandatory.toLocaleString('en-IN')}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+
+      UIComponents.openModal({
+        title: 'Academic Session Fee Schedule',
+        bodyHtml,
+        maxWidth: '620px'
+      });
+    }
+
+    async function boot() {
+      try {
+        [settings, fields, fees] = await Promise.all([
+          admissionService.loadSettings(),
+          admissionService.listFields(),
+          admissionService.listFees()
+        ]);
+      } catch (e) {
+        console.error('Admission config load failed:', e);
+        UIComponents.showToast('Could not load admission configuration. Please refresh.', 'danger');
+      }
+
+      try {
+        const user = await authService.init();
+        if (user && user.role && user.role !== 'parent' && user.role !== 'pending') {
+          staffUser = user;
+          const badge = document.getElementById('entry-by-badge');
+          if (badge) {
+            badge.style.display = 'inline-flex';
+            badge.innerText = `Entered by: ${user.name}`;
+          }
+        }
+      } catch (e) { /* public visitor */ }
+
+      renderPortalHeader();
+      renderWizard();
+      UIComponents.refreshIcons();
+
+      // Top Action Buttons
+      const btnGuidelines = document.getElementById('btn-show-guidelines');
+      if (btnGuidelines) {
+        btnGuidelines.addEventListener('click', openGuidelinesModal);
+      }
+      const sideBtnGuidelines = document.getElementById('side-btn-guidelines');
+      if (sideBtnGuidelines) {
+        sideBtnGuidelines.addEventListener('click', openGuidelinesModal);
+      }
+
+      const btnFees = document.getElementById('btn-show-fees');
+      if (btnFees) {
+        btnFees.addEventListener('click', openFeeStructureModal);
+      }
+      const sideBtnFees = document.getElementById('side-btn-fees');
+      if (sideBtnFees) {
+        sideBtnFees.addEventListener('click', openFeeStructureModal);
+      }
+
+      // Back to Form or Success Screen from Print Preview
+      document.getElementById('btn-back-to-form').addEventListener('click', () => {
+        document.getElementById('a4-document-wrapper').style.display = 'none';
+        const succ = document.getElementById('admission-success-card');
+        if (succ && succ.style.display === 'block') {
+          succ.style.display = 'block';
+        } else {
+          document.getElementById('interactive-form-card').style.display = 'grid';
+          document.getElementById('wizard-progress-card').style.display = 'block';
+        }
+        window.scrollTo(0, 0);
+      });
+
+      // Success screen actions
+      const viewAdmitBtn = document.getElementById('btn-succ-view-admit');
+      if (viewAdmitBtn) {
+        viewAdmitBtn.addEventListener('click', () => {
+          document.getElementById('admission-success-card').style.display = 'none';
+          document.getElementById('a4-document-wrapper').style.display = 'block';
+          window.scrollTo(0, 0);
+        });
+      }
+
+      const newFormBtn = document.getElementById('btn-succ-new-form');
+      if (newFormBtn) {
+        newFormBtn.addEventListener('click', () => {
+          document.getElementById('admission-success-card').style.display = 'none';
+          document.getElementById('interactive-form-card').style.display = 'grid';
+          document.getElementById('wizard-progress-card').style.display = 'block';
+          wizard.completedSteps.clear();
+          wizardGoToStep(1);
+          window.scrollTo(0, 0);
+        });
+      }
+
+      const copyCredsBtn = document.getElementById('btn-succ-copy-creds');
+      if (copyCredsBtn) {
+        copyCredsBtn.addEventListener('click', () => {
+          const u = document.getElementById('succ-cred-user').innerText;
+          const p = document.getElementById('succ-cred-pass').innerText;
+          navigator.clipboard.writeText(`Username: ${u}\nPassword: ${p}`).then(() => {
+            UIComponents.showToast('Credentials copied to clipboard!', 'success');
+          }).catch(() => {});
+        });
+      }
+    }
+
+    window.populateA4 = populateA4;
+    boot();
+  </script>
+</body>
+</html>

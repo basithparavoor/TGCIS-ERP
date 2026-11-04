@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Institutional ID Card & Smart Badge Studio
  * Batch A4 Printable Student & Staff ID Cards with Dynamic QR Verification
  */
@@ -8,6 +8,7 @@ import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
 import { TMS_LOGO } from './logo.js';
 import { QRCodeGenerator } from './qr-generator.js';
+import { exportPdf, formatPdfFilename } from './export-utils.js';
 
 export class IdCardsModule {
   static async render(container) {
@@ -26,26 +27,21 @@ export class IdCardsModule {
     this._cardFormat = 'landscape'; // 'landscape' | 'portrait'
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
-              <span style="color: #16a34a;"><i data-lucide="contact-2"></i></span> ID Card &amp; Smart Badge Studio
-            </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Generate and batch-print official institutional CR-80 PVC ID cards &amp; staff badges with scannable QR verification.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'ID Card & Smart Badge Studio',
+          subtitle: 'Generate and batch-print official institutional CR-80 PVC ID cards & staff badges with scannable QR verification.',
+          breadcrumbs: [{ label: 'ID Cards & Badges' }],
+          badge: 'PVC Studio',
+          actionsHtml: `
             <button class="btn btn-secondary" id="btn-toggle-card-format">
               <i data-lucide="refresh-cw"></i> Switch to <span id="lbl-next-format">Vertical Portrait</span>
             </button>
             <button class="btn btn-primary" id="btn-batch-print-id-cards">
               <i data-lucide="printer"></i> Print Batch A4 Sheets
             </button>
-          </div>
-        </div>
-      </div>
+          `
+        })}
 
       <!-- KPI Summary -->
       <div class="kpi-grid">
@@ -81,7 +77,8 @@ export class IdCardsModule {
           <!-- Card Markups rendered here -->
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.renderToolbarFilters(container);
     this.renderCardsGrid(container);

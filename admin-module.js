@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — School Administration & Governance Module
  * Admission form builder, fee & payment configuration, application review
  * workflow (approve / reject / resend), notifications and audit trail.
@@ -13,7 +13,8 @@ import { TMS_LOGO } from './logo.js';
 import { admissionService, DEFAULT_INSTRUCTIONS, DEFAULT_POPUP_INSTRUCTIONS, getEmbedVideoUrl, renderVideoPlayerHtml } from './admission-service.js';
 import { notificationService } from './notification-service.js';
 import { brandingService } from './branding-service.js';
-import { downloadCsv, exportPdf, kvTable } from './export-utils.js';
+import { WhatsAppService } from './whatsapp-service.js';
+import { downloadCsv, exportPdf, formatPdfFilename, kvTable } from './export-utils.js';
 
 const esc = (v) => UIComponents.escapeHtml(v);
 const safeOn = (id, event, fn) => {
@@ -41,7 +42,8 @@ const ROLE_LABELS = {
   office_boy: 'Office Boy (Data Entry)',
   student: 'Student',
   parent: 'Parent / Guardian',
-  pending: 'Pending Assignment'
+  pending: 'Pending Assignment',
+  rejected: 'Access Rejected'
 };
 
 function parseUserAgent(ua) {
@@ -92,20 +94,17 @@ export class AdminModule {
     const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem;">School Administration &amp; Governance</h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Admission form builder, fee &amp; payment configuration, application review, notifications and audit trail.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <a href="student-admission-portal.html" target="_blank" class="btn btn-secondary"><i data-lucide="external-link"></i> Public Admission Gateway</a>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'School Administration & Governance',
+          subtitle: 'Admission form builder, fee & payment configuration, application review, notifications and audit trail.',
+          breadcrumbs: [{ label: 'Administration' }],
+          badge: isSuperAdmin ? 'Super Admin' : 'Admin Console',
+          actionsHtml: `
+            <a href="/admission" target="_blank" class="btn btn-secondary"><i data-lucide="external-link"></i> Public Admission Gateway</a>
             <button class="btn btn-primary" id="btn-new-notification"><i data-lucide="bell-plus"></i> New Notification</button>
-          </div>
-        </div>
-      </div>
+          `
+        })}
 
       <div class="kpi-grid" style="margin-bottom: 22px;">
         ${UIComponents.renderKpiCard({ title: 'Total Applications', value: stats.total, icon: 'file-text', color: 'blue' })}
@@ -142,6 +141,7 @@ export class AdminModule {
           <button class="tms-tab-pill" data-group="users">
             <i data-lucide="shield-check"></i>
             <span>Access & Security</span>
+            <span class="tab-badge" id="admin-pending-users-badge" style="display:none; background:#f59e0b; color:#fff;">0</span>
           </button>
           <button class="tms-tab-pill" data-group="notices">
             <i data-lucide="bell"></i>
@@ -155,6 +155,7 @@ export class AdminModule {
           <button class="tms-tab-pill super-admin-pill" data-group="superadmin" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(239, 68, 68, 0.12)); border: 1.5px solid rgba(245, 158, 11, 0.45); color: #b45309; font-weight: 800;">
             <i data-lucide="crown" style="color: #f59e0b;"></i>
             <span>Super Admin &amp; Dev</span>
+            <span class="tab-badge" id="superadmin-pending-badge" style="display:none; background:#ef4444; color:#fff;">0</span>
           </button>
           ` : ''}
         </div>
@@ -164,10 +165,40 @@ export class AdminModule {
       <div class="tms-subtab-rail" id="admin-subtab-rail"></div>
 
       <div id="admin-tab-content"></div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
+    this.refreshPendingBadges();
     this.switchGroup('admissions', 'applications');
+  }
+
+  static async refreshPendingBadges() {
+    try {
+      const profiles = await dbService.select('profiles');
+      const pending = (profiles || []).filter(p => p.role === 'pending' || p.approvalStatus === 'pending');
+      this._pendingApprovalsCount = pending.length;
+
+      const userBadge = document.getElementById('admin-pending-users-badge');
+      if (userBadge) {
+        if (pending.length > 0) {
+          userBadge.innerText = pending.length;
+          userBadge.style.display = 'inline-block';
+        } else {
+          userBadge.style.display = 'none';
+        }
+      }
+
+      const superBadge = document.getElementById('superadmin-pending-badge');
+      if (superBadge) {
+        if (pending.length > 0) {
+          superBadge.innerText = pending.length;
+          superBadge.style.display = 'inline-block';
+        } else {
+          superBadge.style.display = 'none';
+        }
+      }
+    } catch (e) { /* ignore */ }
   }
 
   static switchGroup(groupKey, targetSubtab = null) {
@@ -182,6 +213,7 @@ export class AdminModule {
         { key: 'payment-settings', label: 'Portal Rules & Video', icon: 'settings' }
       ],
       users: [
+        { key: 'google-approvals', label: 'User Authentication (Google)', icon: 'user-check', showPendingBadge: true },
         { key: 'users', label: 'User Logins & Roles', icon: 'users' },
         ...(isSuperAdmin ? [{ key: 'user-sessions', label: 'Login & Logout Sessions', icon: 'history' }] : []),
         { key: 'audit', label: 'Security Audit Trail', icon: 'shield-alert' }
@@ -194,6 +226,7 @@ export class AdminModule {
         { key: 'backup', label: 'JSON Disaster Recovery', icon: 'database' }
       ],
       superadmin: [
+        { key: 'google-approvals', label: '🛡️ Google Auth Approvals', icon: 'user-check', showPendingBadge: true },
         { key: 'system-doctor', label: '🩺 System Doctor (Find & Fix)', icon: 'wrench' },
         { key: 'user-sessions', label: '👤 User Login / Logout Sessions', icon: 'history' },
         { key: 'audit', label: '🛡️ Security Audit Logs', icon: 'shield-alert' },
@@ -206,11 +239,13 @@ export class AdminModule {
     if (!subRail) return;
 
     const activeSubKey = targetSubtab || subList[0].key;
+    const pendingCount = this._pendingApprovalsCount || 0;
 
     subRail.innerHTML = subList.map(st => `
       <button class="tms-subtab-pill ${st.key === activeSubKey ? 'active' : ''}" data-tab="${st.key}">
         <i data-lucide="${st.icon}" style="width: 14px; height: 14px;"></i>
         <span>${st.label}</span>
+        ${st.showPendingBadge && pendingCount > 0 ? `<span class="badge" style="background:#ef4444; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${pendingCount}</span>` : ''}
       </button>
     `).join('');
 
@@ -250,6 +285,7 @@ export class AdminModule {
       else if (tabKey === 'payment-settings') await this.renderPaymentSettingsTab(tabContent);
       else if (tabKey === 'notifications') await this.renderNotificationsTab(tabContent);
       else if (tabKey === 'users') await this.renderUsersTab(tabContent);
+      else if (tabKey === 'google-approvals') await this.renderGoogleApprovalsTab(tabContent);
       else if (tabKey === 'branding') await this.renderBrandingTab(tabContent);
       else if (tabKey === 'audit') await this.renderAuditTab(tabContent);
       else if (tabKey === 'backup') await this.renderBackupTab(tabContent);
@@ -285,7 +321,7 @@ export class AdminModule {
             <button class="btn btn-secondary btn-sm" id="btn-export-csv"><i data-lucide="file-spreadsheet"></i> Export CSV</button>
             <button class="btn btn-secondary btn-sm" id="btn-export-pdf"><i data-lucide="file-text"></i> Export PDF</button>
             <button class="btn btn-secondary btn-sm" id="btn-delete-pending" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Pending</button>
-            <a href="student-admission-portal.html" target="_blank" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> New Entry</a>
+            <a href="/admission" target="_blank" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> New Entry</a>
           </div>
         </div>
 
@@ -397,7 +433,8 @@ export class AdminModule {
         <td>${payBadge(a.paymentStatus)}</td>
         <td>${statusBadge(a.status)}</td>
         <td style="white-space:nowrap;">
-          <button class="btn btn-secondary btn-sm btn-view-app" data-id="${esc(a.id)}" title="Open"><i data-lucide="eye"></i></button>
+          <button class="btn btn-secondary btn-sm btn-view-app" data-id="${esc(a.id)}" title="Open Review"><i data-lucide="eye"></i></button>
+          <button class="btn btn-secondary btn-sm btn-edit-app" data-id="${esc(a.id)}" title="Edit Application Data" style="color:#0284c7;"><i data-lucide="edit-3"></i></button>
           <button class="btn btn-secondary btn-sm btn-form-app" data-id="${esc(a.id)}" title="View as Form"><i data-lucide="file-text"></i></button>
           <button class="btn btn-secondary btn-sm btn-print-app" data-id="${esc(a.id)}" title="Print PDF"><i data-lucide="printer"></i></button>
           <button class="btn btn-secondary btn-sm btn-del-single-app" data-id="${esc(a.id)}" title="Delete Application" style="color:var(--danger, #ef4444);"><i data-lucide="trash-2"></i></button>
@@ -413,6 +450,8 @@ export class AdminModule {
       }));
     body.querySelectorAll('.btn-view-app').forEach((b) =>
       b.addEventListener('click', () => this.openApplicationModal(b.dataset.id)));
+    body.querySelectorAll('.btn-edit-app').forEach((b) =>
+      b.addEventListener('click', () => this.openEditApplicationModal(b.dataset.id)));
     body.querySelectorAll('.btn-form-app').forEach((b) =>
       b.addEventListener('click', () => this.showApplicationForm(b.dataset.id)));
     body.querySelectorAll('.btn-print-app').forEach((b) =>
@@ -435,7 +474,10 @@ export class AdminModule {
     body.querySelectorAll('.app-photo-thumb').forEach((img) =>
       img.addEventListener('click', () => {
         const app = rows.find((a) => (a.payload || {}).photo === img.dataset.path);
-        if (app) this.openApplicationModal(app.id);
+        this.openFilePreviewModal({
+          title: (app ? (app.studentName || app.appId) : 'Applicant') + ' - Photograph',
+          path: img.dataset.path
+        });
       }));
 
     this.updateBulkBar();
@@ -531,161 +573,305 @@ export class AdminModule {
     const fields = await admissionService.listFields();
     const credential = await admissionService.getCredentials(id);
 
-    const detailsRows = fields
-      .map((f) => {
-        const isFile = (f.fieldType || 'text') === 'file';
-        const raw = (app.payload || {})[f.fieldKey];
-        let cell;
-        if (isFile) {
-          const ver = (app.docVerifications || {})[f.fieldKey];
-          const verBadge = ver
-            ? `<span class="badge badge-success" style="font-size:0.68rem; margin-left:6px;"><i data-lucide="shield-check"></i> Verified</span>`
-            : '';
-          const stampBtn = (raw && !ver)
-            ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:1px 6px; font-size:0.68rem; margin-left:8px; color:#15803d;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
-            : '';
-          cell = raw
-            ? `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;"><a href="#" class="doc-link" data-path="${esc(raw)}">${esc(String(raw).split('/').pop())}</a> ${verBadge} ${stampBtn}</div>`
-            : '<span style="color:var(--text-muted);">Not attached</span>';
-        } else {
-          cell = esc(raw || '—');
-        }
-        return `<tr><th style="text-align:left;">${esc(f.label)}</th><td>${cell}</td></tr>`;
-      })
-      .join('');
+    const docFields = fields.filter((f) => (f.fieldType || 'text') === 'file');
+    const textFields = fields.filter((f) => (f.fieldType || 'text') !== 'file');
+
+    const detailsRows = textFields.map((f) => {
+      const raw = (app.payload || {})[f.fieldKey];
+      return `
+        <tr>
+          <th style="width:36%; background:#f8fafc; font-weight:700; color:#475569; font-size:0.75rem; border-bottom:1px solid #f1f5f9; padding:8px 12px; white-space:normal;">${esc(f.label)}</th>
+          <td style="font-size:0.82rem; color:#1e293b; border-bottom:1px solid #f1f5f9; padding:8px 12px;">${esc(raw || '—')}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const docsListHtml = docFields.length ? docFields.map((f) => {
+      const raw = (app.payload || {})[f.fieldKey];
+      const ver = (app.docVerifications || {})[f.fieldKey];
+      const verBadge = ver
+        ? `<span class="badge badge-success" style="font-size:0.7rem; padding:3px 8px; font-weight:700;"><i data-lucide="shield-check" style="width:12px;height:12px;"></i> Verified &amp; Stamped</span>`
+        : `<span class="badge badge-warning" style="font-size:0.7rem; padding:3px 8px;">Pending Verification</span>`;
+      const stampBtn = (raw && !ver)
+        ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:2px 8px; font-size:0.72rem; color:#15803d; border-color:#86efac; font-weight:600;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
+        : '';
+      
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+          <div>
+            <div style="font-weight:700; font-size:0.8rem; color:#1e293b;">${esc(f.label)}</div>
+            ${raw ? `
+              <div style="display:flex; gap:8px; align-items:center; margin-top:4px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-secondary btn-sm btn-preview-doc-file" data-path="${esc(raw)}" data-title="${esc(f.label)}" style="font-size:0.74rem; padding:2px 8px; color:#2563eb; border-color:#bfdbfe; font-weight:600;">
+                  <i data-lucide="eye" style="width:12px;height:12px;"></i> Preview File
+                </button>
+                <a href="#" class="btn btn-secondary btn-sm btn-download-doc-file" data-path="${esc(raw)}" style="font-size:0.74rem; padding:2px 8px; color:#475569; text-decoration:none;">
+                  <i data-lucide="download" style="width:12px;height:12px;"></i> Download
+                </a>
+                <span class="font-mono" style="font-size:0.7rem; color:#64748b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(String(raw).split('/').pop())}</span>
+              </div>
+            ` : '<span style="font-size:0.75rem; color:var(--text-muted); font-style:italic;">Not attached</span>'}
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            ${verBadge}
+            ${stampBtn}
+          </div>
+        </div>
+      `;
+    }).join('') : '<p style="font-size:0.8rem; color:var(--text-muted); margin:0;">No document upload requirements defined.</p>';
 
     const photoPath = (app.payload || {}).photo;
-    const photoBlock = photoPath
-      ? `<div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
-           <img id="app-photo-img" alt="Applicant photo" style="width:84px;height:104px;object-fit:cover;border:1px solid var(--border-color);border-radius:6px;background:#f1f5f9;">
-           <div style="font-size:0.78rem;color:var(--text-muted);">Applicant photograph on file.</div>
-         </div>`
-      : '';
-
     const payments = Array.isArray(app.payments) ? app.payments : [];
     const paymentRows = payments.length
       ? payments.map((p) => `<tr>
-          <td>${fmtDate(p.date)}</td>
-          <td>${esc(p.mode)}</td>
-          <td>${esc(p.reference || '—')}</td>
-          <td style="text-align:right;">${fmtMoney(p.amount)}</td>
+          <td style="font-size:0.78rem;">${fmtDate(p.date)}</td>
+          <td style="font-size:0.78rem;"><span class="badge badge-info" style="font-size:0.7rem;">${esc(p.mode)}</span></td>
+          <td style="font-size:0.78rem;" class="font-mono">${esc(p.reference || '—')}</td>
+          <td style="text-align:right; font-weight:700; font-size:0.82rem; color:#16a34a;">${fmtMoney(p.amount)}</td>
         </tr>`).join('')
-      : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No payments recorded.</td></tr>';
+      : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:12px; font-size:0.8rem;">No payment transactions recorded.</td></tr>';
 
     const exam = app.entranceExam || {};
     const isEnrolled = app.status === 'Enrolled';
+    const totalPaidCalc = app.paymentStatus === 'Paid' ? (app.feeTotal || 0) : payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const balanceDueCalc = Math.max(0, (app.feeTotal || 0) - totalPaidCalc);
 
     const bodyHtml = `
-      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:center;">
-        ${statusBadge(app.status)} ${payBadge(app.paymentStatus)}
-        ${isEnrolled ? `<span class="badge badge-success" style="font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</span>` : ''}
-        <span class="badge badge-info">Fees: ${fmtMoney(app.feeTotal)}</span>
-        <span class="badge badge-info">Entered by: ${esc(app.submittedByName || 'Self / Public')}</span>
-      </div>
-
-      ${photoBlock}
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div>
-          <h4 style="font-size:0.95rem; margin-bottom:8px; color:#15803d;">Application Details</h4>
-          <table class="tms-table" style="font-size:0.82rem;"><tbody>
-            <tr><th style="text-align:left;">Form No</th><td class="font-mono">${esc(app.appId || app.id)}</td></tr>
-            <tr><th style="text-align:left;">Submitted</th><td>${fmtDate(app.createdAt)}</td></tr>
-            ${detailsRows}
-          </tbody></table>
-        </div>
-        <div>
-          <h4 style="font-size:0.95rem; margin-bottom:8px; color:#15803d;">Fees</h4>
-          <table class="tms-table" style="font-size:0.82rem;"><tbody>
-            ${(app.feeItems || []).map((f) => `<tr><th style="text-align:left;">${esc(f.name)}</th><td style="text-align:right;">${fmtMoney(f.amount)}</td></tr>`).join('') || '<tr><td style="color:var(--text-muted);">No fees.</td></tr>'}
-            <tr><th style="text-align:left;">Total</th><td style="text-align:right; font-weight:800;">${fmtMoney(app.feeTotal)}</td></tr>
-          </tbody></table>
-
-          <h4 style="font-size:0.95rem; margin:16px 0 8px; color:#15803d;">Payments Ledger</h4>
-          <table class="tms-table" style="font-size:0.82rem;">
-            <thead><tr><th>Date</th><th>Mode</th><th>Reference</th><th style="text-align:right;">Amount</th></tr></thead>
-            <tbody>${paymentRows}</tbody>
-          </table>
-
-          <div style="background: var(--bg-subtle); padding:12px; border-radius:8px; margin-top:12px;">
-            <h4 style="font-size:0.9rem; margin-bottom:8px;">Record a Payment</h4>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
-              <input type="number" class="form-input" id="pay-amount" placeholder="Amount" style="width:110px;">
-              <select class="form-select" id="pay-mode" style="width:120px;">
-                <option>Cash</option><option>UPI</option><option>Cheque</option><option>Card</option><option>Bank Transfer</option>
-              </select>
-              <input class="form-input" id="pay-ref" placeholder="Reference / Note" style="flex:1; min-width:140px;">
-              <button class="btn btn-primary btn-sm" id="btn-record-payment"><i data-lucide="plus"></i> Add</button>
+      <!-- Top Candidate Profile Banner -->
+      <div style="background:linear-gradient(135deg, rgba(22, 163, 74, 0.05), rgba(37, 99, 235, 0.06)); border:1.5px solid var(--border-color); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+          ${photoPath
+            ? `<img id="app-photo-img" alt="Applicant photo" style="width:72px; height:88px; object-fit:cover; border-radius:8px; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.06); background:#f1f5f9;">`
+            : `<div style="width:72px; height:88px; border-radius:8px; border:1.5px dashed var(--border-color); display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f8fafc; color:var(--text-muted); font-size:0.68rem; gap:4px;"><i data-lucide="user" style="width:24px;height:24px;opacity:0.35;"></i>No Photo</div>`
+          }
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <h3 style="font-size:1.3rem; font-weight:800; color:var(--text-primary); margin:0;">${esc(app.studentName || 'Candidate')}</h3>
+              <span class="badge" style="background:#eff6ff; color:#1d4ed8; font-weight:800; font-size:0.78rem; border:1px solid #bfdbfe;">Class ${esc(app.grade || '—')}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin:4px 0 8px; font-size:0.8rem; color:var(--text-muted); flex-wrap:wrap;">
+              <span class="font-mono" style="font-weight:700; color:#334155;">${esc(app.appId || app.id)}</span>
+              <span>•</span>
+              <span>Submitted ${fmtDate(app.createdAt)}</span>
+              <span>•</span>
+              <span>Entered by: <strong>${esc(app.submittedByName || 'Self / Public')}</strong></span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-edit-modal-top" style="color:#0284c7; border-color:#bae6fd; font-weight:700;"><i data-lucide="edit-3"></i> Edit Application</button>
+              ${statusBadge(app.status)}
+              ${payBadge(app.paymentStatus)}
+              ${isEnrolled ? `<span class="badge badge-success" style="font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</span>` : ''}
             </div>
           </div>
+        </div>
 
-          <!-- Entrance Exam Marks Card -->
-          <div style="background: var(--bg-subtle); padding:12px; border-radius:8px; margin-top:14px; border:1px solid var(--border-color);">
-            <h4 style="font-size:0.9rem; margin-bottom:8px; color:#2563eb; display:flex; align-items:center; gap:6px;">
-              <i data-lucide="award" style="width:16px; height:16px;"></i> Entrance Exam &amp; Interview Marks
-            </h4>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
-              <div style="width:95px;">
-                <label style="font-size:0.72rem; color:var(--text-muted); display:block;">Written (50)</label>
-                <input type="number" class="form-input font-mono" id="exam-written" value="${esc(exam.writtenScore ?? '')}" placeholder="0" min="0" max="50">
-              </div>
-              <div style="width:95px;">
-                <label style="font-size:0.72rem; color:var(--text-muted); display:block;">Interview (50)</label>
-                <input type="number" class="form-input font-mono" id="exam-interview" value="${esc(exam.interviewScore ?? '')}" placeholder="0" min="0" max="50">
-              </div>
-              <div style="width:95px;">
-                <label style="font-size:0.72rem; color:var(--text-muted); display:block;">Total (100)</label>
-                <input type="text" class="form-input font-mono" id="exam-total" value="${exam.totalScore != null ? exam.totalScore : ''}" readonly style="background:#f1f5f9; font-weight:700;">
-              </div>
-              <div style="flex:1; min-width:140px;">
-                <label style="font-size:0.72rem; color:var(--text-muted); display:block;">Examiner Remarks</label>
-                <input class="form-input" id="exam-remarks" value="${esc(exam.examinerRemarks || '')}" placeholder="e.g. Recommended">
-              </div>
-              <button class="btn btn-secondary btn-sm" id="btn-save-entrance-score"><i data-lucide="save"></i> Save Marks</button>
-            </div>
+        <!-- KPI Quick Metric Pill -->
+        <div style="display:flex; gap:16px; align-items:center; background:#ffffff; padding:10px 18px; border-radius:10px; border:1px solid var(--border-color); box-shadow:0 2px 5px rgba(0,0,0,0.03);">
+          <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
+            <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Total Fees</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#1e293b;">${fmtMoney(app.feeTotal)}</div>
+          </div>
+          <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
+            <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Paid Amount</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#16a34a;">${fmtMoney(totalPaidCalc)}</div>
+          </div>
+          <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
+            <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Balance Due</div>
+            <div style="font-size:1.15rem; font-weight:800; color:${balanceDueCalc > 0 ? '#ef4444' : '#64748b'};">${fmtMoney(balanceDueCalc)}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Exam Score</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#2563eb;">${exam.totalScore != null ? `${exam.totalScore}/100` : '—'}</div>
           </div>
         </div>
       </div>
 
-      <div style="margin-top:18px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-        <div>
-          <h4 style="font-size:0.95rem; margin-bottom:8px; color:#b45309;">Parent Portal Credentials</h4>
-          ${credential ? `
-            <table class="tms-table" style="font-size:0.82rem;"><tbody>
-              <tr><th style="text-align:left;">Username</th><td><input class="form-input" id="cred-username" value="${esc(credential.username)}"></td></tr>
-              <tr><th style="text-align:left;">Password</th><td><input class="form-input font-mono" id="cred-password" value="${esc(credential.password)}"></td></tr>
-            </tbody></table>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-              <button class="btn btn-secondary btn-sm" id="btn-save-credential"><i data-lucide="save"></i> Save</button>
-              <button class="btn btn-secondary btn-sm" id="btn-resend-credential"><i data-lucide="send"></i> Resend</button>
-              ${(credential.userId || app.parentUserId) ? '' : '<button class="btn btn-primary btn-sm" id="btn-activate-credential"><i data-lucide="key-round"></i> Activate Login</button>'}
-              <button class="btn btn-secondary btn-sm" id="btn-delete-credential" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete</button>
+      <!-- Main Master-Detail 2-Column Grid -->
+      <div style="display:grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap:20px; align-items:start;">
+        
+        <!-- Left Column: Dossier & Documentation -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- Profile Card -->
+          <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="user-check" style="width:16px; height:16px;"></i> Applicant &amp; Family Dossier</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-edit-dossier-card" style="font-size:0.75rem; padding:2px 8px; color:#0284c7; border-color:#bae6fd; font-weight:700;"><i data-lucide="edit-3"></i> Edit Data</button>
             </div>
-            ${(credential.userId || app.parentUserId) ? '' : '<p style="font-size:0.74rem;color:#b45309;margin-top:6px;">This parent login has not been activated yet (the account could not be created when the form was submitted). Click <strong>Activate Login</strong> to create it now.</p>'}`
-            : '<p style="font-size:0.82rem;color:var(--text-muted);">No credentials generated for this application.</p>'}
+            <div class="table-responsive" style="max-height:480px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px;">
+              <table class="tms-table" style="font-size:0.82rem; margin:0;">
+                <tbody>
+                  <tr>
+                    <th style="width:36%; background:#f8fafc; font-weight:700; color:#475569; font-size:0.75rem; border-bottom:1px solid #f1f5f9; padding:8px 12px;">Form Number</th>
+                    <td class="font-mono" style="font-weight:700; color:#1e293b; border-bottom:1px solid #f1f5f9; padding:8px 12px;">${esc(app.appId || app.id)}</td>
+                  </tr>
+                  <tr>
+                    <th style="background:#f8fafc; font-weight:700; color:#475569; font-size:0.75rem; border-bottom:1px solid #f1f5f9; padding:8px 12px;">Submitted Date</th>
+                    <td style="font-size:0.82rem; border-bottom:1px solid #f1f5f9; padding:8px 12px;">${fmtDate(app.createdAt)}</td>
+                  </tr>
+                  ${detailsRows}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Uploaded Documents Card -->
+          <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="files" style="width:16px; height:16px;"></i> Attached Documents &amp; Verification
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              ${docsListHtml}
+            </div>
+          </div>
         </div>
-        <div>
-          <h4 style="font-size:0.95rem; margin-bottom:8px; color:#15803d;">Verification Remarks</h4>
-          <textarea class="form-textarea" id="app-remarks" rows="3" placeholder="Remarks shown to the applicant…">${esc(app.remarks || '')}</textarea>
+
+        <!-- Right Column: Administrative Workflows, Ledger, Entrance Exam, Parent Login -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- Fee Structure & Payment Ledger Card -->
+          <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+              <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="receipt" style="width:16px;height:16px;"></i> Fee Assessment &amp; Ledger</span>
+              <span style="font-size:0.85rem; font-weight:800; color:#1e293b;">Total: ${fmtMoney(app.feeTotal)}</span>
+            </div>
+            
+            <table class="tms-table" style="font-size:0.8rem; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
+              <tbody>
+                ${(app.feeItems || []).map((f) => `<tr><th style="background:#f8fafc; font-size:0.75rem; padding:6px 10px;">${esc(f.name)}</th><td style="text-align:right; font-weight:700; padding:6px 10px;">${fmtMoney(f.amount)}</td></tr>`).join('') || '<tr><td style="color:var(--text-muted); padding:8px 10px;">No fees configured.</td></tr>'}
+              </tbody>
+            </table>
+
+            <div style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px;">Payment History</div>
+            <div class="table-responsive" style="max-height:140px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; margin-bottom:14px;">
+              <table class="tms-table" style="font-size:0.78rem; margin:0;">
+                <thead><tr><th>Date</th><th>Mode</th><th>Reference</th><th style="text-align:right;">Amount</th></tr></thead>
+                <tbody>${paymentRows}</tbody>
+              </table>
+            </div>
+
+            <!-- Record a Payment Form (Spacious 2-row layout) -->
+            <div style="background:var(--bg-subtle, #f8fafc); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
+              <div style="font-weight:700; font-size:0.82rem; margin-bottom:8px; color:#1e293b; display:flex; align-items:center; gap:5px;">
+                <i data-lucide="plus-circle" style="width:14px; height:14px; color:#16a34a;"></i> Record Payment Transaction
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px; font-weight:600;">Amount (₹) *</label>
+                  <input type="number" class="form-input form-input-sm" id="pay-amount" placeholder="e.g. 500" style="width:100%;">
+                </div>
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px; font-weight:600;">Payment Mode</label>
+                  <select class="form-select form-select-sm" id="pay-mode" style="width:100%;">
+                    <option>Cash</option><option>UPI</option><option>Cheque</option><option>Card</option><option>Bank Transfer</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input class="form-input form-input-sm" id="pay-ref" placeholder="Reference / Receipt No / Note" style="flex:1;">
+                <button type="button" class="btn btn-primary btn-sm" id="btn-record-payment" style="white-space:nowrap; padding:5px 12px;">
+                  <i data-lucide="plus"></i> Add
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Entrance Exam & Interview Marks Card -->
+          <div class="card" style="padding:16px 18px; border:1.5px solid #bfdbfe; border-radius:10px; background:rgba(37,99,235,0.02); margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#2563eb; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="award" style="width:16px; height:16px;"></i> Entrance Examination &amp; Evaluation
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+              <div style="background:#ffffff; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color);">
+                <label style="font-size:0.7rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:2px;">Written (50)</label>
+                <input type="number" class="form-input form-input-sm font-mono" id="exam-written" value="${esc(exam.writtenScore ?? '')}" placeholder="0" min="0" max="50" style="font-weight:700; width:100%;">
+              </div>
+              <div style="background:#ffffff; padding:8px 10px; border-radius:8px; border:1px solid var(--border-color);">
+                <label style="font-size:0.7rem; color:var(--text-muted); font-weight:700; display:block; margin-bottom:2px;">Interview (50)</label>
+                <input type="number" class="form-input form-input-sm font-mono" id="exam-interview" value="${esc(exam.interviewScore ?? '')}" placeholder="0" min="0" max="50" style="font-weight:700; width:100%;">
+              </div>
+              <div style="background:#eff6ff; padding:8px 10px; border-radius:8px; border:1.5px solid #bfdbfe; text-align:center;">
+                <label style="font-size:0.7rem; color:#1d4ed8; font-weight:800; display:block; margin-bottom:2px;">Total (100)</label>
+                <input type="text" class="form-input form-input-sm font-mono" id="exam-total" value="${exam.totalScore != null ? exam.totalScore : ''}" readonly style="background:transparent; border:none; font-weight:800; font-size:1.15rem; color:#1d4ed8; text-align:center; padding:0; width:100%;">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input class="form-input form-input-sm" id="exam-remarks" value="${esc(exam.examinerRemarks || '')}" placeholder="Examiner remarks (e.g. Recommended, Strong in Math)" style="flex:1;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-save-entrance-score" style="white-space:nowrap; padding:5px 12px;">
+                <i data-lucide="save"></i> Save Scores
+              </button>
+            </div>
+          </div>
+
+          <!-- Parent Portal Account Credentials Card -->
+          <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#b45309; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="key-round" style="width:16px; height:16px;"></i> Parent Portal Access Credentials
+            </div>
+            ${credential ? `
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px; font-weight:600;">Username</label>
+                  <input class="form-input form-input-sm font-mono" id="cred-username" value="${esc(credential.username)}" style="width:100%;">
+                </div>
+                <div>
+                  <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px; font-weight:600;">Password</label>
+                  <input class="form-input form-input-sm font-mono" id="cred-password" value="${esc(credential.password)}" style="width:100%;">
+                </div>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-save-credential"><i data-lucide="save"></i> Save</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-parent-cred" style="color:#0284c7;"><i data-lucide="share-2"></i> Copy Login Message</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-parent-cred" style="color:#16a34a;"><i data-lucide="send"></i> WhatsApp</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-resend-credential"><i data-lucide="send"></i> Resend</button>
+                ${(credential.userId || app.parentUserId) ? '' : '<button type="button" class="btn btn-primary btn-sm" id="btn-activate-credential"><i data-lucide="key-round"></i> Activate Login</button>'}
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-delete-credential" style="color:#ef4444; margin-left:auto;"><i data-lucide="trash-2"></i> Delete</button>
+              </div>
+              ${(credential.userId || app.parentUserId) ? '' : '<p style="font-size:0.74rem; color:#b45309; margin-top:8px;">Account awaiting activation. Click <strong>Activate Login</strong> to create cloud auth user.</p>'}
+            ` : '<p style="font-size:0.8rem; color:var(--text-muted); margin:0;">No credentials generated for this application yet.</p>'}
+          </div>
+
+          <!-- Official Verification Remarks Card -->
+          <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
+            <div style="font-weight:800; font-size:0.92rem; color:#475569; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="message-square" style="width:16px; height:16px;"></i> Administrative Verification Remarks
+            </div>
+            <textarea class="form-textarea" id="app-remarks" rows="2" placeholder="Official remarks visible to applicant (e.g. Original TC required during interview)..." style="font-size:0.82rem;">${esc(app.remarks || '')}</textarea>
+          </div>
         </div>
+
       </div>
     `;
 
     const footerHtml = `
-      <button class="btn btn-secondary" id="btn-app-close">Close</button>
-      <button class="btn btn-secondary" id="btn-app-form"><i data-lucide="file-text"></i> View as Form</button>
-      <button class="btn btn-secondary" id="btn-app-print"><i data-lucide="printer"></i> Print Form</button>
-      <button class="btn btn-secondary" id="btn-app-verifying"><i data-lucide="clock"></i> Mark Under Verification</button>
-      <button class="btn btn-secondary" id="btn-app-reject" style="color:#ef4444;"><i data-lucide="x-circle"></i> Reject</button>
-      <button class="btn btn-primary" id="btn-app-approve"><i data-lucide="check-circle"></i> Approve</button>
-      ${isEnrolled
-        ? `<button class="btn btn-secondary" id="btn-view-enrolled" style="color:#16a34a; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
-        : `<button class="btn btn-success" id="btn-app-enroll" style="background:#16a34a; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
-      }
-      <button class="btn btn-secondary" id="btn-app-delete-modal" style="color:#ef4444; margin-left:auto;"><i data-lucide="trash-2"></i> Delete</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; width:100%;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-close">Close</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-form"><i data-lucide="file-text"></i> View as Form</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-print"><i data-lucide="printer"></i> Print Form</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-verifying" style="color:#b45309; border-color:#fde68a;">
+            <i data-lucide="clock"></i> Mark Under Verification
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-reject" style="color:#ef4444; border-color:#fca5a5;">
+            <i data-lucide="x-circle"></i> Reject
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-app-approve">
+            <i data-lucide="check-circle"></i> Approve
+          </button>
+          ${isEnrolled
+            ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-view-enrolled" style="color:#16a34a; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
+            : `<button type="button" class="btn btn-success btn-sm" id="btn-app-enroll" style="background:#16a34a; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
+          }
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-app-delete-modal" style="color:#ef4444;" title="Delete Application">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+      </div>
     `;
 
-    UIComponents.openModal({ title: `Application ${app.appId || app.id}`, bodyHtml, footerHtml, maxWidth: '820px' });
+    UIComponents.openModal({ title: `Application ${app.appId || app.id}`, bodyHtml, footerHtml, maxWidth: '1140px' });
 
     document.getElementById('btn-app-close').addEventListener('click', () => UIComponents.closeModal());
     document.getElementById('btn-app-approve').addEventListener('click', () => this.setApplicationStatus(app, 'Approved'));
@@ -739,6 +925,78 @@ export class AdminModule {
         this.openApplicationModal(app.id);
       });
     });
+    // Edit application button listeners
+    document.getElementById('btn-edit-modal-top')?.addEventListener('click', () => {
+      UIComponents.closeModal();
+      this.openEditApplicationModal(app.id);
+    });
+    document.getElementById('btn-edit-dossier-card')?.addEventListener('click', () => {
+      UIComponents.closeModal();
+      this.openEditApplicationModal(app.id);
+    });
+
+    // Applicant photo click opens File Preview modal
+    document.getElementById('app-photo-img')?.addEventListener('click', () => {
+      if (photoPath) {
+        this.openFilePreviewModal({
+          title: `${app.studentName || 'Candidate'} — Photograph`,
+          path: photoPath
+        });
+      }
+    });
+
+    // Document preview buttons
+    document.querySelectorAll('.btn-preview-doc-file').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.openFilePreviewModal({
+          title: btn.dataset.title,
+          path: btn.dataset.path
+        });
+      });
+    });
+
+    // Document direct download buttons
+    document.querySelectorAll('.btn-download-doc-file').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url = await admissionService.getSignedUrl('admission-docs', btn.dataset.path, 3600) ||
+                    admissionService.getPublicUrl('admission-docs', btn.dataset.path);
+        if (url) window.open(url, '_blank');
+        else UIComponents.showToast('Storage link unavailable.', 'warning');
+      });
+    });
+
+    // Parent login credentials copy & WhatsApp share
+    document.getElementById('btn-copy-parent-cred')?.addEventListener('click', () => {
+      const u = document.getElementById('cred-username')?.value.trim() || credential?.username;
+      const p = document.getElementById('cred-password')?.value || credential?.password;
+      this.copyCredentialMessageToClipboard({
+        name: app.guardianName || app.studentName || 'Parent',
+        role: 'parent',
+        username: u,
+        password: p,
+        customUrl: `${this.getCredentialShareConfig().domain}/login.html`
+      });
+    });
+
+    document.getElementById('btn-wa-parent-cred')?.addEventListener('click', () => {
+      const u = document.getElementById('cred-username')?.value.trim() || credential?.username;
+      const p = document.getElementById('cred-password')?.value || credential?.password;
+      const msg = this.compileCredentialMessage({
+        name: app.guardianName || app.studentName || 'Parent',
+        role: 'parent',
+        username: u,
+        password: p,
+        customUrl: `${this.getCredentialShareConfig().domain}/login.html`
+      });
+      const ph = WhatsAppService.cleanPhone(app.phone);
+      if (ph) {
+        window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    });
+
     const delModalBtn = document.getElementById('btn-app-delete-modal');
     if (delModalBtn) {
       delModalBtn.addEventListener('click', async () => {
@@ -777,7 +1035,8 @@ export class AdminModule {
     if (printBtn) {
       printBtn.addEventListener('click', async () => {
         const formHtml = await this.buildApplicationFormHtml(app, fields, credential);
-        exportPdf(`Admission-Form-${app.appId || app.id}`, formHtml);
+        const filename = formatPdfFilename('Admission_Form', app.appId || app.id);
+        exportPdf(filename, formHtml, { filename, title: `Admission Application Form — ${app.appId || app.id}`, subtitle: `Candidate: ${app.studentName || 'Student'} • Class: ${app.grade || '—'}`, showHeader: false, showFooter: true });
       });
     }
 
@@ -899,14 +1158,7 @@ export class AdminModule {
   }
 
   static async printApplication(id) {
-    const app = (this._apps || []).find((a) => a.id === id);
-    if (!app) return;
-    const fields = await admissionService.listFields();
-    const body = `
-      <div class="doc-title">${esc(TMS_CONFIG.institution.name)}</div>
-      <div class="doc-sub">Admission Application — ${esc(app.appId || app.id)}</div>
-      ${kvTable(this.applicationPairs(app, fields))}`;
-    exportPdf(`Admission-${app.appId || app.id}`, body);
+    await this.showApplicationForm(id, true);
   }
 
   static async openEnrollmentModal(app) {
@@ -1169,7 +1421,16 @@ export class AdminModule {
           </div>
         `;
 
-        exportPdf(`Merit-List-${selected}`, meritDocHtml);
+        const meritFilename = formatPdfFilename('Merit_List', selected);
+        exportPdf(meritFilename, meritDocHtml, {
+          filename: meritFilename,
+          title: `Official Entrance Merit List — Class ${selected.toUpperCase()}`,
+          subtitle: `Academic Session: ${TMS_CONFIG.academic?.currentYear || '2027 - 2028'}`,
+          badge: 'Merit Verified',
+          showHeader: true,
+          showFooter: true,
+          signatures: ['Admission In-Charge', 'Principal / Controller of Examinations']
+        });
       });
     }
 
@@ -1179,35 +1440,33 @@ export class AdminModule {
   /** Build the application laid out exactly like the printed admission form. */
   static async buildApplicationFormHtml(app, fields, credential) {
     const list = fields || (await admissionService.listFields());
-    const cred = credential === undefined ? await admissionService.getCredentials(app.id) : credential;
+    const cred = credential !== undefined ? credential : await admissionService.getOrCreateCredentials(app);
 
     const photoKey = 'photo';
-
-    // Real photograph (signed URL from the private admission bucket).
     const photoPath = (app.payload || {})[photoKey] || '';
     let photoUrl = '';
     if (photoPath) {
       photoUrl = (await admissionService.getSignedUrl('admission-docs', photoPath, 3600)) || '';
     }
     const photoBox = `
-      <div style="width:100px;height:124px;border:1px solid #000;margin-left:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;font-size:9px;background:#fafafa;">
+      <div style="width:105px;height:128px;border:1.5px solid #0f172a;margin-left:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;font-size:8.5px;background:#fafafa;padding:2px;border-radius:4px;">
         ${photoUrl
           ? `<img src="${esc(photoUrl)}" alt="Applicant photograph" style="width:100%;height:100%;object-fit:cover;display:block;">`
-          : 'Passport size photo'}
+          : 'Affix recent<br>passport-size<br>photograph'}
       </div>`;
 
     const groups = new Map();
     list.forEach((f) => {
       if (f.fieldKey === photoKey) return;
-      const s = f.section || 'General';
+      const s = f.section || 'General Details';
       if (!groups.has(s)) groups.set(s, []);
       groups.get(s).push(f);
     });
 
     let details = '';
     groups.forEach((sectionFields, section) => {
-      details += `<div style="font-size:12px; font-weight:800; text-decoration:underline; margin:10px 0 4px;">${esc(section)}</div>`;
-      details += '<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:6px;"><tbody>';
+      details += `<div style="font-size:11.5px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #bbf7d0; padding-bottom:2px;">${esc(section)}</div>`;
+      details += '<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:8px;"><tbody>';
       sectionFields.forEach((f) => {
         const raw = (app.payload || {})[f.fieldKey];
         const isFile = (f.fieldType || 'text') === 'file';
@@ -1215,63 +1474,212 @@ export class AdminModule {
           ? (raw ? esc(String(raw).split('/').pop()) : 'Not attached')
           : (raw ? esc(raw) : '&#8212;');
         details += `<tr>
-          <td style="width:38%; padding:3px 0;"><strong>${esc(f.label)} :</strong></td>
-          <td style="padding:3px 0;">${shown}</td>
+          <td style="width:36%; padding:4px 6px; background:#f8fafc; font-weight:700; border:1px solid #e2e8f0; color:#334155;">${esc(f.label)}</td>
+          <td style="padding:4px 6px; border:1px solid #e2e8f0; font-weight:500;">${shown}</td>
         </tr>`;
       });
       details += '</tbody></table>';
     });
 
     const feeRows = (app.feeItems || [])
-      .map((f) => `<tr><td style="padding:2px 0;">${esc(f.name)}</td><td style="text-align:right;">${fmtMoney(f.amount)}</td></tr>`)
+      .map((f) => `<tr><td style="padding:3px 6px; border:1px solid #e2e8f0;">${esc(f.name)}</td><td style="text-align:right; padding:3px 6px; border:1px solid #e2e8f0;">${fmtMoney(f.amount)}</td></tr>`)
       .join('');
 
-    const credBlock = cred
-      ? `<div style="border:1.5px dashed #b45309; padding:8px; margin-top:12px;">
-           <div style="font-size:11px; font-weight:800; text-decoration:underline;">Parent Portal Login</div>
-           <div style="font-size:10.5px; margin-top:4px;">
-             Username: <strong>${esc(cred.username)}</strong> &nbsp;&nbsp; Password: <strong>${esc(cred.password)}</strong>
-           </div>
-         </div>`
-      : '';
+    const portalUrl = (typeof window !== 'undefined' && window.location.origin)
+      ? `${window.location.origin}/parent`
+      : 'https://www.thaibagarden.com/parent';
+
+    const credBlock = cred ? `
+      <div style="border:1.5px solid #16a34a; background:#f0fdf4; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #bbf7d0; padding-bottom:4px; margin-bottom:6px;">
+          <div style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">
+            🔐 Parent &amp; Student Portal Login Credentials (Official)
+          </div>
+          <span style="font-size:8.5px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:10px;">Status: Active</span>
+        </div>
+        <table style="width:100%; font-size:10.5px; border-collapse:collapse; margin-bottom:4px; border:none;">
+          <tbody>
+            <tr style="border:none;">
+              <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Tracking Portal:</strong></td>
+              <td style="padding:3px 0; color:#15803d; font-family:monospace; border:none;"><strong>${esc(portalUrl)}</strong></td>
+              <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Authorized Role:</strong></td>
+              <td style="padding:3px 0; border:none;">Parent / Student Tracking</td>
+            </tr>
+            <tr style="border:none;">
+              <td style="padding:3px 0; color:#374151; border:none;"><strong>Username:</strong></td>
+              <td style="padding:3px 0; border:none;"><span class="font-mono" style="font-size:12px; font-weight:800; color:#0f172a; background:#ffffff; padding:2px 8px; border:1px solid #cbd5e1; border-radius:4px;">${esc(cred.username)}</span></td>
+              <td style="padding:3px 0; color:#374151; border:none;"><strong>Password:</strong></td>
+              <td style="padding:3px 0; border:none;"><span class="font-mono" style="font-size:12px; font-weight:800; color:#0f172a; background:#ffffff; padding:2px 8px; border:1px solid #cbd5e1; border-radius:4px;">${esc(cred.password || '******')}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:8.5px; color:#475569; margin-top:4px; line-height:1.35;">
+          <strong>Security Notice:</strong> Keep these credentials strictly confidential. Sign in to the school portal to track admission status, download entrance exam admit cards, pay online fees, and access the academic diary.
+        </div>
+      </div>
+    ` : '';
+
+    const payload = app.payload || {};
+    const candName = app.studentName || payload.candidateName || payload.studentName || '—';
+    const guardian = app.guardianName || payload.fatherName || payload.guardianName || '—';
+    const applyingGrade = app.grade || payload.applyingClass || payload.grade || '—';
+    const contactPhone = app.phone || payload.phone || payload.mobile || '—';
+    const addressStr = `${payload.village || payload.address || 'Baghait, Tapan'} ${payload.pin ? '- ' + payload.pin : ''}`.trim();
 
     return `
-      <div class="doc-title">${esc(TMS_CONFIG.institution.name)}</div>
-      <div class="doc-sub">${esc(TMS_CONFIG.institution.tagline || '')} &nbsp;|&nbsp; Admission Application Form</div>
-      <div style="display:flex; align-items:flex-start; gap:16px;">
-        <table style="flex:1; font-size:11px; margin-bottom:10px;"><tbody>
-          <tr>
-            <th style="text-align:left;">Form No</th><td>${esc(app.appId || app.id)}</td>
-          </tr>
-          <tr>
-            <th style="text-align:left;">Status</th><td>${esc(app.status || '')}</td>
-          </tr>
-          <tr>
-            <th style="text-align:left;">Submitted</th><td>${fmtDate(app.createdAt)}</td>
-          </tr>
-          <tr>
-            <th style="text-align:left;">Entered By</th><td>${esc(app.submittedByName || 'Self / Public')}</td>
-          </tr>
-        </tbody></table>
+      <!-- Official Form Header -->
+      <div style="border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
+        <div style="width: 70px; height: 70px; flex-shrink: 0;">
+          ${TMS_LOGO.emblemSvg(70)}
+        </div>
+        <div style="text-align: center; flex: 1;">
+          <div style="font-size: 10px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
+          <h1 style="font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 900; color: #0f172a; margin: 1px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px;">${esc(TMS_CONFIG.institution.name)}</h1>
+          <div style="font-size: 9px; color: #334155;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.district)} - ${esc(TMS_CONFIG.institution.address.pin)} • Regd. No. : ${esc(TMS_CONFIG.institution.regNo)}</div>
+          <div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">Helpline: ${esc(TMS_CONFIG.institution.contact.phone1)}, ${esc(TMS_CONFIG.institution.contact.phone2)} • Web: www.thaibagarden.com</div>
+        </div>
+        <div style="width: 105px; text-align: right; flex-shrink: 0;">
+          <div style="display: inline-block; padding: 3px 8px; background: #f0fdf4; border: 1.5px solid #16a34a; color: #15803d; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
+          <div style="font-size: 8.5px; color: #475569; margin-top: 3px;">Session: <strong>${esc(TMS_CONFIG.academic?.currentYear || '2027 - 2028')}</strong></div>
+        </div>
+      </div>
+
+      <!-- Application Summary Row with Photo -->
+      <div style="display:flex; align-items:flex-start; gap:16px; margin-bottom:12px;">
+        <table style="flex:1; font-size:10.5px; border-collapse:collapse;">
+          <tbody>
+            <tr>
+              <th style="width:28%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Form Number</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong class="font-mono" style="font-size:12px; color:#15803d;">${esc(app.appId || app.id)}</strong></td>
+              <th style="width:24%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Class Applied</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong>${esc(applyingGrade)}</strong></td>
+            </tr>
+            <tr>
+              <th style="padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Submission Date</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;">${fmtDate(app.createdAt)}</td>
+              <th style="padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Application Status</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><span class="badge badge-success">${esc(app.status || 'Submitted')}</span></td>
+            </tr>
+            <tr>
+              <th style="padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Candidate Name</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong>${esc(candName)}</strong></td>
+              <th style="padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Entered By</th>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;">${esc(app.submittedByName || 'Self / Public')}</td>
+            </tr>
+          </tbody>
+        </table>
         ${photoBox}
       </div>
+
+      <!-- Dynamic Sections & Form Details -->
       ${details}
-      <div style="font-size:12px; font-weight:800; text-decoration:underline; margin:12px 0 4px;">Fees &amp; Payment</div>
-      <table style="width:62%; font-size:10.5px; border-collapse:collapse;">
+
+      <!-- Fees & Payment Details -->
+      <div style="font-size:11.5px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #bbf7d0; padding-bottom:2px;">Fees &amp; Payment Ledger</div>
+      <table style="width:65%; font-size:10px; border-collapse:collapse; margin-bottom:8px;">
         <tbody>
-          ${feeRows || '<tr><td>No fees configured.</td><td></td></tr>'}
-          <tr>
-            <td style="border-top:1px solid #000; font-weight:800; padding-top:3px;">Total</td>
-            <td style="border-top:1px solid #000; text-align:right; font-weight:800; padding-top:3px;">${fmtMoney(app.feeTotal)}</td>
+          ${feeRows || '<tr><td style="padding:3px 6px; border:1px solid #e2e8f0;">Admission Registration Fee</td><td style="text-align:right; padding:3px 6px; border:1px solid #e2e8f0;">₹ 0</td></tr>'}
+          <tr style="background:#f8fafc;">
+            <td style="border:1px solid #cbd5e1; font-weight:800; padding:4px 6px;">Total Fee Amount</td>
+            <td style="border:1px solid #cbd5e1; text-align:right; font-weight:800; padding:4px 6px; color:#15803d;">${fmtMoney(app.feeTotal)}</td>
           </tr>
-          <tr><td>Payment Status</td><td style="text-align:right;">${esc(app.paymentStatus || 'Pending')}</td></tr>
+          <tr>
+            <td style="border:1px solid #e2e8f0; padding:3px 6px;">Payment Clearance Status</td>
+            <td style="border:1px solid #e2e8f0; text-align:right; font-weight:700; padding:3px 6px;">${esc(app.paymentStatus || 'Pending')}</td>
+          </tr>
         </tbody>
       </table>
-      ${app.remarks ? `<div style="margin-top:12px; font-size:10.5px;"><strong>Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
+
+      ${app.remarks ? `<div style="margin:8px 0; font-size:10px; background:#f8fafc; padding:6px 10px; border-left:3px solid #16a34a; border-radius:3px;"><strong>Official Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
+
+      <!-- User Credentials Block -->
       ${credBlock}
-      <div style="margin-top:24px; display:flex; justify-content:space-between; font-size:10px;">
-        <span>Parent / Guardian Signature</span>
-        <span>Office Use Only</span>
+
+      <!-- Declaration -->
+      <div style="margin:14px 0 16px 0; font-size:9.5px; line-height:1.4; color:#374151;">
+        <div style="font-weight:800; text-decoration:underline; margin-bottom:2px;">Declaration:</div>
+        I hereby solemnly declare that all particulars furnished in this application are true, complete, and authentic to the best of my knowledge. I agree to abide by the rules, code of discipline, and academic guidelines of THAIBA PUBLIC SCHOOL.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:20px; font-size:10px; margin-bottom:18px;">
+        <div style="text-align:center; min-width:180px;">
+          <div style="border-top:1.5px solid #0f172a; margin-bottom:4px;"></div>
+          <strong>Signature of Parent / Guardian</strong>
+        </div>
+        <div style="text-align:center; min-width:180px;">
+          <div style="border-top:1.5px solid #0f172a; margin-bottom:4px;"></div>
+          <strong>Signature of Candidate / Student</strong>
+        </div>
+        <div style="text-align:center; min-width:180px;">
+          <div style="border-top:1.5px solid #0f172a; margin-bottom:4px;"></div>
+          <strong>Authorized Admission Officer</strong>
+        </div>
+      </div>
+
+      <!-- TEAR-OFF ADMIT CARD SLIP -->
+      <div style="border-top:2px dashed #64748b; margin-top:20px; padding-top:14px; position:relative; page-break-inside:avoid;">
+        <div style="text-align:center; font-size:9px; font-weight:800; color:#475569; letter-spacing:1.5px; margin-bottom:8px;">
+          ✂ - - - - - - - - - - - TEAR-OFF ADMISSION TEST ADMIT CARD &amp; ACKNOWLEDGEMENT SLIP - - - - - - - - - - - ✂
+        </div>
+        <div style="border:1.5px solid #0f172a; padding:10px 14px; border-radius:6px; background:#ffffff;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #0f172a; padding-bottom:6px; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${TMS_LOGO.emblemSvg(36)}
+              <div>
+                <h3 style="font-family:'Outfit', sans-serif; font-size:13px; font-weight:800; margin:0; text-transform:uppercase;">${esc(TMS_CONFIG.institution.name)}</h3>
+                <div style="font-size:8.5px; color:#64748b;">OFFICE OF ADMISSIONS • ENTRANCE ADMIT CARD</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <span class="badge badge-success" style="font-size:9px; font-weight:800;">SESSION ${esc(TMS_CONFIG.academic?.currentYear || '2027 - 2028')}</span>
+            </div>
+          </div>
+
+          <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:6px;">
+            <tbody>
+              <tr>
+                <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Form No. :</strong></td>
+                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong class="font-mono" style="color:#15803d;">${esc(app.appId || app.id)}</strong></td>
+                <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Applying Class :</strong></td>
+                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong>${esc(applyingGrade)}</strong></td>
+              </tr>
+              <tr>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Student Name :</strong></td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1;"><strong>${esc(candName)}</strong></td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Father / Guardian :</strong></td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1;">${esc(guardian)}</td>
+              </tr>
+              <tr>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Contact Number :</strong></td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1;">${esc(contactPhone)}</td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Address :</strong></td>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1;">${esc(addressStr)}</td>
+              </tr>
+              <tr style="background:#f0fdf4;">
+                <td style="padding:3px 4px; border:1.5px solid #16a34a; font-weight:800; color:#166534;"><strong>Portal Credentials :</strong></td>
+                <td colspan="3" style="padding:3px 4px; border:1.5px solid #16a34a;">
+                  User: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? cred.username : '—')}</strong> &nbsp;|&nbsp;
+                  Password: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? (cred.password || '******') : '—')}</strong> &nbsp;|&nbsp;
+                  Portal: <span class="font-mono" style="color:#15803d; font-size:9px;">www.thaibagarden.com</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Exam Centre :</strong></td>
+                <td colspan="3" style="padding:3px 4px; border:1px solid #cbd5e1;">THAIBA PUBLIC SCHOOL, Baghait, Tapan, Dakshin Dinajpur</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; font-size:9px; padding-top:14px;">
+            <div>
+              Date of Issue: <strong>${fmtDate(app.createdAt)}</strong>
+            </div>
+            <div style="text-align:center;">
+              <div style="border-top:1px solid #0f172a; width:140px; margin-bottom:2px;"></div>
+              <strong>Seal &amp; Signature of Authority</strong>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -1281,10 +1689,17 @@ export class AdminModule {
     const app = (this._apps || []).find((a) => a.id === id);
     if (!app) return;
     const fields = await admissionService.listFields();
-    const credential = await admissionService.getCredentials(app.id);
+    const credential = await admissionService.getOrCreateCredentials(app);
     const formHtml = await this.buildApplicationFormHtml(app, fields, credential);
+    const filename = formatPdfFilename('Admission_Form', app.appId || app.id);
     if (print) {
-      exportPdf(`Admission-Form-${app.appId || app.id}`, formHtml);
+      exportPdf(filename, formHtml, {
+        filename,
+        title: `Admission Application Form — ${app.appId || app.id}`,
+        subtitle: `Candidate: ${app.studentName || 'Student'} • Class: ${app.grade || '—'}`,
+        showHeader: false,
+        showFooter: true
+      });
       return;
     }
     UIComponents.openModal({
@@ -1295,7 +1710,15 @@ export class AdminModule {
         <button class="btn btn-primary" id="btn-form-print"><i data-lucide="printer"></i> Print / Save PDF</button>`
     });
     document.getElementById('btn-form-close').addEventListener('click', () => UIComponents.closeModal());
-    document.getElementById('btn-form-print').addEventListener('click', () => exportPdf(`Admission-Form-${app.appId || app.id}`, formHtml));
+    document.getElementById('btn-form-print').addEventListener('click', () => {
+      exportPdf(filename, formHtml, {
+        filename,
+        title: `Admission Application Form — ${app.appId || app.id}`,
+        subtitle: `Candidate: ${app.studentName || 'Student'} • Class: ${app.grade || '—'}`,
+        showHeader: false,
+        showFooter: true
+      });
+    });
     UIComponents.refreshIcons();
   }
 
@@ -1312,24 +1735,47 @@ export class AdminModule {
 
   static exportApplicationsPdf() {
     const rows = this.filteredApplications();
+    const filename = formatPdfFilename('Admissions_Register', new Date().toISOString().slice(0, 10));
     const body = `
-      <div class="doc-title">${esc(TMS_CONFIG.institution.name)}</div>
-      <div class="doc-sub">Admission Applications Report — Generated ${new Date().toLocaleString('en-GB')}</div>
-      <table>
-        <thead><tr><th>Form No</th><th>Candidate</th><th>Class</th><th>Guardian</th><th>Phone</th><th>Fees</th><th>Payment</th><th>Status</th></tr></thead>
+      <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+        <thead>
+          <tr style="background: #f1f5f9; color: #0f172a;">
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Form No</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Candidate Name</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Class</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Guardian</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Phone</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Fees</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Payment</th>
+            <th style="padding: 6px 8px; border: 1px solid #cbd5e1;">Status</th>
+          </tr>
+        </thead>
         <tbody>
           ${rows.map((a) => `<tr>
-            <td>${esc(a.appId || a.id)}</td><td>${esc(a.studentName)}</td><td>${esc(a.grade)}</td>
-            <td>${esc(a.guardianName)}</td><td>${esc(a.phone)}</td><td>${fmtMoney(a.feeTotal)}</td>
-            <td>${esc(a.paymentStatus)}</td><td>${esc(a.status)}</td>
+            <td class="font-mono" style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: 700;">${esc(a.appId || a.id)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: 600;">${esc(a.studentName)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(a.grade)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(a.guardianName)}</td>
+            <td class="font-mono" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(a.phone)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${fmtMoney(a.feeTotal)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(a.paymentStatus)}</td>
+            <td style="padding: 5px 8px; border: 1px solid #cbd5e1;"><span class="badge badge-info">${esc(a.status)}</span></td>
           </tr>`).join('')}
         </tbody>
       </table>`;
-    exportPdf('TMS-Admissions-Report', body);
+    exportPdf(filename, body, {
+      filename,
+      title: 'Admissions Applications Master Register',
+      subtitle: `Total Candidate Applications: ${rows.length} • Session ${TMS_CONFIG.academic?.currentYear || '2027 - 2028'}`,
+      badge: 'Official Register',
+      showHeader: true,
+      showFooter: true,
+      signatures: ['Admissions Officer', 'Accounts Officer', 'Principal / Headmaster']
+    });
   }
 
   /* ================================================================== */
-  /* Form Builder                                                       */
+  /* Section-Based Admission Form Customizer                            */
   /* ================================================================== */
 
   static async renderFormBuilderTab(tabContent) {
@@ -1339,39 +1785,141 @@ export class AdminModule {
       ? (await admissionService.listFields())
       : fields;
 
-    tabContent.innerHTML = `
-      <div class="card">
-        <div class="card-header" style="flex-wrap:wrap; gap:12px;">
-          <div>
-            <h3 class="card-title">Admission Form Builder</h3>
-            <p class="card-desc">Add, edit, reorder and mark fields required. ${usingDefaults ? '<strong style="color:#b45309;">Showing built-in defaults — save to persist.</strong>' : ''}</p>
+    // Group fields by section
+    const sectionMap = new Map();
+    list.forEach((f) => {
+      const s = (f.section || 'General Information').trim();
+      if (!sectionMap.has(s)) sectionMap.set(s, []);
+      sectionMap.get(s).push(f);
+    });
+
+    const totalSections = sectionMap.size;
+    const totalFields = list.length;
+    const activeCount = list.filter((f) => f.isActive !== false).length;
+
+    let sectionsHtml = '';
+    let secIdx = 0;
+
+    sectionMap.forEach((secFields, secName) => {
+      secIdx += 1;
+      const secActiveCount = secFields.filter(f => f.isActive !== false).length;
+
+      sectionsHtml += `
+        <div class="card section-customizer-card" style="margin-bottom:22px; border:1.5px solid var(--border-color); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-sm);">
+          <div class="card-header" style="background:#F8FAFC; border-bottom:1.5px solid var(--border-color); padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="width:34px; height:34px; border-radius:8px; background:#DCFCE7; color:#15803d; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; font-family:var(--font-mono);">
+                ${String(secIdx).padStart(2, '0')}
+              </span>
+              <div>
+                <h4 style="margin:0 0 2px 0; font-size:1.05rem; font-weight:800; color:var(--text-primary); letter-spacing:-0.01em;">
+                  ${esc(secName)}
+                </h4>
+                <div style="display:flex; gap:8px; align-items:center; font-size:0.75rem; color:var(--text-muted);">
+                  <span>${secFields.length} question(s)</span>
+                  <span>•</span>
+                  <span style="color:#15803d; font-weight:600;">${secActiveCount} active</span>
+                  ${secFields.length - secActiveCount > 0 ? `<span>•</span><span style="color:#b45309;">${secFields.length - secActiveCount} disabled</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm btn-rename-section" data-section="${esc(secName)}" title="Rename this section">
+                <i data-lucide="edit-3"></i> Rename Section
+              </button>
+              <button class="btn btn-primary btn-sm btn-add-field-to-sec" data-section="${esc(secName)}">
+                <i data-lucide="plus"></i> Add Question
+              </button>
+              <button class="btn btn-secondary btn-sm btn-del-section" data-section="${esc(secName)}" style="color:#ef4444;" title="Delete Section and all its questions">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
           </div>
-          <div style="display:flex; gap:8px;">
-            ${usingDefaults ? '<button class="btn btn-secondary btn-sm" id="btn-seed-fields"><i data-lucide="download"></i> Load &amp; Save Defaults</button>' : ''}
-            ${usingDefaults ? '' : '<button class="btn btn-secondary btn-sm" id="btn-select-all-fields"><i data-lucide="check-square"></i> Select All</button><button class="btn btn-secondary btn-sm" id="btn-bulk-del-fields" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Selected (<span id="field-selected-count">0</span>)</button>'}
-            <button class="btn btn-primary btn-sm" id="btn-add-field"><i data-lucide="plus"></i> Add Field</button>
+
+          <div class="table-responsive">
+            <table class="tms-table" style="font-size:0.85rem; margin:0;">
+              <thead>
+                <tr style="background:#ffffff;">
+                  <th style="width:34px;">${usingDefaults ? '' : '<input type="checkbox" class="section-select-all" data-section="' + esc(secName) + '">'}</th>
+                  <th style="width:50px;">#</th>
+                  <th>Question Label</th>
+                  <th>Field Key</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${secFields.map((f, i) => `
+                  <tr>
+                    <td>${usingDefaults ? '' : `<input type="checkbox" class="field-row-check" data-section="${esc(secName)}" value="${esc(f.id)}">`}</td>
+                    <td class="font-mono" style="font-size:0.8rem; color:var(--text-muted);">${f.displayOrder || i + 1}</td>
+                    <td>
+                      <span style="font-weight:700; color:var(--text-primary);">${esc(f.label)}</span>
+                      ${f.placeholder ? `<br><span style="font-size:0.72rem; color:var(--text-muted);">${esc(f.placeholder)}</span>` : ''}
+                    </td>
+                    <td class="font-mono" style="font-size:0.78rem; color:#475569;">${esc(f.fieldKey)}</td>
+                    <td><span class="badge badge-info" style="font-size:0.72rem;">${esc(f.fieldType)}</span></td>
+                    <td>
+                      <button type="button" class="badge btn-toggle-required ${f.required ? 'badge-success' : ''}" data-key="${esc(f.fieldKey)}" style="cursor:pointer; border:none;" title="Click to toggle required">
+                        ${f.required ? '✓ Required' : 'Optional'}
+                      </button>
+                    </td>
+                    <td>
+                      <button type="button" class="badge btn-toggle-active ${f.isActive === false ? 'badge-warning' : 'badge-success'}" data-key="${esc(f.fieldKey)}" style="cursor:pointer; border:none;" title="Click to toggle active">
+                        ${f.isActive === false ? '⊘ Disabled' : '● Active'}
+                      </button>
+                    </td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <button class="btn btn-secondary btn-sm btn-edit-field" data-key="${esc(f.fieldKey)}" title="Edit Question"><i data-lucide="pencil"></i></button>
+                      <button class="btn btn-secondary btn-sm btn-del-field" data-id="${esc(f.id)}" style="color:#ef4444;" title="Delete Question"><i data-lucide="trash-2"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
         </div>
-        <div class="table-responsive">
-          <table class="tms-table" style="font-size:0.85rem;">
-            <thead><tr><th style="width:34px;">${usingDefaults ? '' : '<input type="checkbox" id="field-select-all">'}</th><th>#</th><th>Label</th><th>Key</th><th>Type</th><th>Section</th><th>Required</th><th>Active</th><th>Actions</th></tr></thead>
-            <tbody>
-              ${list.map((f, i) => `<tr>
-                <td>${usingDefaults ? '' : `<input type="checkbox" class="field-row-check" value="${esc(f.id)}">`}</td>
-                <td>${f.displayOrder || i + 1}</td>
-                <td style="font-weight:600;">${esc(f.label)}</td>
-                <td class="font-mono">${esc(f.fieldKey)}</td>
-                <td><span class="badge badge-info">${esc(f.fieldType)}</span></td>
-                <td>${esc(f.section || '—')}</td>
-                <td>${f.required ? '<span class="badge badge-success">Yes</span>' : '<span class="badge">No</span>'}</td>
-                <td>${f.isActive === false ? '<span class="badge badge-warning">Off</span>' : '<span class="badge badge-success">On</span>'}</td>
-                <td>
-                  <button class="btn btn-secondary btn-sm btn-edit-field" data-key="${esc(f.fieldKey)}"><i data-lucide="pencil"></i></button>
-                  <button class="btn btn-secondary btn-sm btn-del-field" data-id="${esc(f.id)}" style="color:#ef4444;"><i data-lucide="trash-2"></i></button>
-                </td>
-              </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:26px;">No fields configured.</td></tr>'}
-            </tbody>
-          </table>
+      `;
+    });
+
+    tabContent.innerHTML = `
+      <div style="margin-bottom:20px;">
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header" style="flex-wrap:wrap; gap:14px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="badge badge-primary" style="font-size:0.75rem;">Section-Based Architecture</span>
+                <span style="font-size:0.78rem; color:var(--text-muted); font-weight:600;">${totalSections} Section(s) • ${totalFields} Total Question(s) (${activeCount} Active)</span>
+              </div>
+              <h3 class="card-title" style="margin-top:4px;">Admission Form Section Customizer</h3>
+              <p class="card-desc" style="margin-top:2px;">
+                Organize your admission portal application into dedicated section steps. Only active questions configured here will be asked to candidates.
+                ${usingDefaults ? '<br><strong style="color:#b45309;">Showing built-in defaults — click "Save &amp; Persist Defaults" to enable live customization.</strong>' : ''}
+              </p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              ${usingDefaults ? '<button class="btn btn-secondary btn-sm" id="btn-seed-fields"><i data-lucide="download"></i> Save &amp; Persist Defaults</button>' : ''}
+              ${usingDefaults ? '' : `
+                <button class="btn btn-secondary btn-sm" id="btn-select-all-fields"><i data-lucide="check-square"></i> Select All</button>
+                <button class="btn btn-secondary btn-sm" id="btn-bulk-del-fields" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Selected (<span id="field-selected-count">0</span>)</button>
+              `}
+              <button class="btn btn-secondary btn-sm" id="btn-add-section"><i data-lucide="folder-plus"></i> Add New Section</button>
+              <button class="btn btn-primary btn-sm" id="btn-add-field"><i data-lucide="plus"></i> Add Question</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="sections-container">
+          ${sectionsHtml || `
+            <div class="card" style="text-align:center; padding:48px 20px; color:var(--text-muted);">
+              <i data-lucide="layers" style="width:48px; height:48px; margin:0 auto 12px; color:#cbd5e1;"></i>
+              <h4 style="color:var(--text-primary); margin-bottom:6px;">No Sections Configured</h4>
+              <p style="font-size:0.86rem; max-width:400px; margin:0 auto 16px;">Click "Add New Section" or "Save &amp; Persist Defaults" to set up your admission form.</p>
+            </div>
+          `}
         </div>
       </div>
     `;
@@ -1380,7 +1928,7 @@ export class AdminModule {
     if (seedBtn) seedBtn.addEventListener('click', async () => {
       await admissionService.seedDefaultFields();
       await auditService.log('ADMISSION_FORM_FIELDS_SEEDED', 'GOVERNANCE', {});
-      UIComponents.showToast('Default fields saved.', 'success');
+      UIComponents.showToast('Default form sections saved.', 'success');
       this.renderTab('form-builder');
     });
 
@@ -1390,49 +1938,233 @@ export class AdminModule {
       if (el) el.innerText = checkedFields().length;
     };
     tabContent.querySelectorAll('.field-row-check').forEach((c) => c.addEventListener('change', syncFieldCount));
-    const fieldSelAll = document.getElementById('field-select-all');
-    if (fieldSelAll) fieldSelAll.addEventListener('change', (e) => {
-      tabContent.querySelectorAll('.field-row-check').forEach((c) => { c.checked = e.target.checked; });
-      syncFieldCount();
+
+    // Section-level select all
+    tabContent.querySelectorAll('.section-select-all').forEach((sa) => {
+      sa.addEventListener('change', (e) => {
+        const sec = sa.dataset.section;
+        tabContent.querySelectorAll(`.field-row-check[data-section="${sec}"]`).forEach((c) => { c.checked = e.target.checked; });
+        syncFieldCount();
+      });
     });
+
     const fieldSelBtn = document.getElementById('btn-select-all-fields');
     if (fieldSelBtn) fieldSelBtn.addEventListener('click', () => {
       tabContent.querySelectorAll('.field-row-check').forEach((c) => { c.checked = true; });
       syncFieldCount();
     });
+
     const fieldBulkDel = document.getElementById('btn-bulk-del-fields');
     if (fieldBulkDel) fieldBulkDel.addEventListener('click', async () => {
       const ids = checkedFields();
-      if (!ids.length) { UIComponents.showToast('Select at least one field.', 'warning'); return; }
-      if (!confirm(`Delete ${ids.length} form field(s)?`)) return;
+      if (!ids.length) { UIComponents.showToast('Select at least one question.', 'warning'); return; }
+      if (!confirm(`Delete ${ids.length} form question(s)?`)) return;
       for (const id of ids) {
         // eslint-disable-next-line no-await-in-loop
         await admissionService.removeField(id);
       }
       await auditService.log('ADMISSION_FORM_FIELDS_BULK_DELETED', 'GOVERNANCE', { count: ids.length });
-      UIComponents.showToast(`${ids.length} field(s) deleted.`, 'success');
+      UIComponents.showToast(`${ids.length} question(s) deleted.`, 'success');
       this.renderTab('form-builder');
     });
 
+    // Add field global
     safeOn('btn-add-field', 'click', () => this.openFieldModal(null));
+
+    // Add field to specific section
+    tabContent.querySelectorAll('.btn-add-field-to-sec').forEach((b) => {
+      b.addEventListener('click', () => this.openFieldModal(null, b.dataset.section));
+    });
+
+    // Add new section modal
+    safeOn('btn-add-section', 'click', () => this.openAddSectionModal(Array.from(sectionMap.keys())));
+
+    // Rename section
+    tabContent.querySelectorAll('.btn-rename-section').forEach((b) => {
+      b.addEventListener('click', () => this.openRenameSectionModal(b.dataset.section, list));
+    });
+
+    // Delete entire section
+    tabContent.querySelectorAll('.btn-del-section').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const secName = b.dataset.section;
+        const secItems = list.filter(f => (f.section || 'General Information').trim() === secName);
+        if (!confirm(`Are you sure you want to delete section "${secName}" and all its ${secItems.length} question(s)?`)) return;
+        for (const item of secItems) {
+          // eslint-disable-next-line no-await-in-loop
+          await admissionService.removeField(item.id);
+        }
+        await auditService.log('ADMISSION_SECTION_DELETED', 'GOVERNANCE', { section: secName, count: secItems.length });
+        UIComponents.showToast(`Section "${secName}" deleted.`, 'success');
+        this.renderTab('form-builder');
+      });
+    });
+
+    // Quick toggle required
+    tabContent.querySelectorAll('.btn-toggle-required').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const field = list.find(f => f.fieldKey === b.dataset.key);
+        if (!field) return;
+        field.required = !field.required;
+        await admissionService.saveField(field);
+        UIComponents.showToast(`"${field.label}" marked ${field.required ? 'Required' : 'Optional'}.`, 'info');
+        this.renderTab('form-builder');
+      });
+    });
+
+    // Quick toggle active
+    tabContent.querySelectorAll('.btn-toggle-active').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const field = list.find(f => f.fieldKey === b.dataset.key);
+        if (!field) return;
+        field.isActive = field.isActive === false ? true : false;
+        await admissionService.saveField(field);
+        UIComponents.showToast(`"${field.label}" set to ${field.isActive ? 'Active' : 'Disabled'}.`, 'info');
+        this.renderTab('form-builder');
+      });
+    });
+
+    // Edit field
     tabContent.querySelectorAll('.btn-edit-field').forEach((b) =>
       b.addEventListener('click', () => this.openFieldModal(list.find((f) => f.fieldKey === b.dataset.key) || null)));
+
+    // Delete single field
     tabContent.querySelectorAll('.btn-del-field').forEach((b) =>
       b.addEventListener('click', async () => {
-        if (!confirm('Delete this field?')) return;
+        if (!confirm('Delete this question?')) return;
         await admissionService.removeField(b.dataset.id);
-        UIComponents.showToast('Field deleted.', 'success');
+        UIComponents.showToast('Question deleted.', 'success');
         this.renderTab('form-builder');
       }));
+
     UIComponents.refreshIcons();
   }
 
-  static openFieldModal(field) {
+  static openAddSectionModal(existingSections) {
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group">
+          <label class="form-label">New Section Name *</label>
+          <input class="form-input" id="new-sec-name" placeholder="e.g. Health &amp; Medical Details, Hostel Facility">
+        </div>
+        <div style="border-top:1px solid var(--border-color); padding-top:14px;">
+          <h5 style="font-size:0.9rem; font-weight:700; margin-bottom:8px;">First Question in this Section</h5>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label">Question Label *</label>
+              <input class="form-input" id="new-sec-fld-label" placeholder="e.g. Existing Medical Conditions">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Field Key (unique, no spaces) *</label>
+              <input class="form-input font-mono" id="new-sec-fld-key" placeholder="e.g. medicalCondition">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Response Type</label>
+              <select class="form-select" id="new-sec-fld-type">
+                ${['text', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox', 'file'].map(t => `<option>${t}</option>`).join('')}
+              </select>
+            </div>
+            <label style="display:flex; gap:8px; align-items:center; grid-column:1/-1;">
+              <input type="checkbox" id="new-sec-fld-req"> Required Question
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" id="sec-cancel">Cancel</button>
+      <button class="btn btn-primary" id="sec-save"><i data-lucide="plus"></i> Create Section</button>
+    `;
+
+    UIComponents.openModal({ title: 'Add New Form Section', bodyHtml, footerHtml, maxWidth: '520px' });
+    document.getElementById('sec-cancel').addEventListener('click', () => UIComponents.closeModal());
+    document.getElementById('sec-save').addEventListener('click', async () => {
+      const secName = document.getElementById('new-sec-name').value.trim();
+      const label = document.getElementById('new-sec-fld-label').value.trim();
+      const key = document.getElementById('new-sec-fld-key').value.trim().replace(/\s+/g, '_');
+      const type = document.getElementById('new-sec-fld-type').value;
+      const req = document.getElementById('new-sec-fld-req').checked;
+
+      if (!secName) { UIComponents.showToast('Please enter a section name.', 'warning'); return; }
+      if (!label || !key) { UIComponents.showToast('Please enter the question label and field key.', 'warning'); return; }
+
+      try {
+        await admissionService.saveField({
+          label,
+          fieldKey: key,
+          fieldType: type,
+          section: secName,
+          displayOrder: 1,
+          required: req,
+          isActive: true
+        });
+        await auditService.log('ADMISSION_SECTION_CREATED', 'GOVERNANCE', { section: secName, fieldKey: key });
+        UIComponents.showToast(`Section "${secName}" created successfully.`, 'success');
+        UIComponents.closeModal();
+        this.renderTab('form-builder');
+      } catch (e) {
+        UIComponents.showToast(e.message, 'danger');
+      }
+    });
+    UIComponents.refreshIcons();
+  }
+
+  static openRenameSectionModal(currentName, allFields) {
+    const secFields = allFields.filter(f => (f.section || 'General Information').trim() === currentName);
+
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Current Section Name</label>
+          <input class="form-input" value="${esc(currentName)}" readonly style="background:var(--bg-subtle);">
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Section Name *</label>
+          <input class="form-input" id="rename-new-sec-name" value="${esc(currentName)}" autofocus>
+          <span style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:block;">
+            All ${secFields.length} question(s) in this section will be updated to the new section name.
+          </span>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" id="rename-cancel">Cancel</button>
+      <button class="btn btn-primary" id="rename-save"><i data-lucide="check"></i> Update Section Name</button>
+    `;
+
+    UIComponents.openModal({ title: 'Rename Form Section', bodyHtml, footerHtml, maxWidth: '480px' });
+    document.getElementById('rename-cancel').addEventListener('click', () => UIComponents.closeModal());
+    document.getElementById('rename-save').addEventListener('click', async () => {
+      const newName = document.getElementById('rename-new-sec-name').value.trim();
+      if (!newName || newName === currentName) { UIComponents.closeModal(); return; }
+
+      try {
+        for (const f of secFields) {
+          f.section = newName;
+          // eslint-disable-next-line no-await-in-loop
+          await admissionService.saveField(f);
+        }
+        await auditService.log('ADMISSION_SECTION_RENAMED', 'GOVERNANCE', { oldName: currentName, newName });
+        UIComponents.showToast(`Section renamed to "${newName}".`, 'success');
+        UIComponents.closeModal();
+        this.renderTab('form-builder');
+      } catch (e) {
+        UIComponents.showToast(e.message, 'danger');
+      }
+    });
+    UIComponents.refreshIcons();
+  }
+
+  static openFieldModal(field, defaultSection = '') {
     const f = field || {};
+    const existingSection = f.section || defaultSection || 'General Information';
+
     const bodyHtml = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
         <div class="form-group" style="grid-column:1/-1;">
-          <label class="form-label">Field Label *</label>
+          <label class="form-label">Question / Field Label *</label>
           <input class="form-input" id="fld-label" value="${esc(f.label || '')}" placeholder="e.g. Mother's Name">
         </div>
         <div class="form-group">
@@ -1446,48 +2178,59 @@ export class AdminModule {
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Section</label>
-          <input class="form-input" id="fld-section" value="${esc(f.section || 'General')}">
+          <label class="form-label">Section (Step Group) *</label>
+          <input class="form-input" id="fld-section" value="${esc(existingSection)}" placeholder="e.g. Candidate Details">
         </div>
         <div class="form-group">
           <label class="form-label">Display Order</label>
-          <input type="number" class="form-input" id="fld-order" value="${f.displayOrder || 0}">
+          <input type="number" class="form-input" id="fld-order" value="${f.displayOrder || 1}">
         </div>
         <div class="form-group" style="grid-column:1/-1;">
-          <label class="form-label">Options (comma separated — for select)</label>
-          <input class="form-input" id="fld-options" value="${esc((f.options || []).join(', '))}">
+          <label class="form-label">Options (comma separated — for dropdown select)</label>
+          <input class="form-input" id="fld-options" value="${esc((f.options || []).join(', '))}" placeholder="e.g. Male, Female, Other">
         </div>
         <div class="form-group" style="grid-column:1/-1;">
           <label class="form-label">Placeholder / Help Text</label>
           <input class="form-input" id="fld-placeholder" value="${esc(f.placeholder || '')}">
         </div>
-        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="fld-required" ${f.required ? 'checked' : ''}> Required</label>
-        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="fld-active" ${f.isActive === false ? '' : 'checked'}> Active</label>
+        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="fld-required" ${f.required ? 'checked' : ''}> Required Question</label>
+        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="fld-active" ${f.isActive === false ? '' : 'checked'}> Active (Ask to Applicants)</label>
       </div>
     `;
+
     const footerHtml = `
       <button class="btn btn-secondary" id="fld-cancel">Cancel</button>
-      <button class="btn btn-primary" id="fld-save"><i data-lucide="save"></i> Save Field</button>
+      <button class="btn btn-primary" id="fld-save"><i data-lucide="save"></i> Save Question</button>
     `;
-    UIComponents.openModal({ title: field ? 'Edit Field' : 'Add Field', bodyHtml, footerHtml });
+
+    UIComponents.openModal({ title: field ? 'Edit Question' : 'Add Question', bodyHtml, footerHtml });
     document.getElementById('fld-cancel').addEventListener('click', () => UIComponents.closeModal());
     document.getElementById('fld-save').addEventListener('click', async () => {
       const options = document.getElementById('fld-options').value.split(',').map((s) => s.trim()).filter(Boolean);
+      const label = document.getElementById('fld-label').value.trim();
+      const fieldKey = document.getElementById('fld-key').value.trim();
+      const section = document.getElementById('fld-section').value.trim();
+
+      if (!label || !fieldKey || !section) {
+        UIComponents.showToast('Label, key, and section are required.', 'warning');
+        return;
+      }
+
       try {
         await admissionService.saveField({
           id: f.id,
-          label: document.getElementById('fld-label').value.trim(),
-          fieldKey: document.getElementById('fld-key').value.trim(),
+          label,
+          fieldKey,
           fieldType: document.getElementById('fld-type').value,
-          section: document.getElementById('fld-section').value.trim(),
-          displayOrder: Number(document.getElementById('fld-order').value || 0),
+          section,
+          displayOrder: Number(document.getElementById('fld-order').value || 1),
           options,
           placeholder: document.getElementById('fld-placeholder').value.trim(),
           required: document.getElementById('fld-required').checked,
           isActive: document.getElementById('fld-active').checked
         });
-        await auditService.log('ADMISSION_FIELD_SAVED', 'GOVERNANCE', { key: document.getElementById('fld-key').value });
-        UIComponents.showToast('Field saved.', 'success');
+        await auditService.log('ADMISSION_FIELD_SAVED', 'GOVERNANCE', { key: fieldKey });
+        UIComponents.showToast('Question saved.', 'success');
         UIComponents.closeModal();
         this.renderTab('form-builder');
       } catch (e) {
@@ -1496,7 +2239,6 @@ export class AdminModule {
     });
     UIComponents.refreshIcons();
   }
-
   /* ================================================================== */
   /* Fees                                                               */
   /* ================================================================== */
@@ -2273,6 +3015,387 @@ export class AdminModule {
   }
 
   /* ================================================================== */
+  /* User Authentication & Google Approvals                             */
+  /* ================================================================== */
+
+  static async renderGoogleApprovalsTab(tabContent) {
+    const currentUser = authService.getCurrentUser();
+    const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
+
+    let profiles = [];
+    try {
+      profiles = await dbService.select('profiles');
+    } catch (e) {
+      profiles = [];
+    }
+
+    // Categorize
+    const pendingList = profiles.filter((p) => p.role === 'pending' || p.approvalStatus === 'pending');
+    const approvedList = profiles.filter((p) => p.role !== 'pending' && p.role !== 'rejected' && p.isActive !== false);
+    const rejectedList = profiles.filter((p) => p.role === 'rejected' || p.approvalStatus === 'rejected' || p.isActive === false);
+
+    this._pendingApprovalsCount = pendingList.length;
+    this.refreshPendingBadges();
+
+    const roles = Object.values(TMS_CONFIG.roles).filter((r) => isSuperAdmin ? true : r !== 'super_admin');
+    const scopes = Object.values(TMS_CONFIG.scopes);
+
+    if (!this._approvalFilter) {
+      this._approvalFilter = pendingList.length > 0 ? 'pending' : 'all';
+    }
+    const currentFilter = this._approvalFilter;
+
+    let displayed = profiles;
+    if (currentFilter === 'pending') displayed = pendingList;
+    else if (currentFilter === 'approved') displayed = approvedList;
+    else if (currentFilter === 'rejected') displayed = rejectedList;
+
+    tabContent.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:20px;">
+        <!-- KPI Summary Cards -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px;">
+          <div class="card" style="padding:16px; border-left:4px solid #f59e0b; background:linear-gradient(to right, rgba(245,158,11,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#b45309; text-transform:uppercase; letter-spacing:0.04em;">Pending Approvals</div>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+              <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${pendingList.length}</span>
+              ${pendingList.length > 0 ? '<span class="badge badge-warning" style="font-size:0.72rem;">Requires Action</span>' : '<span style="font-size:0.72rem; color:#16a34a;">All Approved</span>'}
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Waiting on approval screen</div>
+          </div>
+          <div class="card" style="padding:16px; border-left:4px solid #16a34a; background:linear-gradient(to right, rgba(22,163,74,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.04em;">Active &amp; Approved</div>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+              <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${approvedList.length}</span>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Active Staff &amp; Users</span>
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Full portal permissions granted</div>
+          </div>
+          <div class="card" style="padding:16px; border-left:4px solid #ef4444; background:linear-gradient(to right, rgba(239,68,68,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#b91c1c; text-transform:uppercase; letter-spacing:0.04em;">Rejected / Revoked</div>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+              <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${rejectedList.length}</span>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Blocked Access</span>
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Access denied or disabled</div>
+          </div>
+          <div class="card" style="padding:16px; border-left:4px solid #6366f1; background:linear-gradient(to right, rgba(99,102,241,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#4338ca; text-transform:uppercase; letter-spacing:0.04em;">Total Registered</div>
+            <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
+              <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${profiles.length}</span>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Total Accounts</span>
+            </div>
+            <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Google &amp; manual accounts</div>
+          </div>
+        </div>
+
+        <!-- Main Approvals Management Card -->
+        <div class="card">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3 class="card-title" style="margin:0; font-size:1.15rem;">User Authentication &amp; Google Sign-in Approvals</h3>
+                <span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:700; font-size:0.72rem;">
+                  Google OAuth / Gmail
+                </span>
+              </div>
+              <p class="card-desc" style="margin-top:4px;">
+                When institutional users sign in with Gmail/Google, their accounts are held in pending status until you approve them and assign their official institutional role.
+              </p>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-approvals">
+                <i data-lucide="refresh-cw"></i> Refresh List
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter & Search Toolbar -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+            <div style="display:flex; gap:6px; flex-wrap:wrap;" id="approval-filter-tabs">
+              <button class="btn btn-sm ${currentFilter === 'pending' ? 'btn-primary' : 'btn-secondary'} filter-btn" data-filter="pending" style="display:flex; align-items:center; gap:6px;">
+                <i data-lucide="clock"></i>
+                <span>Pending Approvals</span>
+                <span class="badge" style="background:${currentFilter === 'pending' ? 'rgba(255,255,255,0.25)' : '#fef3c7'}; color:${currentFilter === 'pending' ? '#fff' : '#b45309'}; padding:1px 6px; font-size:0.7rem;">${pendingList.length}</span>
+              </button>
+              <button class="btn btn-sm ${currentFilter === 'approved' ? 'btn-primary' : 'btn-secondary'} filter-btn" data-filter="approved" style="display:flex; align-items:center; gap:6px;">
+                <i data-lucide="check-circle"></i>
+                <span>Approved Users (${approvedList.length})</span>
+              </button>
+              <button class="btn btn-sm ${currentFilter === 'rejected' ? 'btn-primary' : 'btn-secondary'} filter-btn" data-filter="rejected" style="display:flex; align-items:center; gap:6px;">
+                <i data-lucide="shield-x"></i>
+                <span>Rejected (${rejectedList.length})</span>
+              </button>
+              <button class="btn btn-sm ${currentFilter === 'all' ? 'btn-primary' : 'btn-secondary'} filter-btn" data-filter="all" style="display:flex; align-items:center; gap:6px;">
+                <i data-lucide="users"></i>
+                <span>All Accounts (${profiles.length})</span>
+              </button>
+            </div>
+
+            <div style="position:relative; min-width:240px;">
+              <input type="text" class="form-input form-input-sm" id="approval-search-input" placeholder="Search by name or email..." style="padding-left:32px;">
+              <i data-lucide="search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-muted);"></i>
+            </div>
+          </div>
+
+          <!-- Approvals Table -->
+          <div class="table-responsive">
+            <table class="tms-table" id="approval-table" style="font-size:0.85rem;">
+              <thead>
+                <tr>
+                  <th style="min-width:220px;">User &amp; Google Account</th>
+                  <th>Current Status</th>
+                  <th style="min-width:160px;">Role Assignment</th>
+                  <th style="min-width:140px;">Access Scope</th>
+                  <th style="min-width:130px;">Title / Designation</th>
+                  <th style="min-width:120px;">Department</th>
+                  <th style="text-align:right; min-width:180px;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${displayed.map((p) => {
+                  const isPending = p.role === 'pending' || p.approvalStatus === 'pending';
+                  const isRejected = p.role === 'rejected' || p.approvalStatus === 'rejected' || p.isActive === false;
+                  const isTargetSuper = (p.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase() || p.role === 'super_admin' || p.is_super_admin === true || p.isSuperAdmin === true;
+                  const canModify = isSuperAdmin || !isTargetSuper;
+                  const isGmail = (p.email || '').toLowerCase().includes('@gmail.com');
+
+                  // Default selected role for pending user
+                  const currentRole = p.role === 'pending' ? 'teacher' : p.role;
+                  const currentScope = p.scope === 'own_records' ? (currentRole === 'admin' ? 'school_wide' : 'own_records') : (p.scope || 'own_records');
+
+                  return `
+                    <tr data-id="${esc(p.id)}" data-email="${esc(p.email || '')}" class="approval-row ${isPending ? 'row-pending-highlight' : ''}" style="${isPending ? 'background:rgba(245, 158, 11, 0.04);' : ''}">
+                      <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                          <img src="${esc(p.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150')}" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1.5px solid var(--border-color); background:#f1f5f9; flex-shrink:0;">
+                          <div style="min-width:0;">
+                            <div style="font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:6px;">
+                              <span class="user-display-name">${esc(p.name || 'TMS User')}</span>
+                              ${isTargetSuper ? '<span class="badge" style="background:#fef3c7; color:#b45309; font-weight:800; font-size:0.65rem; padding:1px 5px;">👑 ROOT</span>' : ''}
+                            </div>
+                            <div class="font-mono user-display-email" style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:6px; margin-top:2px;">
+                              <span>${esc(p.email || '—')}</span>
+                              ${isGmail ? `
+                                <span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.62rem; padding:1px 5px; display:inline-flex; align-items:center; gap:3px;">
+                                  <svg width="10" height="10" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                                  Google
+                                </span>` : ''}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        ${isPending ? `
+                          <span class="badge badge-warning" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                            <i data-lucide="clock" style="width:12px; height:12px;"></i> Pending Approval
+                          </span>
+                        ` : isRejected ? `
+                          <span class="badge badge-danger" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                            <i data-lucide="shield-x" style="width:12px; height:12px;"></i> Rejected / Inactive
+                          </span>
+                        ` : `
+                          <span class="badge badge-success" style="display:inline-flex; align-items:center; gap:4px; font-weight:700;">
+                            <i data-lucide="check-circle" style="width:12px; height:12px;"></i> Approved (${esc(ROLE_LABELS[p.role] || p.role)})
+                          </span>
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700;">👑 Super Admin</span>` : `
+                          <select class="form-select form-select-sm approval-role-select">
+                            ${roles.map((r) => `
+                              <option value="${esc(r)}" ${(r === currentRole) ? 'selected' : ''}>
+                                ${esc(ROLE_LABELS[r] || r)}
+                              </option>
+                            `).join('')}
+                          </select>
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span class="badge badge-success">school_wide</span>` : `
+                          <select class="form-select form-select-sm approval-scope-select">
+                            ${scopes.map((s) => `
+                              <option value="${esc(s)}" ${(s === currentScope) ? 'selected' : ''}>
+                                ${esc(s)}
+                              </option>
+                            `).join('')}
+                          </select>
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span>${esc(p.title || 'Super Admin')}</span>` : `
+                          <input type="text" class="form-input form-input-sm approval-title-input" value="${esc(p.title || (isPending ? 'Teacher' : 'Staff Member'))}" placeholder="Title">
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span>${esc(p.department || 'Governance')}</span>` : `
+                          <input type="text" class="form-input form-input-sm approval-dept-input" value="${esc(p.department || (isPending ? 'Academics' : 'General'))}" placeholder="Department">
+                        `}
+                      </td>
+
+                      <td style="text-align:right; white-space:nowrap;">
+                        ${!canModify ? '<span style="font-size:0.72rem; color:var(--text-muted); font-style:italic;">Root Protected</span>' : `
+                          ${isPending ? `
+                            <button class="btn btn-primary btn-sm btn-action-approve" style="padding:5px 12px; font-weight:700;" title="Approve user and grant portal access">
+                              <i data-lucide="user-check"></i> Approve &amp; Assign
+                            </button>
+                            <button class="btn btn-secondary btn-sm btn-action-reject" style="padding:5px 9px; color:#ef4444;" title="Reject access request">
+                              <i data-lucide="user-x"></i> Reject
+                            </button>
+                          ` : isRejected ? `
+                            <button class="btn btn-secondary btn-sm btn-action-approve" style="padding:5px 12px; color:#16a34a; font-weight:700;" title="Re-approve and activate">
+                              <i data-lucide="rotate-ccw"></i> Re-Approve
+                            </button>
+                          ` : `
+                            <button class="btn btn-secondary btn-sm btn-action-update" style="padding:5px 10px;" title="Update role and permissions">
+                              <i data-lucide="save"></i> Update
+                            </button>
+                            <button class="btn btn-secondary btn-sm btn-action-reject" style="padding:5px 9px; color:#ef4444;" title="Revoke access">
+                              <i data-lucide="user-x"></i> Reject
+                            </button>
+                          `}
+                        `}
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted);">No accounts found in this view.</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.bindGoogleApprovalEvents(tabContent, profiles);
+    UIComponents.refreshIcons();
+  }
+
+  static bindGoogleApprovalEvents(tabContent, profiles) {
+    // 1. Filter tabs
+    tabContent.querySelectorAll('.filter-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        this._approvalFilter = e.currentTarget.dataset.filter;
+        this.renderGoogleApprovalsTab(tabContent);
+      });
+    });
+
+    // 2. Search input live filtering
+    const searchInput = tabContent.querySelector('#approval-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        tabContent.querySelectorAll('.approval-row').forEach((row) => {
+          const name = (row.querySelector('.user-display-name')?.innerText || '').toLowerCase();
+          const email = (row.querySelector('.user-display-email')?.innerText || '').toLowerCase();
+          if (!query || name.includes(query) || email.includes(query)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    // 3. Refresh button
+    const refreshBtn = tabContent.querySelector('#btn-refresh-approvals');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        UIComponents.showToast('Refreshing accounts list...', 'info');
+        this.renderGoogleApprovalsTab(tabContent);
+      });
+    }
+
+    // 4. Approve / Update Button
+    tabContent.querySelectorAll('.btn-action-approve, .btn-action-update').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const row = e.currentTarget.closest('tr');
+        const userId = row.dataset.id;
+        const userEmail = row.dataset.email;
+        const selectedRole = row.querySelector('.approval-role-select')?.value || 'teacher';
+        const selectedScope = row.querySelector('.approval-scope-select')?.value || 'own_records';
+        const title = row.querySelector('.approval-title-input')?.value.trim() || ROLE_LABELS[selectedRole] || 'Staff Member';
+        const dept = row.querySelector('.approval-dept-input')?.value.trim() || 'General';
+
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Saving...`;
+        UIComponents.refreshIcons();
+
+        try {
+          const updates = {
+            role: selectedRole,
+            scope: selectedScope,
+            title: title,
+            department: dept,
+            isActive: true
+          };
+
+          await dbService.update('profiles', userId, updates);
+          await auditService.log('USER_APPROVED_BY_ADMIN', 'SECURITY', {
+            userId,
+            email: userEmail,
+            role: selectedRole,
+            scope: selectedScope
+          });
+
+          UIComponents.showToast(`Account ${userEmail} approved as ${ROLE_LABELS[selectedRole] || selectedRole}!`, 'success');
+          await this.renderGoogleApprovalsTab(tabContent);
+        } catch (err) {
+          console.error('Approval failed:', err);
+          UIComponents.showToast(`Approval failed: ${err.message}`, 'error');
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          UIComponents.refreshIcons();
+        }
+      });
+    });
+
+    // 5. Reject Button
+    tabContent.querySelectorAll('.btn-action-reject').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const row = e.currentTarget.closest('tr');
+        const userId = row.dataset.id;
+        const userEmail = row.dataset.email;
+
+        if (!confirm(`Are you sure you want to REJECT and block access for ${userEmail}?\nThey will be shown the access rejected message and prevented from entering the ERP.`)) {
+          return;
+        }
+
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Rejecting...`;
+        UIComponents.refreshIcons();
+
+        try {
+          const updates = {
+            role: 'rejected',
+            isActive: false
+          };
+
+          await dbService.update('profiles', userId, updates);
+          await auditService.log('USER_REJECTED_BY_ADMIN', 'SECURITY', {
+            userId,
+            email: userEmail
+          });
+
+          UIComponents.showToast(`Access rejected for ${userEmail}.`, 'info');
+          await this.renderGoogleApprovalsTab(tabContent);
+        } catch (err) {
+          console.error('Rejection failed:', err);
+          UIComponents.showToast(`Rejection failed: ${err.message}`, 'error');
+          btn.disabled = false;
+          btn.innerHTML = originalHtml;
+          UIComponents.refreshIcons();
+        }
+      });
+    });
+  }
+
+  /* ================================================================== */
   /* Users & Roles                                                      */
   /* ================================================================== */
 
@@ -2301,9 +3424,14 @@ export class AdminModule {
 
     tabContent.innerHTML = `
       <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
           <div>
             <h3 class="card-title">Users &amp; Roles</h3>
+            <p class="card-desc">Every account in the system — including staff and parent logins created elsewhere. Use <strong>Edit Details</strong> to change a user's profile, photo, class assignment or password.</p>
+          </div>
+          <div>
+            <button class="btn btn-secondary btn-sm" id="btn-config-cred-share"><i data-lucide="message-square"></i> Customize Share Message</button>
+          </div>
             <p class="card-desc">Every account in the system — including staff and parent logins created elsewhere. Use <strong>Edit Details</strong> to change a user's profile, photo, class assignment or password. To make a staff member an Office Boy (admission data entry), set their role to <strong>Office Boy</strong>.</p>
           </div>
         </div>
@@ -2325,9 +3453,21 @@ export class AdminModule {
                 <td class="font-mono" style="font-size:0.78rem;">${esc(p.email || '—')}</td>
                 <td style="font-size:0.78rem;">
                   ${login && login.username
-                    ? `<span class="font-mono">${esc(login.username)}</span>
-                       <button class="btn btn-secondary btn-sm btn-reveal-pass" data-user="${esc(p.id)}" title="Show password" style="padding:2px 6px;"><i data-lucide="eye"></i></button>
-                       <span class="user-pass font-mono" data-user="${esc(p.id)}" style="display:none; color:#b45309;">${esc(login.password || '—')}</span>`
+                    ? `<div style="display:flex; flex-direction:column; gap:4px;">
+                         <div style="display:flex; align-items:center; gap:6px;">
+                           <span class="font-mono" style="font-weight:700;">${esc(login.username)}</span>
+                           <button class="btn btn-secondary btn-sm btn-reveal-pass" data-user="${esc(p.id)}" title="Show password" style="padding:1px 5px;"><i data-lucide="eye" style="width:12px;height:12px;"></i></button>
+                           <span class="user-pass font-mono" data-user="${esc(p.id)}" style="display:none; color:#b45309; font-weight:700;">${esc(login.password || '—')}</span>
+                         </div>
+                         <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
+                           <button class="btn btn-secondary btn-sm btn-copy-user-cred" data-user="${esc(p.id)}" title="Copy login message for this user" style="padding:1px 6px; font-size:0.72rem; color:#0284c7; border-color:#bae6fd;">
+                             <i data-lucide="share-2" style="width:11px;height:11px;"></i> Copy
+                           </button>
+                           ${p.phone ? `<button class="btn btn-secondary btn-sm btn-wa-user-cred" data-user="${esc(p.id)}" title="Share login via WhatsApp" style="padding:1px 6px; font-size:0.72rem; color:#16a34a; border-color:#bbf7d0;">
+                             <i data-lucide="send" style="width:11px;height:11px;"></i> WA
+                           </button>` : ''}
+                         </div>
+                       </div>`
                     : '<span style="color:var(--text-muted);">—</span>'}
                 </td>
                 <td>
@@ -2356,6 +3496,53 @@ export class AdminModule {
         </div>
       </div>
     `;
+
+    // Credential share settings button
+    document.getElementById('btn-config-cred-share')?.addEventListener('click', () => {
+      this.openCredentialTemplateModal();
+    });
+
+    // Copy user credentials button
+    tabContent.querySelectorAll('.btn-copy-user-cred').forEach((b) => {
+      b.addEventListener('click', () => {
+        const userId = b.dataset.user;
+        const profile = profiles.find((p) => p.id === userId);
+        const login = loginByUser[userId];
+        if (login) {
+          this.copyCredentialMessageToClipboard({
+            name: profile?.name || 'User',
+            role: profile?.role || 'staff',
+            username: login.username,
+            password: login.password,
+            customUrl: `${this.getCredentialShareConfig().domain}/login.html`
+          });
+        }
+      });
+    });
+
+    // WhatsApp user credentials button
+    tabContent.querySelectorAll('.btn-wa-user-cred').forEach((b) => {
+      b.addEventListener('click', () => {
+        const userId = b.dataset.user;
+        const profile = profiles.find((p) => p.id === userId);
+        const login = loginByUser[userId];
+        if (login) {
+          const msg = this.compileCredentialMessage({
+            name: profile?.name || 'User',
+            role: profile?.role || 'staff',
+            username: login.username,
+            password: login.password,
+            customUrl: `${this.getCredentialShareConfig().domain}/login.html`
+          });
+          const ph = WhatsAppService.cleanPhone(profile?.phone);
+          if (ph) {
+            window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
+          } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+          }
+        }
+      });
+    });
 
     tabContent.querySelectorAll('.btn-reveal-pass').forEach((b) =>
       b.addEventListener('click', () => {
@@ -3966,6 +5153,711 @@ const safeOn = (id, event, fn) => {
 
     UIComponents.refreshIcons();
   }
-}
 
-export default AdminModule;
+  /* ================================================================== */
+  /* Document & File Previewer Lightbox                                 */
+  /* ================================================================== */
+
+  static async openFilePreviewModal({ title = 'Document Preview', path, url, fileName = '' }) {
+    let overlay = document.getElementById('tms-file-preview-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'tms-file-preview-overlay';
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(6px);
+        z-index: 999999; display: flex; align-items: center; justify-content: center;
+        padding: 16px; box-sizing: border-box;
+      `;
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.style.display = 'none';
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.style.display !== 'none') {
+          overlay.style.display = 'none';
+        }
+      });
+    }
+
+    overlay.style.display = 'flex';
+    overlay.innerHTML = `
+      <div style="background:#ffffff; border-radius:12px; width:100%; max-width:980px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.2);">
+        <div style="padding:14px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; background:#f8fafc;">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+            <div style="width:36px; height:36px; border-radius:8px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <i data-lucide="file-text" style="width:20px;height:20px;"></i>
+            </div>
+            <div style="min-width:0;">
+              <h4 style="margin:0; font-size:0.95rem; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(title)}</h4>
+              <p style="margin:0; font-size:0.75rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(fileName || path || 'Loading document...')}</p>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div id="tms-preview-img-controls" style="display:none; align-items:center; gap:4px; margin-right:8px; padding-right:8px; border-right:1px solid #e2e8f0;">
+              <button class="btn btn-secondary btn-sm" id="btn-zoom-in" title="Zoom In" style="padding:4px 8px;"><i data-lucide="zoom-in" style="width:14px;height:14px;"></i></button>
+              <button class="btn btn-secondary btn-sm" id="btn-zoom-out" title="Zoom Out" style="padding:4px 8px;"><i data-lucide="zoom-out" style="width:14px;height:14px;"></i></button>
+              <button class="btn btn-secondary btn-sm" id="btn-rotate-img" title="Rotate 90°" style="padding:4px 8px;"><i data-lucide="rotate-cw" style="width:14px;height:14px;"></i></button>
+              <button class="btn btn-secondary btn-sm" id="btn-reset-img" title="Reset View" style="padding:4px 8px;"><i data-lucide="maximize-2" style="width:14px;height:14px;"></i></button>
+            </div>
+            <a id="btn-download-preview" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; font-size:0.78rem;" download target="_blank">
+              <i data-lucide="download" style="width:14px;height:14px;"></i> Download
+            </a>
+            <a id="btn-open-tab-preview" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px; padding:5px 10px; font-size:0.78rem;" target="_blank">
+              <i data-lucide="external-link" style="width:14px;height:14px;"></i> Open
+            </a>
+            <button class="icon-btn" id="btn-close-preview" style="padding:6px; border-radius:6px; color:#64748b; cursor:pointer;"><i data-lucide="x" style="width:18px;height:18px;"></i></button>
+          </div>
+        </div>
+        <div id="tms-preview-content" style="flex:1; overflow:auto; background:#0f172a; min-height:420px; display:flex; align-items:center; justify-content:center; position:relative;">
+          <div style="color:#94a3b8; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="loader-2" class="spin"></i> Loading document...
+          </div>
+        </div>
+      </div>
+    `;
+
+    UIComponents.refreshIcons();
+    document.getElementById('btn-close-preview')?.addEventListener('click', () => { overlay.style.display = 'none'; });
+
+    let finalUrl = url;
+    if (!finalUrl && path) {
+      finalUrl = await admissionService.getSignedUrl('admission-docs', path, 7200);
+      if (!finalUrl) finalUrl = admissionService.getPublicUrl('admission-docs', path);
+    }
+
+    const contentEl = document.getElementById('tms-preview-content');
+    const dlBtn = document.getElementById('btn-download-preview');
+    const openBtn = document.getElementById('btn-open-tab-preview');
+    const imgControls = document.getElementById('tms-preview-img-controls');
+
+    if (!finalUrl) {
+      if (contentEl) {
+        contentEl.style.background = '#f8fafc';
+        contentEl.innerHTML = `
+          <div style="text-align:center; padding:40px; color:#64748b;">
+            <i data-lucide="alert-circle" style="width:48px;height:48px;color:#f59e0b;margin-bottom:12px;"></i>
+            <h5 style="margin:0 0 6px 0; color:#1e293b;">Document Preview Unavailable</h5>
+            <p style="font-size:0.8rem; margin:0 0 16px 0;">The attached file could not be loaded from storage (${esc(path || 'unknown')}).</p>
+          </div>
+        `;
+        UIComponents.refreshIcons();
+      }
+      return;
+    }
+
+    if (dlBtn) dlBtn.href = finalUrl;
+    if (openBtn) openBtn.href = finalUrl;
+
+    const lowerPath = (path || finalUrl || '').toLowerCase();
+    const isImage = lowerPath.includes('.jpg') || lowerPath.includes('.jpeg') || lowerPath.includes('.png') ||
+                    lowerPath.includes('.webp') || lowerPath.includes('.gif') || lowerPath.includes('.svg') ||
+                    finalUrl.startsWith('data:image/');
+    const isPdf = lowerPath.includes('.pdf') || finalUrl.startsWith('data:application/pdf');
+
+    if (isImage) {
+      if (imgControls) imgControls.style.display = 'flex';
+      let zoom = 1;
+      let rot = 0;
+      contentEl.innerHTML = `
+        <div style="width:100%; height:100%; min-height:480px; display:flex; align-items:center; justify-content:center; overflow:auto; padding:20px;">
+          <img id="tms-target-img" src="${finalUrl}" alt="Preview" style="max-width:100%; max-height:75vh; object-fit:contain; transition:transform 0.15s ease-out; transform:scale(1) rotate(0deg); border-radius:4px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        </div>
+      `;
+
+      const targetImg = document.getElementById('tms-target-img');
+      const updateTransform = () => {
+        if (targetImg) targetImg.style.transform = `scale(${zoom}) rotate(${rot}deg)`;
+      };
+
+      document.getElementById('btn-zoom-in')?.addEventListener('click', () => { zoom = Math.min(zoom + 0.25, 3.5); updateTransform(); });
+      document.getElementById('btn-zoom-out')?.addEventListener('click', () => { zoom = Math.max(zoom - 0.25, 0.4); updateTransform(); });
+      document.getElementById('btn-rotate-img')?.addEventListener('click', () => { rot = (rot + 90) % 360; updateTransform(); });
+      document.getElementById('btn-reset-img')?.addEventListener('click', () => { zoom = 1; rot = 0; updateTransform(); });
+    } else if (isPdf) {
+      contentEl.style.background = '#334155';
+      contentEl.innerHTML = `
+        <iframe src="${finalUrl}#toolbar=1" style="width:100%; height:76vh; border:none; background:#ffffff;" title="PDF Preview"></iframe>
+      `;
+    } else {
+      contentEl.style.background = '#f8fafc';
+      contentEl.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#1e293b;">
+          <div style="width:56px; height:56px; border-radius:12px; background:#eff6ff; color:#2563eb; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px;">
+            <i data-lucide="file-check" style="width:28px;height:28px;"></i>
+          </div>
+          <h4 style="margin:0 0 8px 0;">Attached File</h4>
+          <p style="font-size:0.82rem; color:#64748b; margin:0 0 20px 0;">${esc(path || fileName)}</p>
+          <div style="display:flex; justify-content:center; gap:10px;">
+            <a href="${finalUrl}" target="_blank" class="btn btn-primary btn-sm"><i data-lucide="external-link"></i> Open Document</a>
+            <a href="${finalUrl}" download class="btn btn-secondary btn-sm"><i data-lucide="download"></i> Download File</a>
+          </div>
+        </div>
+      `;
+    }
+    UIComponents.refreshIcons();
+  }
+
+  /* ================================================================== */
+  /* Admission Application Data Editor                                  */
+  /* ================================================================== */
+
+  static async openEditApplicationModal(appId) {
+    let app = (this._apps || []).find((a) => a.id === appId);
+    if (!app) {
+      app = await admissionService.getApplication(appId);
+    }
+    if (!app) {
+      UIComponents.showToast('Application record not found.', 'danger');
+      return;
+    }
+
+    const fields = await admissionService.listFields();
+    const payload = app.payload || {};
+
+    const getVal = (key, fallback = '') => {
+      if (payload[key] !== undefined && payload[key] !== null) return payload[key];
+      if (app[key] !== undefined && app[key] !== null) return app[key];
+      return fallback;
+    };
+
+    const classOptions = ['Nursery', 'LKG', 'UKG', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+    const currentClass = getVal('applyingClass', app.grade || '');
+
+    const docFields = fields.filter((f) => (f.fieldType || 'text') === 'file');
+    const standardDocKeys = ['photo', 'birthCertificate', 'aadhaarDoc', 'marksheet'];
+    const standardDocLabels = {
+      photo: 'Applicant Photo',
+      birthCertificate: 'Birth Certificate',
+      aadhaarDoc: 'Aadhaar / ID Card',
+      marksheet: 'Previous Marksheet / Transfer Certificate'
+    };
+
+    const docFieldsToRender = [...docFields];
+    standardDocKeys.forEach(k => {
+      if (!docFieldsToRender.some(f => f.fieldKey === k)) {
+        docFieldsToRender.push({ fieldKey: k, label: standardDocLabels[k], fieldType: 'file' });
+      }
+    });
+
+    const docsHtml = docFieldsToRender.map((f) => {
+      const curPath = getVal(f.fieldKey, '');
+      return `
+        <div style="padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <strong style="font-size:0.8rem; color:#1e293b;">${esc(f.label)}</strong>
+            ${curPath ? `
+              <div style="display:flex; gap:6px; align-items:center;">
+                <span class="badge badge-success" style="font-size:0.68rem;"><i data-lucide="check"></i> Attached</span>
+                <button type="button" class="btn btn-secondary btn-sm btn-edit-preview-doc" data-path="${esc(curPath)}" data-title="${esc(f.label)}" style="font-size:0.72rem; padding:2px 8px; color:#2563eb; border-color:#bfdbfe;">
+                  <i data-lucide="eye" style="width:12px;height:12px;"></i> Preview
+                </button>
+              </div>
+            ` : '<span style="font-size:0.72rem; color:#94a3b8; font-style:italic;">No file attached</span>'}
+          </div>
+          <div>
+            <label style="font-size:0.7rem; color:#64748b; display:block; margin-bottom:3px;">Replace or Upload File:</label>
+            <input type="file" class="form-input form-input-sm edit-doc-file" data-key="${esc(f.fieldKey)}" accept="image/*,application/pdf" style="font-size:0.75rem;">
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const bodyHtml = `
+      <form id="edit-app-form" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Status & Meta Bar -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; background:#f0fdf4; border:1px solid #bbf7d0; padding:12px 16px; border-radius:8px;">
+          <div>
+            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Application Status</label>
+            <select class="form-select form-select-sm" id="ea-status">
+              <option value="Submitted" ${app.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
+              <option value="Under Verification" ${app.status === 'Under Verification' ? 'selected' : ''}>Under Verification</option>
+              <option value="Approved" ${app.status === 'Approved' ? 'selected' : ''}>Approved</option>
+              <option value="Rejected" ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+              <option value="Enrolled" ${app.status === 'Enrolled' ? 'selected' : ''}>Enrolled</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Payment Status</label>
+            <select class="form-select form-select-sm" id="ea-pay-status">
+              <option value="Not Required" ${app.paymentStatus === 'Not Required' ? 'selected' : ''}>Not Required</option>
+              <option value="Pending" ${app.paymentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Paid" ${app.paymentStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+              <option value="Partial" ${app.paymentStatus === 'Partial' ? 'selected' : ''}>Partial</option>
+              <option value="Waived" ${app.paymentStatus === 'Waived' ? 'selected' : ''}>Waived</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Total Fees (₹)</label>
+            <input type="number" class="form-input form-input-sm" id="ea-fee-total" value="${esc(app.feeTotal != null ? app.feeTotal : 0)}">
+          </div>
+        </div>
+
+        <!-- Section 1: Candidate Identity -->
+        <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="user" style="width:16px;height:16px;"></i> 1. Candidate Details
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Candidate's Full Name *</label>
+              <input class="form-input form-input-sm" id="ea-candidate-name" value="${esc(getVal('candidateName', app.studentName || ''))}" required>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Applying for Class *</label>
+              <select class="form-select form-select-sm" id="ea-class">
+                ${classOptions.map((c) => `<option value="${esc(c)}" ${(currentClass === c || app.grade === c) ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Date of Birth</label>
+              <input type="date" class="form-input form-input-sm" id="ea-dob" value="${esc(getVal('dob', app.dob || ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Gender</label>
+              <select class="form-select form-select-sm" id="ea-gender">
+                <option value="Male" ${getVal('gender', app.gender) === 'Male' ? 'selected' : ''}>Male</option>
+                <option value="Female" ${getVal('gender', app.gender) === 'Female' ? 'selected' : ''}>Female</option>
+                <option value="Other" ${getVal('gender', app.gender) === 'Other' ? 'selected' : ''}>Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Blood Group</label>
+              <select class="form-select form-select-sm" id="ea-blood-group">
+                <option value="">Select Blood Group</option>
+                ${['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(b => `<option value="${b}" ${getVal('bloodGroup') === b ? 'selected' : ''}>${b}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Religion</label>
+              <input class="form-input form-input-sm" id="ea-religion" value="${esc(getVal('religion', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Aadhaar / National ID</label>
+              <input class="form-input form-input-sm font-mono" id="ea-aadhaar" value="${esc(getVal('aadhaar', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Identification Marks</label>
+              <input class="form-input form-input-sm" id="ea-marks" value="${esc(getVal('identificationMarks', ''))}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Guardian Details -->
+        <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="users" style="width:16px;height:16px;"></i> 2. Guardian &amp; Contact Details
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Father's / Guardian's Name *</label>
+              <input class="form-input form-input-sm" id="ea-father-name" value="${esc(getVal('fatherName', app.guardianName || ''))}" required>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Father's Occupation</label>
+              <input class="form-input form-input-sm" id="ea-father-occ" value="${esc(getVal('fatherOccupation', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Mother's Name</label>
+              <input class="form-input form-input-sm" id="ea-mother-name" value="${esc(getVal('motherName', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Mother's Occupation</label>
+              <input class="form-input form-input-sm" id="ea-mother-occ" value="${esc(getVal('motherOccupation', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Mobile / WhatsApp Number *</label>
+              <input class="form-input form-input-sm font-mono" id="ea-phone" value="${esc(getVal('phone', app.phone || ''))}" required>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Email Address</label>
+              <input type="email" class="form-input form-input-sm font-mono" id="ea-email" value="${esc(getVal('email', app.email || ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Annual Family Income</label>
+              <input type="number" class="form-input form-input-sm" id="ea-income" value="${esc(getVal('fatherIncome', getVal('annualIncome', '')))}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Address & School -->
+        <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="map-pin" style="width:16px;height:16px;"></i> 3. Address &amp; Academic History
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Village / Street</label>
+              <input class="form-input form-input-sm" id="ea-village" value="${esc(getVal('village', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Post Office (PO)</label>
+              <input class="form-input form-input-sm" id="ea-po" value="${esc(getVal('po', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Police Station (PS)</label>
+              <input class="form-input form-input-sm" id="ea-ps" value="${esc(getVal('ps', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">District</label>
+              <input class="form-input form-input-sm" id="ea-district" value="${esc(getVal('district', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">PIN Code</label>
+              <input class="form-input form-input-sm font-mono" id="ea-pin" value="${esc(getVal('pin', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Previous School</label>
+              <input class="form-input form-input-sm" id="ea-prev-school" value="${esc(getVal('previousSchool', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Last Class Passed</label>
+              <input class="form-input form-input-sm" id="ea-last-class" value="${esc(getVal('lastClass', ''))}">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.75rem;">Last Percentage / Marks</label>
+              <input class="form-input form-input-sm" id="ea-last-marks" value="${esc(getVal('lastMarks', ''))}">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Attached Files -->
+        <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="paperclip" style="width:16px;height:16px;"></i> 4. Attached Files &amp; Uploads
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
+            ${docsHtml}
+          </div>
+        </div>
+
+        <!-- Section 5: Remarks -->
+        <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#475569; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="message-square" style="width:16px;height:16px;"></i> 5. Verification Remarks / Internal Notes
+          </div>
+          <textarea class="form-textarea" id="ea-remarks" rows="2" style="font-size:0.82rem;" placeholder="Administrative notes visible to reviewers...">${esc(app.remarks || '')}</textarea>
+        </div>
+      </form>
+    `;
+
+    const footerHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-edit-app">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-save-edit-app"><i data-lucide="save"></i> Save Application Changes</button>
+      </div>
+    `;
+
+    UIComponents.openModal({
+      title: `Edit Application Data — ${app.appId || app.id}`,
+      bodyHtml,
+      footerHtml,
+      maxWidth: '1000px'
+    });
+
+    document.getElementById('btn-cancel-edit-app')?.addEventListener('click', () => {
+      UIComponents.closeModal();
+      this.openApplicationModal(app.id);
+    });
+
+    // Wire document preview buttons inside edit modal
+    document.querySelectorAll('.btn-edit-preview-doc').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.openFilePreviewModal({ title: btn.dataset.title, path: btn.dataset.path });
+      });
+    });
+
+    // Wire save button
+    document.getElementById('btn-save-edit-app')?.addEventListener('click', async () => {
+      const saveBtn = document.getElementById('btn-save-edit-app');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Saving...';
+      UIComponents.refreshIcons();
+
+      try {
+        const candidateName = document.getElementById('ea-candidate-name')?.value.trim();
+        const applyingClass = document.getElementById('ea-class')?.value;
+        const fatherName = document.getElementById('ea-father-name')?.value.trim();
+        const phone = document.getElementById('ea-phone')?.value.trim();
+
+        if (!candidateName || !fatherName || !phone) {
+          UIComponents.showToast('Please fill in required fields: Candidate Name, Father Name, and Mobile Number.', 'warning');
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i data-lucide="save"></i> Save Application Changes';
+          UIComponents.refreshIcons();
+          return;
+        }
+
+        const values = {
+          candidateName,
+          applyingClass,
+          dob: document.getElementById('ea-dob')?.value || '',
+          gender: document.getElementById('ea-gender')?.value || '',
+          bloodGroup: document.getElementById('ea-blood-group')?.value || '',
+          religion: document.getElementById('ea-religion')?.value.trim() || '',
+          aadhaar: document.getElementById('ea-aadhaar')?.value.trim() || '',
+          identificationMarks: document.getElementById('ea-marks')?.value.trim() || '',
+          fatherName,
+          fatherOccupation: document.getElementById('ea-father-occ')?.value.trim() || '',
+          motherName: document.getElementById('ea-mother-name')?.value.trim() || '',
+          motherOccupation: document.getElementById('ea-mother-occ')?.value.trim() || '',
+          phone,
+          email: document.getElementById('ea-email')?.value.trim() || '',
+          fatherIncome: document.getElementById('ea-income')?.value || '',
+          village: document.getElementById('ea-village')?.value.trim() || '',
+          po: document.getElementById('ea-po')?.value.trim() || '',
+          ps: document.getElementById('ea-ps')?.value.trim() || '',
+          district: document.getElementById('ea-district')?.value.trim() || '',
+          pin: document.getElementById('ea-pin')?.value.trim() || '',
+          previousSchool: document.getElementById('ea-prev-school')?.value.trim() || '',
+          lastClass: document.getElementById('ea-last-class')?.value.trim() || '',
+          lastMarks: document.getElementById('ea-last-marks')?.value || ''
+        };
+
+        // Process file uploads
+        const fileInputs = document.querySelectorAll('.edit-doc-file');
+        for (const input of fileInputs) {
+          if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const key = input.dataset.key;
+            const sanitizedName = admissionService.sanitizeFileName(file.name);
+            const uploadPath = `applications/${app.appId || app.id}/${key}-${Date.now()}-${sanitizedName}`;
+            const res = await admissionService.uploadFile('admission-docs', uploadPath, file);
+            if (res && res.path) {
+              values[key] = res.path;
+            } else {
+              // Fallback to base64 data URL
+              const base64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+              });
+              if (base64) values[key] = base64;
+            }
+          }
+        }
+
+        const status = document.getElementById('ea-status')?.value;
+        const paymentStatus = document.getElementById('ea-pay-status')?.value;
+        const feeTotal = parseFloat(document.getElementById('ea-fee-total')?.value) || 0;
+        const remarks = document.getElementById('ea-remarks')?.value.trim() || '';
+
+        await admissionService.updateApplication(app.id, { values, status, paymentStatus, remarks });
+        await dbService.update('admissions_applications', app.id, { feeTotal });
+        await auditService.log('ADMISSION_UPDATED', 'ADMISSIONS', { id: app.id, formNo: app.appId, candidateName }, app.id);
+
+        UIComponents.showToast('Application details updated successfully!', 'success');
+        UIComponents.closeModal();
+
+        const tabContent = document.getElementById('admin-tab-content');
+        await this.refreshApplications(tabContent);
+        this.openApplicationModal(app.id);
+      } catch (err) {
+        console.error('Save application failed:', err);
+        UIComponents.showToast(`Error saving application: ${err.message}`, 'danger');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i data-lucide="save"></i> Save Application Changes';
+        UIComponents.refreshIcons();
+      }
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  /* ================================================================== */
+  /* Credential Sharing & Template Manager                             */
+  /* ================================================================== */
+
+  static getCredentialShareConfig() {
+    let raw = null;
+    try {
+      raw = localStorage.getItem('tms_credential_share_template');
+    } catch (_) {}
+
+    let cfg = null;
+    if (raw) {
+      try { cfg = JSON.parse(raw); } catch (_) {}
+    }
+
+    const defaultDomain = (window && window.location && window.location.origin && !window.location.origin.includes('localhost'))
+      ? window.location.origin
+      : 'https://tms.clubad.space';
+
+    const defaultTemplate = `Assalamu Alaikum / Greetings {name},
+
+Here are your official login credentials for {institution_name}:
+
+• Role: {role}
+• Login ID / Username: {username}
+• Password: {password}
+• Portal Link: {portal_url}
+
+Please keep your login details safe and confidential.`;
+
+    return {
+      template: (cfg && cfg.template) || defaultTemplate,
+      domain: (cfg && cfg.domain) || defaultDomain
+    };
+  }
+
+  static async saveCredentialShareConfig({ template, domain }) {
+    const payload = { template, domain, updatedAt: new Date().toISOString() };
+    try {
+      localStorage.setItem('tms_credential_share_template', JSON.stringify(payload));
+    } catch (_) {}
+    try {
+      await dbService.upsert('app_settings', { id: 'credential_share_template', value: payload });
+    } catch (_) {}
+    UIComponents.showToast('Credential sharing template saved!', 'success');
+  }
+
+  static compileCredentialMessage({ name, role, username, password, customUrl }) {
+    const cfg = this.getCredentialShareConfig();
+    const portalUrl = customUrl || `${cfg.domain}/login.html`;
+    const schoolName = TMS_CONFIG.schoolName || 'Thaiba Public School';
+
+    let msg = cfg.template;
+    msg = msg.replace(/{name}/g, name || 'User');
+    msg = msg.replace(/{role}/g, ROLE_LABELS[role] || role || 'User');
+    msg = msg.replace(/{username}/g, username || '—');
+    msg = msg.replace(/{password}/g, password || '—');
+    msg = msg.replace(/{portal_url}/g, portalUrl);
+    msg = msg.replace(/{domain}/g, cfg.domain);
+    msg = msg.replace(/{institution_name}/g, schoolName);
+
+    return msg;
+  }
+
+  static async copyCredentialMessageToClipboard(opts) {
+    const msg = this.compileCredentialMessage(opts);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(msg);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = msg;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      UIComponents.showToast(`Login credentials copied for ${opts.name || 'user'}! Ready to paste & share.`, 'success');
+    } catch (e) {
+      UIComponents.showToast('Could not copy to clipboard: ' + e.message, 'danger');
+    }
+  }
+
+  static openCredentialTemplateModal() {
+    const cfg = this.getCredentialShareConfig();
+
+    const sampleProfile = {
+      name: 'Dr. Ahmad Khan',
+      role: 'teacher',
+      username: 'ahmad.khan',
+      password: 'TMS@Secure2026'
+    };
+
+    const previewMsg = this.compileCredentialMessage(sampleProfile);
+
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:0.82rem; color:var(--text-muted); margin:0;">
+          Customize the template message used when copying or sharing login credentials to Staff, Parents, or Students via WhatsApp, SMS, or Clipboard.
+        </p>
+
+        <div>
+          <label class="form-label" style="font-size:0.78rem; font-weight:700;">Portal Domain / Link</label>
+          <input class="form-input form-input-sm font-mono" id="cst-domain" value="${esc(cfg.domain)}" placeholder="e.g. https://tms.clubad.space">
+          <small style="font-size:0.7rem; color:var(--text-muted);">The default website address or domain included in the login link.</small>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label class="form-label" style="font-size:0.78rem; font-weight:700; margin:0;">Message Template</label>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <span class="badge badge-info cst-tag" data-tag="{name}" style="cursor:pointer;" title="Click to insert">{name}</span>
+              <span class="badge badge-info cst-tag" data-tag="{username}" style="cursor:pointer;" title="Click to insert">{username}</span>
+              <span class="badge badge-info cst-tag" data-tag="{password}" style="cursor:pointer;" title="Click to insert">{password}</span>
+              <span class="badge badge-info cst-tag" data-tag="{role}" style="cursor:pointer;" title="Click to insert">{role}</span>
+              <span class="badge badge-info cst-tag" data-tag="{portal_url}" style="cursor:pointer;" title="Click to insert">{portal_url}</span>
+              <span class="badge badge-info cst-tag" data-tag="{institution_name}" style="cursor:pointer;" title="Click to insert">{institution_name}</span>
+            </div>
+          </div>
+          <textarea class="form-textarea font-mono" id="cst-template" rows="7" style="font-size:0.82rem; line-height:1.45;">${esc(cfg.template)}</textarea>
+        </div>
+
+        <div>
+          <label class="form-label" style="font-size:0.78rem; font-weight:700; color:#15803d; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="eye" style="width:14px;height:14px;"></i> Live Preview
+          </label>
+          <pre id="cst-preview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:0.8rem; white-space:pre-wrap; color:#1e293b; margin:0; max-height:160px; overflow-y:auto;">${esc(previewMsg)}</pre>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-close-cst">Cancel</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-save-cst"><i data-lucide="save"></i> Save Template</button>
+      </div>
+    `;
+
+    UIComponents.openModal({
+      title: 'Credential Sharing Message Settings',
+      bodyHtml,
+      footerHtml,
+      maxWidth: '680px'
+    });
+
+    const updateLivePreview = () => {
+      const template = document.getElementById('cst-template')?.value || '';
+      const domain = document.getElementById('cst-domain')?.value.trim() || window.location.origin;
+      const portalUrl = `${domain}/login.html`;
+      const schoolName = TMS_CONFIG.schoolName || 'Thaiba Public School';
+
+      let out = template;
+      out = out.replace(/{name}/g, sampleProfile.name);
+      out = out.replace(/{role}/g, ROLE_LABELS[sampleProfile.role] || sampleProfile.role);
+      out = out.replace(/{username}/g, sampleProfile.username);
+      out = out.replace(/{password}/g, sampleProfile.password);
+      out = out.replace(/{portal_url}/g, portalUrl);
+      out = out.replace(/{domain}/g, domain);
+      out = out.replace(/{institution_name}/g, schoolName);
+
+      const previewEl = document.getElementById('cst-preview');
+      if (previewEl) previewEl.innerText = out;
+    };
+
+    document.getElementById('cst-template')?.addEventListener('input', updateLivePreview);
+    document.getElementById('cst-domain')?.addEventListener('input', updateLivePreview);
+
+    document.querySelectorAll('.cst-tag').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const ta = document.getElementById('cst-template');
+        if (!ta) return;
+        const tag = chip.dataset.tag;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        ta.value = ta.value.substring(0, start) + tag + ta.value.substring(end);
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = start + tag.length;
+        updateLivePreview();
+      });
+    });
+
+    document.getElementById('btn-close-cst')?.addEventListener('click', () => UIComponents.closeModal());
+
+    document.getElementById('btn-save-cst')?.addEventListener('click', async () => {
+      const template = document.getElementById('cst-template')?.value || '';
+      const domain = document.getElementById('cst-domain')?.value.trim() || window.location.origin;
+      await this.saveCredentialShareConfig({ template, domain });
+      UIComponents.closeModal();
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+}

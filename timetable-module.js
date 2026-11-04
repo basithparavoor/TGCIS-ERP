@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Class Timetable & Academic Schedule Engine
  * Interactive Weekly Period Matrix, Teacher Workload Assignment & Printable A4 Class Schedule
  */
@@ -8,6 +8,7 @@ import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
 import { auditService } from './audit-service.js';
 import { TMS_LOGO } from './logo.js';
+import { exportPdf, formatPdfFilename } from './export-utils.js';
 
 export const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -58,26 +59,19 @@ export class TimetableModule {
     this._currentSchedule = existing?.schedule || {};
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
-              <span style="color: #2563eb;"><i data-lucide="calendar-days"></i></span> Timetable &amp; Teacher Substitution Matrix
-            </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Weekly period routine, teacher schedule allocations, and automated daily teacher absence &amp; substitution engine.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            ${this._activeView === 'matrix' ? `
-              <button class="btn btn-secondary" id="btn-print-timetable"><i data-lucide="printer"></i> Print Class Timetable (A4)</button>
-              <button class="btn btn-primary" id="btn-save-timetable"><i data-lucide="save"></i> Save Schedule</button>
-            ` : `
-              <button class="btn btn-primary" id="btn-print-substitution-slips"><i data-lucide="printer"></i> Print Daily Proxy Slips (A4)</button>
-            `}
-          </div>
-        </div>
-      </div>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Class Timetables & Substitution Matrix',
+          subtitle: 'Weekly period routine, teacher schedule allocations, and automated daily teacher absence & substitution engine.',
+          breadcrumbs: [{ label: 'Class Timetables' }],
+          badge: `${this._selectedGrade} - Sec ${this._selectedSection}`,
+          actionsHtml: this._activeView === 'matrix' ? `
+            <button class="btn btn-secondary" id="btn-print-timetable"><i data-lucide="printer"></i> Print Timetable (A4)</button>
+            <button class="btn btn-primary" id="btn-save-timetable"><i data-lucide="save"></i> Save Schedule</button>
+          ` : `
+            <button class="btn btn-primary" id="btn-print-substitution-slips"><i data-lucide="printer"></i> Print Proxy Slips (A4)</button>
+          `
+        })}
 
       <!-- Module View Tabs -->
       <div class="tms-tab-rail-wrapper">
@@ -393,7 +387,8 @@ export class TimetableModule {
         `;
       })()}
       `}
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     UIComponents.refreshIcons();
@@ -794,7 +789,7 @@ export class TimetableModule {
       bodyHtml,
       footerHtml: `
         <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Close</button>
-        <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i> Print Official Schedule (A4)</button>
+        <button class="btn btn-primary" id="btn-print-timetable-pdf"><i data-lucide="printer"></i> Print / Save PDF Schedule</button>
       `
     });
 
@@ -859,7 +854,7 @@ export class TimetableModule {
       bodyHtml,
       footerHtml: `
         <button class="btn btn-secondary" onclick="document.getElementById('global-modal-close').click()">Close</button>
-        <button class="btn btn-primary" onclick="window.print()"><i data-lucide="printer"></i> Print All Slips (A4)</button>
+        <button class="btn btn-primary" id="btn-print-subslips-pdf"><i data-lucide="printer"></i> Print / Save PDF Slips</button>
       `
     });
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Attendance Engine, Smart Kiosk & Telemetry Module
  * Daily Registers, 1-Click Status Toggles, Smart QR/Barcode Kiosk Terminal, CSV Reporting
  */
@@ -60,23 +60,18 @@ export class AttendanceModule {
     const presentRate = filteredStudents.length > 0 ? `${Math.round(((presentCount + lateCount) / filteredStudents.length) * 100)}%` : '—';
 
     container.innerHTML = `
-      <div style="margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          <div>
-            <h1 style="font-size: 1.8rem; display: flex; align-items: center; gap: 10px;">
-              <span style="color: #16a34a;"><i data-lucide="check-square"></i></span> Attendance & Smart Campus Telemetry
-            </h1>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">
-              Daily morning registers, 1-click status toggles, and Smart QR/Barcode Campus Kiosk Terminal.
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <button class="btn btn-secondary" id="btn-export-att"><i data-lucide="download"></i> Export Register (CSV)</button>
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'Attendance & Smart Campus Telemetry',
+          subtitle: 'Daily morning registers, 1-click status toggles, and Smart QR/Barcode Campus Kiosk Terminal.',
+          breadcrumbs: [{ label: 'Attendance & Radar' }],
+          badge: 'Live Radar',
+          actionsHtml: `
+            <button class="btn btn-secondary" id="btn-export-att"><i data-lucide="download"></i> Export CSV</button>
             <button class="btn btn-secondary" id="btn-mark-all-present"><i data-lucide="check-check"></i> Mark All Present</button>
             <button class="btn btn-primary" id="btn-qr-scanner"><i data-lucide="qr-code"></i> Launch QR Kiosk</button>
-          </div>
-        </div>
-      </div>
+          `
+        })}
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Attendance Today', value: presentRate, icon: 'users', color: 'emerald', subtitle: `${presentCount + lateCount} / ${filteredStudents.length} Present` })}
@@ -202,7 +197,8 @@ export class AttendanceModule {
           </table>
         </div>
       </div>
-    `;
+    </div>
+  `;
 
     this.bindEvents(container);
     UIComponents.refreshIcons();
