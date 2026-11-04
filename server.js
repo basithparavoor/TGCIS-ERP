@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 const ROOT = __dirname;
 
 const MIME_TYPES = {
@@ -172,11 +172,27 @@ function getNetworkIp() {
   return '127.0.0.1';
 }
 
-server.listen(PORT, '0.0.0.0', () => {
+let currentPort = PORT;
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`[TPS ERP] Port ${currentPort} in use, trying port ${currentPort + 1}...`);
+    currentPort++;
+    server.listen(currentPort, '0.0.0.0');
+  } else {
+    console.error('SERVER ERROR:', err.message);
+  }
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+server.listen(currentPort, '0.0.0.0', () => {
   const ip = getNetworkIp();
   console.log(`\n=============================================`);
   console.log(`  THAIBA PUBLIC SCHOOL ERP — Server Online`);
-  console.log(`  Local URL:   http://localhost:${PORT}/`);
-  console.log(`  Wi-Fi URL:   http://${ip}:${PORT}/`);
+  console.log(`  Local URL:   http://localhost:${currentPort}/`);
+  console.log(`  Wi-Fi URL:   http://${ip}:${currentPort}/`);
   console.log(`=============================================\n`);
 });
