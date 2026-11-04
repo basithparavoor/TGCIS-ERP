@@ -100,7 +100,7 @@ export const TMS_LOGO = {
     const instName = opts.title || 'THAIBA PUBLIC SCHOOL';
     const subTitle = opts.subtitle || 'Run by : Thaiba Heritage, Kolkata';
     const address = opts.address || 'Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011';
-    const website = opts.website || 'www.thaibagarden.com';
+    const website = opts.website || 'tps.clubad.space';
     const email = opts.email || 'tps@thaibagarden.com';
     const contact = opts.contact || '+91 8653382851, +91 8167782851';
 

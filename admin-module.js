@@ -1487,7 +1487,7 @@ export class AdminModule {
 
     const portalUrl = (typeof window !== 'undefined' && window.location.origin)
       ? `${window.location.origin}/parent`
-      : 'https://www.thaibagarden.com/parent';
+      : 'https://tps.clubad.space/parent';
 
     const credBlock = cred ? `
       <div style="border:1.5px solid #16a34a; background:#f0fdf4; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
@@ -1536,7 +1536,7 @@ export class AdminModule {
           <div style="font-size: 10px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
           <h1 style="font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 900; color: #0f172a; margin: 1px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px;">${esc(TMS_CONFIG.institution.name)}</h1>
           <div style="font-size: 9px; color: #334155;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.district)} - ${esc(TMS_CONFIG.institution.address.pin)} • Regd. No. : ${esc(TMS_CONFIG.institution.regNo)}</div>
-          <div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">Helpline: ${esc(TMS_CONFIG.institution.contact.phone1)}, ${esc(TMS_CONFIG.institution.contact.phone2)} • Web: www.thaibagarden.com</div>
+          <div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">Helpline: ${esc(TMS_CONFIG.institution.contact.phone1)}, ${esc(TMS_CONFIG.institution.contact.phone2)} • Web: tps.clubad.space</div>
         </div>
         <div style="width: 105px; text-align: right; flex-shrink: 0;">
           <div style="display: inline-block; padding: 3px 8px; background: #f0fdf4; border: 1.5px solid #16a34a; color: #15803d; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
@@ -1660,7 +1660,7 @@ export class AdminModule {
                 <td colspan="3" style="padding:3px 4px; border:1.5px solid #16a34a;">
                   User: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? cred.username : '—')}</strong> &nbsp;|&nbsp;
                   Password: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? (cred.password || '******') : '—')}</strong> &nbsp;|&nbsp;
-                  Portal: <span class="font-mono" style="color:#15803d; font-size:9px;">www.thaibagarden.com</span>
+                  Portal: <span class="font-mono" style="color:#15803d; font-size:9px;">tps.clubad.space</span>
                 </td>
               </tr>
               <tr>

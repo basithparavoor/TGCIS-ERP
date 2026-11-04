@@ -27,7 +27,7 @@ export const TMS_CONFIG = {
       phone1: "+91 8653382851",
       phone2: "+91 8167782851",
       email: "tps@thaibagarden.com",
-      website: "https://www.thaibagarden.com"
+      website: "https://tps.clubad.space"
     },
     gpsGeofence: {
       latitude: 25.2891,

@@ -83,8 +83,8 @@ export function renderDocumentHeader(opts = {}) {
   const tagline = opts.tagline || inst.tagline || 'Run by : Thaiba Heritage, Kolkata';
   const regNo = opts.regNo || inst.regNo || 'IV 01894/2011';
   const address = opts.address || `${inst.address?.campus || 'Baghait, Tapan'}, ${inst.address?.district || 'Dakshin Dinajpur'} - ${inst.address?.pin || '733127'} (W.B.)`;
-  const contact = opts.contact || `Helpline: ${inst.contact?.phone1 || '+91 8653382851'}, ${inst.contact?.phone2 || '+91 8167782851'} • Email: ${inst.contact?.email || 'tms@thaibagarden.com'}`;
-  const website = opts.website || inst.contact?.website || 'www.thaibagarden.com';
+  const contact = opts.contact || `Helpline: ${inst.contact?.phone1 || '+91 8653382851'}, ${inst.contact?.phone2 || '+91 8167782851'} • Email: ${inst.contact?.email || 'tps@thaibagarden.com'}`;
+  const website = opts.website || inst.contact?.website || 'tps.clubad.space';
   const badge = opts.badge || 'Official Record';
   const title = opts.title || '';
   const subtitle = opts.subtitle || '';
@@ -172,7 +172,7 @@ export function renderDocumentFooter(opts = {}) {
           <span class="tms-footer-dim">• Computer Generated Official Record • Tamper Evident</span>
         </div>
         <div class="tms-footer-center">
-          <span>Portal Verification: <strong>www.thaibagarden.com</strong></span>
+          <span>Portal Verification: <strong>tps.clubad.space</strong></span>
         </div>
         <div class="tms-footer-right">
           <span>Issued: <strong>${attrEsc(currentDate)} ${attrEsc(currentTime)}</strong></span>
