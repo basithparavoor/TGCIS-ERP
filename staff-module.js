@@ -1,3 +1,4 @@
+import { institutionService } from './institution-service.js';
 /**
  * THAIBA PUBLIC SCHOOL — Staff & Human Resources Module
  *
@@ -64,6 +65,7 @@ export class StaffModule {
       return acc;
     }, {});
 
+    staff = institutionService.filterByActiveSchool(staff);
     this._staff = staff;
     this._credByStaff = credByStaff;
 

@@ -40,6 +40,53 @@ END;
 $$;
 
 -- ============================================================================
+-- 1c. Schools & Sub-Managements Registry (Group of Schools Architecture)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS schools (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    short_name TEXT,
+    tagline TEXT,
+    board TEXT,
+    status TEXT DEFAULT 'Active',
+    principal_name TEXT,
+    principal_email TEXT,
+    contact_phone TEXT,
+    contact_email TEXT,
+    website TEXT,
+    campus_location TEXT,
+    district TEXT,
+    state TEXT,
+    country TEXT DEFAULT 'India',
+    pin TEXT,
+    theme_color TEXT,
+    logo_badge TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "schools_read_all" ON schools;
+CREATE POLICY "schools_read_all" ON schools
+  FOR SELECT TO authenticated, anon
+  USING (true);
+
+DROP POLICY IF EXISTS "schools_manage_central_admin" ON schools;
+CREATE POLICY "schools_manage_central_admin" ON schools
+  FOR ALL TO authenticated
+  USING (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']))
+  WITH CHECK (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']));
+
+-- Seed default member schools
+INSERT INTO schools (id, code, name, short_name, tagline, board, status, principal_name, principal_email, contact_phone, contact_email, website, campus_location, district, state, pin, theme_color, logo_badge)
+VALUES
+  ('tps', 'TPS-TAPAN', 'THAIBA PUBLIC SCHOOL', 'TPS (Tapan)', 'Modern Education with Morality', 'State / Central Affiliated', 'Active', 'C. M. Basith', 'cmbasith786@gmail.com', '+91 8653382851', 'tps@thaibagarden.com', 'https://tps.clubad.space', 'Baghait, Tapan, Dakshin Dinajpur', 'Dakshin Dinajpur', 'West Bengal', '733127', '#BF9A33', 'TPS'),
+  ('tms', 'TMS-TAPAN', 'THAIBA MODEL SCHOOL', 'TMS (Main)', 'Excellence in Islamic & Contemporary Education', 'State / Central Affiliated', 'Active', 'Dr. Z. A. Rahman', 'principal@thaibamodel.school', '+91 8653382850', 'tms@thaibagarden.com', 'https://tms.thaibagarden.com', 'Thaiba Garden Campus, Tapan', 'Dakshin Dinajpur', 'West Bengal', '733127', '#16a34a', 'TMS')
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
 -- 2. Profiles - server-side source of truth for role, scope & identity
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS profiles (
@@ -1240,5 +1287,19 @@ DROP POLICY IF EXISTS "student_leaves_read" ON student_leaves;
 CREATE POLICY "student_leaves_read" ON student_leaves FOR SELECT TO anon, authenticated USING (true);
 DROP POLICY IF EXISTS "student_leaves_manage" ON student_leaves;
 CREATE POLICY "student_leaves_manage" ON student_leaves FOR ALL TO anon, authenticated USING (true);
+
+-- ============================================================================
+-- Group of Schools Multi-Branch Schema Additions
+-- ============================================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE students ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE staff ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE facilities ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE attendance_records ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE student_leaves ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE admissions_applications ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+ALTER TABLE notices ADD COLUMN IF NOT EXISTS school_id TEXT DEFAULT 'tps';
+
 
 

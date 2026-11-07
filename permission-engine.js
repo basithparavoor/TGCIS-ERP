@@ -61,6 +61,11 @@ export const CAPABILITIES = {
   // Reports
   VIEW_REPORTS: 'view_reports',
 
+  // Central Management & Group of Schools
+  MANAGE_GROUP_INSTITUTIONS: 'manage_group_institutions',
+  SWITCH_SCHOOL_CONTEXT: 'switch_school_context',
+  CENTRAL_MANAGEMENT_CONSOLE: 'central_management_console',
+
   // Super Admin Exclusive Privileges
   SUPER_ADMIN_CONSOLE: 'super_admin_console',
   VIEW_DEVELOPER_OPTIONS: 'view_developer_options',
@@ -71,6 +76,9 @@ export const CAPABILITIES = {
 };
 
 export const SUPER_ADMIN_ONLY_CAPABILITIES = [
+  CAPABILITIES.MANAGE_GROUP_INSTITUTIONS,
+  CAPABILITIES.SWITCH_SCHOOL_CONTEXT,
+  CAPABILITIES.CENTRAL_MANAGEMENT_CONSOLE,
   CAPABILITIES.SUPER_ADMIN_CONSOLE,
   CAPABILITIES.VIEW_DEVELOPER_OPTIONS,
   CAPABILITIES.DIAGNOSE_AND_FIX_ERRORS,
@@ -81,6 +89,7 @@ export const SUPER_ADMIN_ONLY_CAPABILITIES = [
 
 const ROLE_CAPABILITY_MATRIX = {
   [TMS_CONFIG.roles.SUPER_ADMIN]: Object.values(CAPABILITIES),
+  [TMS_CONFIG.roles.CENTRAL_ADMIN || 'central_admin']: Object.values(CAPABILITIES),
 
   [TMS_CONFIG.roles.ADMIN]: Object.values(CAPABILITIES).filter(c => !SUPER_ADMIN_ONLY_CAPABILITIES.includes(c)),
 

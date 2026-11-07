@@ -1,9 +1,103 @@
 /**
- * THAIBA PUBLIC SCHOOL — ERP Master Configuration
- * Single-Institution Architecture
+ * THAIBA HERITAGE GROUP OF INSTITUTIONS — ERP Master Configuration
+ * Multi-Institution Architecture: Central Management & Sub-Managements
  */
 
 export const TMS_CONFIG = {
+  // Central Group of Institutions Hierarchy
+  group: {
+    name: "THAIBA HERITAGE GROUP OF INSTITUTIONS",
+    shortName: "Thaiba Heritage Group",
+    trust: "Thaiba Heritage, Kolkata",
+    regNo: "IV 01894/2011",
+    tagline: "Central Educational Trust & Group Governance",
+    hq: {
+      campus: "Thaiba Heritage Headquarters",
+      city: "Kolkata",
+      state: "West Bengal",
+      country: "India",
+      phone: "+91 8653382851",
+      email: "central@thaibaheritage.org",
+      director: "C. M. Basith",
+      directorEmail: "cmbasith786@gmail.com"
+    },
+    // Sub-Managements / Member Schools
+    schools: [
+      {
+        id: "tps",
+        code: "TPS-TAPAN",
+        name: "THAIBA PUBLIC SCHOOL",
+        shortName: "TPS (Tapan)",
+        tagline: "Modern Education with Morality",
+        board: "State / Central Affiliated",
+        status: "Active",
+        principal: "C. M. Basith",
+        principalEmail: "cmbasith786@gmail.com",
+        contact: {
+          phone1: "+91 8653382851",
+          phone2: "+91 8167782851",
+          email: "tps@thaibagarden.com",
+          website: "https://tps.clubad.space"
+        },
+        address: {
+          campus: "Baghait, Tapan",
+          village: "Baghait",
+          city: "Tapan",
+          district: "Dakshin Dinajpur",
+          state: "West Bengal",
+          country: "India",
+          pin: "733127",
+          locality: "Thaiba Garden, Tapan"
+        },
+        themeColor: "#BF9A33",
+        logo: "tps-logo.png",
+        logoBadge: "TPS",
+        founded: "2011",
+        gpsGeofence: {
+          latitude: 25.2891,
+          longitude: 88.5832,
+          radiusMeters: 300
+        }
+      },
+      {
+        id: "tms",
+        code: "TMS-TAPAN",
+        name: "THAIBA MODEL SCHOOL",
+        shortName: "TMS (Main)",
+        tagline: "Excellence in Islamic & Contemporary Education",
+        board: "State / Central Affiliated",
+        status: "Active",
+        principal: "Dr. Z. A. Rahman",
+        principalEmail: "principal@thaibamodel.school",
+        contact: {
+          phone1: "+91 8653382850",
+          phone2: "+91 8167782850",
+          email: "tms@thaibagarden.com",
+          website: "https://tms.thaibagarden.com"
+        },
+        address: {
+          campus: "Thaiba Garden Campus",
+          village: "Baghait",
+          city: "Tapan",
+          district: "Dakshin Dinajpur",
+          state: "West Bengal",
+          country: "India",
+          pin: "733127",
+          locality: "Thaiba Garden, Tapan"
+        },
+        themeColor: "#16a34a",
+        logo: "icons/tms-logo.png",
+        logoBadge: "TMS",
+        founded: "2015",
+        gpsGeofence: {
+          latitude: 25.2910,
+          longitude: 88.5850,
+          radiusMeters: 300
+        }
+      }
+    ]
+  },
+
   institution: {
     name: "THAIBA PUBLIC SCHOOL",
     tagline: "Run by : Thaiba Heritage, Kolkata",
@@ -64,6 +158,7 @@ export const TMS_CONFIG = {
 
   roles: {
     SUPER_ADMIN: "super_admin",
+    CENTRAL_ADMIN: "central_admin",
     ADMIN: "admin",
     PRINCIPAL: "principal",
     COORDINATOR: "coordinator",
@@ -78,6 +173,7 @@ export const TMS_CONFIG = {
   },
 
   scopes: {
+    GROUP_WIDE: "group_wide",
     SCHOOL_WIDE: "school_wide",
     ASSIGNED_CLASS: "assigned_class",
     ASSIGNED_SUBJECT: "assigned_subject",

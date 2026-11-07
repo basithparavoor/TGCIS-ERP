@@ -1,3 +1,4 @@
+import { institutionService } from './institution-service.js';
 /**
  * THAIBA PUBLIC SCHOOL — Finance, Invoicing & Cash Counter Module
  */
@@ -19,6 +20,8 @@ export class FinanceModule {
       dbService.select('invoices'),
       dbService.select('students')
     ]);
+    invoices = institutionService.filterByActiveSchool(invoices || []);
+    students = institutionService.filterByActiveSchool(students || []);
     this._students = students || [];
     const esc = (v) => UIComponents.escapeHtml(v);
     const canManage = PermissionEngine.can(CAPABILITIES.MANAGE_FINANCE);

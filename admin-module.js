@@ -4184,6 +4184,7 @@ export class AdminModule {
                   <th>Current Status</th>
                   <th style="min-width:160px;">Role Assignment</th>
                   <th style="min-width:140px;">Access Scope</th>
+                  <th style="min-width:150px;">School / Campus</th>
                   <th style="min-width:130px;">Title / Designation</th>
                   <th style="min-width:120px;">Department</th>
                   <th style="text-align:right; min-width:180px;">Action</th>
@@ -4257,6 +4258,19 @@ export class AdminModule {
                             ${scopes.map((s) => `
                               <option value="${esc(s)}" ${(s === currentScope) ? 'selected' : ''}>
                                 ${esc(s)}
+                              </option>
+                            `).join('')}
+                          </select>
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span class="badge badge-info">Central HQ (All)</span>` : `
+                          <select class="form-select form-select-sm approval-school-select">
+                            <option value="all" ${(p.school_id === 'all') ? 'selected' : ''}>Central HQ (All Schools)</option>
+                            ${institutionService.getSchools().map((s) => `
+                              <option value="${esc(s.id)}" ${(p.school_id || 'tps') === s.id ? 'selected' : ''}>
+                                ${esc(s.shortName || s.name)}
                               </option>
                             `).join('')}
                           </select>
@@ -4355,6 +4369,7 @@ export class AdminModule {
         const userEmail = row.dataset.email;
         const selectedRole = row.querySelector('.approval-role-select')?.value || 'teacher';
         const selectedScope = row.querySelector('.approval-scope-select')?.value || 'own_records';
+        const selectedSchool = row.querySelector('.approval-school-select')?.value || 'tps';
         const title = row.querySelector('.approval-title-input')?.value.trim() || ROLE_LABELS[selectedRole] || 'Staff Member';
         const dept = row.querySelector('.approval-dept-input')?.value.trim() || 'General';
 
@@ -4369,6 +4384,8 @@ export class AdminModule {
             email: userEmail,
             role: selectedRole,
             scope: selectedScope,
+            school_id: selectedSchool,
+            schoolId: selectedSchool,
             title: title,
             department: dept,
             isActive: true,

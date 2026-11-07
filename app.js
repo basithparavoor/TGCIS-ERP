@@ -173,6 +173,9 @@ export class AppController {
               <button class="mobile-header-menu-btn" id="mobile-header-menu-btn" title="Navigation Menu" aria-label="Open Navigation Menu">
                 <i data-lucide="menu"></i>
               </button>
+              <!-- Central Management & Active School Context Switcher -->
+              <div class="topbar-branch-switcher-wrap" id="topbar-branch-switcher-wrap" style="display: flex; align-items: center;"></div>
+
               <div class="search-bar-trigger" id="global-search-trigger">
                 <i data-lucide="search" style="width: 16px; height: 16px;"></i>
                 <span>Search students, staff, records...</span>
@@ -229,6 +232,7 @@ export class AppController {
       </nav>
     `;
 
+    this.renderBranchSwitcher();
     this.populateSidebarNav();
 
     window.addEventListener('tms_hostel_toggled', () => {
@@ -313,7 +317,7 @@ export class AppController {
           { id: 'staff', label: 'Staff & HR', icon: 'users', module: 'staff' },
           { id: 'communication', label: 'Notice & Bulletins', icon: 'message-square', module: 'communication' },
           { id: 'reports', label: 'School Analytics', icon: 'bar-chart-3', module: 'reports' },
-          { id: 'institution', label: 'Campus Facilities', icon: 'building', module: 'institution' },
+          { id: 'institution', label: isCentralAdmin ? 'Central & Schools' : 'Campus Facilities', icon: 'building-2', module: 'institution' },
           { id: 'users', label: 'User & Permissions', icon: 'shield-check', module: 'users' },
           { id: 'administration', label: 'School Administration', icon: 'settings', module: 'administration' }
         ]
@@ -348,7 +352,158 @@ export class AppController {
     UIComponents.refreshIcons();
   }
 
+  
+  renderBranchSwitcher() {
+    const wrap = document.getElementById('topbar-branch-switcher-wrap');
+    if (!wrap) return;
+
+    const user = authService.getCurrentUser() || {};
+    const isCentralAdmin = institutionService.isUserCentralAdmin(user);
+    const activeSchool = institutionService.getActiveSchool();
+    const isCentral = institutionService.isCentralManagementMode();
+    const esc = (v) => UIComponents.escapeHtml(v);
+
+    if (isCentralAdmin) {
+      wrap.innerHTML = `
+        <button class="branch-switcher-btn" id="btn-topbar-branch-switcher" title="Switch Operating Context (Central Group HQ or Branch)" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 10px; background: ${isCentral ? '#0f172a' : '#ffffff'}; color: ${isCentral ? '#f8fafc' : '#0f172a'}; border: 1.5px solid ${isCentral ? '#334155' : '#cbd5e1'}; padding: 6px 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(15,23,42,0.06); font-size: 0.82rem; margin-right: 6px;">
+          <i data-lucide="${isCentral ? 'layers' : 'building-2'}" style="width: 16px; height: 16px; color: ${isCentral ? '#38bdf8' : '#BF9A33'};"></i>
+          <span style="white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;">
+            ${esc(activeSchool.shortName || activeSchool.name)}
+          </span>
+          <span style="display: inline-flex; align-items: center; justify-content: center; background: ${isCentral ? '#38bdf820' : '#BF9A3320'}; color: ${isCentral ? '#38bdf8' : '#BF9A33'}; padding: 2px 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;">
+            ${isCentral ? 'CENTRAL HQ' : 'BRANCH'}
+          </span>
+          <i data-lucide="chevron-down" style="width: 13px; height: 13px; opacity: 0.7;"></i>
+        </button>
+      `;
+
+      wrap.querySelector('#btn-topbar-branch-switcher')?.addEventListener('click', () => {
+        this.openSchoolSwitcherModal();
+      });
+    } else {
+      wrap.innerHTML = `
+        <div style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 10px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 6px 12px; font-size: 0.8rem; margin-right: 6px;">
+          <i data-lucide="building-2" style="width: 15px; height: 15px; color: #BF9A33;"></i>
+          <span style="white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;">
+            ${esc(activeSchool.shortName || activeSchool.name)}
+          </span>
+          <span style="font-size: 0.68rem; color: #64748b; font-weight: 700;">BRANCH</span>
+        </div>
+      `;
+    }
+
+    UIComponents.refreshIcons();
+  }
+
+  openSchoolSwitcherModal() {
+    const esc = (v) => UIComponents.escapeHtml(v);
+    const schools = institutionService.getSchools();
+    const activeId = institutionService.getActiveSchoolId();
+    const groupProfile = institutionService.getGroupProfile();
+
+    UIComponents.openModal({
+      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="layers" style="color:#BF9A33;width:22px;height:22px;"></i><span>Central Management — Switch Operating Context</span></div>',
+      bodyHtml: `
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <p style="font-size: 0.86rem; color: #64748b; margin: 0;">
+            Select whether you want to operate in <strong>Central Management Mode</strong> (governing all sub-managements) or drill down directly into a specific <strong>School Branch</strong>.
+          </p>
+
+          <!-- Central Management HQ Option -->
+          <div class="switcher-hq-card" data-id="all" style="background: ${activeId === 'all' ? '#0f172a' : '#f8fafc'}; color: ${activeId === 'all' ? '#ffffff' : '#0f172a'}; border: 2px solid ${activeId === 'all' ? '#38bdf8' : '#e2e8f0'}; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.2s ease;">
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: ${activeId === 'all' ? '#1e293b' : '#eff6ff'}; color: ${activeId === 'all' ? '#38bdf8' : '#2563eb'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                  🏛️
+                </div>
+                <div>
+                  <div style="font-size: 1rem; font-weight: 800;">Central Group HQ — Consolidated Overview</div>
+                  <div style="font-size: 0.78rem; color: ${activeId === 'all' ? '#94a3b8' : '#64748b'}; margin-top: 2px;">
+                    ${esc(groupProfile.name)} &bull; ${esc(groupProfile.trust)}
+                  </div>
+                </div>
+              </div>
+              ${activeId === 'all' ? '<span class="badge badge-info">Active Console</span>' : '<button class="btn btn-secondary btn-sm" style="pointer-events:none;">Switch to Central</button>'}
+            </div>
+            <div style="font-size: 0.78rem; color: ${activeId === 'all' ? '#cbd5e1' : '#64748b'}; margin-top: 10px; padding-top: 8px; border-top: 1px solid ${activeId === 'all' ? '#1e293b' : '#e2e8f0'};">
+              Access group consolidated KPIs, cross-school analytics, centralized audit trail, and all branch directories.
+            </div>
+          </div>
+
+          <!-- Sub-Managements / Schools List -->
+          <div>
+            <div style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px;">
+              Controlled Sub-Managements (Member Schools)
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+              ${schools.map(s => {
+                const isSelected = activeId === s.id;
+                return `
+                  <div class="switcher-school-card" data-id="${esc(s.id)}" style="background: ${isSelected ? '#FCF4D9' : '#ffffff'}; border: 2px solid ${isSelected ? '#BF9A33' : '#e2e8f0'}; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: ${s.themeColor ? s.themeColor + '18' : '#f1f5f9'}; color: ${s.themeColor || '#BF9A33'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.88rem; flex-shrink: 0;">
+                        ${esc(s.logoBadge || s.code?.substring(0, 3) || 'SCH')}
+                      </div>
+                      <div style="min-width: 0;">
+                        <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          ${esc(s.name)}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #64748b;">
+                          Code: <span class="font-mono" style="font-weight: 700;">${esc(s.code)}</span> &bull; Head: ${esc(s.principal || 'C. M. Basith')}
+                        </div>
+                      </div>
+                    </div>
+                    ${isSelected ? '<span class="badge badge-success">Selected Branch</span>' : '<button class="btn btn-secondary btn-sm" style="pointer-events:none;">Switch</button>'}
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `,
+      footerHtml: `
+        <button class="btn btn-secondary" id="switcher-close">Close</button>
+        <button class="btn btn-primary" id="switcher-register-new"><i data-lucide="plus-circle"></i> Register New School</button>
+      `
+    });
+
+    document.getElementById('switcher-close')?.addEventListener('click', () => UIComponents.closeModal());
+    document.getElementById('switcher-register-new')?.addEventListener('click', () => {
+      UIComponents.closeModal();
+      window.location.hash = '#/institution';
+      setTimeout(() => {
+        InstitutionModule.openSchoolModal(null, document.getElementById('app-viewport'));
+      }, 250);
+    });
+
+    const handleSelect = (schId) => {
+      const switched = institutionService.setActiveSchoolId(schId);
+      UIComponents.showToast(`Switched operating context to ${switched.name}!`, 'success');
+      UIComponents.closeModal();
+      this.renderBranchSwitcher();
+      this.handleRoute();
+    };
+
+    document.querySelectorAll('.switcher-hq-card, .switcher-school-card').forEach(card => {
+      card.addEventListener('click', () => {
+        handleSelect(card.dataset.id);
+      });
+    });
+
+    UIComponents.refreshIcons();
+  }
+
   bindGlobalEvents() {
+    window.addEventListener('tms_school_switched', () => {
+      this.renderBranchSwitcher();
+      const brandH2 = document.querySelector('#sidebar-brand-box h2');
+      const brandP = document.querySelector('#sidebar-brand-box p');
+      if (brandH2) brandH2.innerText = institutionService.isCentralManagementMode() ? 'THAIBA HERITAGE' : TMS_CONFIG.institution.name;
+      if (brandP) brandP.innerText = institutionService.isCentralManagementMode() ? 'Central Group Management' : (TMS_CONFIG.institution.code || 'Campus ERP');
+      this.populateSidebarNav();
+      this.handleRoute();
+    });
+
     window.addEventListener('tms_session_changed', (e) => {
       const sess = e?.detail?.session;
       if (sess) {
@@ -1285,7 +1440,7 @@ export class AppController {
 
   async renderDashboard(container) {
     const esc = (v) => UIComponents.escapeHtml(v);
-    const [students, staff, invoices, attendance, applications] = await Promise.all([
+    const [rawStudents, rawStaff, rawInvoices, rawAttendance, rawApplications] = await Promise.all([
       dbService.select('students'),
       dbService.select('staff_directory'),
       dbService.select('invoices'),
@@ -1293,6 +1448,17 @@ export class AppController {
       dbService.select('admissions_applications').catch(() => [])
     ]);
     const user = authService.getCurrentUser() || {};
+    const isCentral = institutionService.isCentralManagementMode();
+    const isCentralAdmin = institutionService.isUserCentralAdmin(user);
+    const activeSchool = institutionService.getActiveSchool();
+    const groupProfile = institutionService.getGroupProfile();
+    const schools = institutionService.getSchools();
+
+    const students = isCentral ? rawStudents : institutionService.filterByActiveSchool(rawStudents);
+    const staff = isCentral ? rawStaff : institutionService.filterByActiveSchool(rawStaff);
+    const invoices = isCentral ? rawInvoices : institutionService.filterByActiveSchool(rawInvoices);
+    const attendance = isCentral ? rawAttendance : institutionService.filterByActiveSchool(rawAttendance);
+    const applications = isCentral ? rawApplications : institutionService.filterByActiveSchool(rawApplications);
 
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
@@ -1394,6 +1560,121 @@ export class AppController {
           </div>
         </div>
 
+        ${isCentral ? `
+        <!-- Central Management Directorate Header -->
+        <div class="group-central-banner" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border-radius: 18px; padding: 24px 26px; color: #ffffff; margin-bottom: 22px; box-shadow: 0 10px 30px rgba(15,23,42,0.12); position: relative; overflow: hidden; border: 1.5px solid #334155;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; position:relative; z-index:2;">
+            <div>
+              <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:800; color:#38BDF8; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+                <i data-lucide="shield-check" style="width:14px;height:14px;"></i> Central Management Directorate &bull; Controlling Authority
+              </div>
+              <h2 style="font-size:1.55rem; font-weight:900; margin:0 0 6px 0; color:#ffffff; letter-spacing:-0.01em;">
+                ${esc(groupProfile.name)}
+              </h2>
+              <p style="font-size:0.86rem; color:#94A3B8; margin:0; max-width:680px; line-height:1.5;">
+                Controlling, directing and governing all operating sub-managements across member schools. Central Trust: <strong>${esc(groupProfile.trust)}</strong> (${esc(groupProfile.regNo)}) &bull; HQ: ${esc(groupProfile.headquarters || 'Kolkata')}.
+              </p>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+              <button class="btn btn-secondary btn-sm" id="btn-central-add-school" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.25); color:#ffffff;">
+                <i data-lucide="plus-circle"></i> Register School Branch
+              </button>
+              <a href="#/institution" class="btn btn-primary btn-sm" style="background:#38BDF8; border-color:#38BDF8; color:#0F172A; font-weight:800;">
+                <i data-lucide="building-2"></i> Sub-Managements (${schools.length})
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Managements & Campuses Performance Matrix -->
+        <div class="card" style="margin-bottom: 22px; border: 1.5px solid var(--border-color); box-shadow: 0 4px 16px rgba(15,23,42,0.04);">
+          <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+                <i data-lucide="layers" style="color:#BF9A33; width:18px; height:18px;"></i>
+                Sub-Managements &amp; Member Schools Matrix
+              </h3>
+              <p class="card-desc">Live status, student enrollments, faculty size, and financial collections across member school branches.</p>
+            </div>
+            <a href="#/institution" class="btn btn-secondary btn-sm">Manage All Branches &rarr;</a>
+          </div>
+
+          <div class="table-responsive">
+            <table class="tms-table">
+              <thead>
+                <tr>
+                  <th>Campus / School</th>
+                  <th>School Code</th>
+                  <th>Principal / Campus Head</th>
+                  <th>Enrolled Students</th>
+                  <th>Faculty &amp; Staff</th>
+                  <th>Fee Collections</th>
+                  <th>Status</th>
+                  <th>Console Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${schools.map(sch => {
+                  const schStudents = rawStudents.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+                  const schStaff = rawStaff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+                  const schInvoices = rawInvoices.filter(i => (i.school_id || i.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+                  const schCollected = schInvoices.reduce((sum, inv) => sum + (parseFloat(inv.paid) || 0), 0);
+
+                  return `
+                    <tr>
+                      <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                          <div style="width: 32px; height: 32px; border-radius: 8px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#2563eb'}; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem;">
+                            ${esc(sch.logoBadge || sch.code?.substring(0,3) || 'SCH')}
+                          </div>
+                          <div>
+                            <strong style="color: #0f172a;">${esc(sch.name)}</strong>
+                            <div style="font-size: 0.72rem; color: #64748b;">${esc(sch.address?.district || 'Dakshin Dinajpur')}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td><span class="font-mono" style="font-weight: 700; font-size: 0.78rem;">${esc(sch.code)}</span></td>
+                      <td><span style="font-weight: 600;">${esc(sch.principal || 'C. M. Basith')}</span></td>
+                      <td><strong>${schStudents.length}</strong> Students</td>
+                      <td>${schStaff.length} Staff</td>
+                      <td>₹${schCollected.toLocaleString()}</td>
+                      <td><span class="badge ${sch.status === 'Active' ? 'badge-success' : 'badge-warning'}">${esc(sch.status || 'Active')}</span></td>
+                      <td>
+                        <button class="btn btn-primary btn-sm btn-drill-school" data-id="${esc(sch.id)}" style="padding: 4px 10px; font-size: 0.75rem;">
+                          <i data-lucide="arrow-right-circle"></i> Open School Console
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        ` : `
+        <!-- Sub-Management Campus Header Banner -->
+        <div class="sub-management-banner" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1.5px solid var(--primary, #BF9A33);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(191,154,51,0.2); color: #BF9A33; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;">
+              ${esc(activeSchool.logoBadge || activeSchool.code?.substring(0,3) || 'SCH')}
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #BF9A33;">Sub-Management Console</span>
+                <span class="badge badge-success" style="font-size: 0.68rem;">Live Active</span>
+              </div>
+              <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; font-weight: 800; color: #ffffff;">
+                ${esc(activeSchool.name)} (${esc(activeSchool.code)})
+              </h3>
+            </div>
+          </div>
+          ${isCentralAdmin ? `
+            <button class="btn btn-secondary btn-sm" id="btn-return-central-hq" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #ffffff;">
+              <i data-lucide="layers"></i> <span>Return to Central Group HQ</span>
+            </button>
+          ` : ''}
+        </div>
+        `}
         <!-- 1. Dark Contrast Executive Hero Card (TPSH Adaptation) -->
         <div class="m-hero-card">
           <div class="m-hero-top-row">

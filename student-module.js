@@ -1,3 +1,4 @@
+import { institutionService } from './institution-service.js';
 
 export const SAMPLE_STUDENTS = [
   {
@@ -175,7 +176,8 @@ export const STUDENT_IMPORT_FIELDS = [
 export class StudentModule {
   static async render(container) {
     const rawStudents = (await dbService.select('students')) || [];
-    const students = rawStudents.length ? rawStudents : SAMPLE_STUDENTS;
+    const allStudents = rawStudents.length ? rawStudents : SAMPLE_STUDENTS;
+    const students = institutionService.filterByActiveSchool(allStudents);
     const esc = (v) => UIComponents.escapeHtml(v);
     const canManage = PermissionEngine.can(CAPABILITIES.MANAGE_STUDENTS);
 
