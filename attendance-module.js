@@ -919,7 +919,7 @@ export class AttendanceModule {
             Scan Barcode / QR ID Card or Enter Admission No:
           </label>
           <div style="display:flex; gap:8px;">
-            <input type="text" id="qr-input-scan" class="form-input font-mono" placeholder="e.g. TPS-2026-001" autofocus style="font-size:1.05rem; padding:10px 14px; text-align:center; border-radius:9999px;">
+            <input type="text" id="qr-input-scan" class="form-input font-mono" placeholder="e.g. TGCIS-2026-001" autofocus style="font-size:1.05rem; padding:10px 14px; text-align:center; border-radius:9999px;">
             <button class="btn btn-primary" id="btn-qr-punch-submit" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; padding:0 22px; font-weight:700;">
               Punch IN
             </button>
@@ -934,12 +934,7 @@ export class AttendanceModule {
           <span style="color:#64748B; font-size:0.88rem;">Ready for scan. Present student QR card to camera or scanner gun...</span>
         </div>
 
-        <!-- Student Quick Simulation Punch Buttons -->
-        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-          <button class="btn btn-outline btn-xs demo-qr-punch" data-id="TPS-2026-001">⚡ Punch: MD Aamir (TPS-2026-001)</button>
-          <button class="btn btn-outline btn-xs demo-qr-punch" data-id="TPS-2026-002">⚡ Punch: Rehan Islam (TPS-2026-002)</button>
-          <button class="btn btn-outline btn-xs demo-qr-punch" data-id="TPS-2026-005">⚡ Punch: Sultana Sarkar (TPS-2026-005)</button>
-        </div>
+        
 
         <!-- Live Kiosk Activity Feed -->
         <div style="text-align:left; border-top:1px solid #E2E8F0; padding-top:16px;">
@@ -1144,9 +1139,7 @@ export class AttendanceModule {
       });
     }
 
-    viewport.querySelectorAll('.demo-qr-punch').forEach(b => {
-      b.addEventListener('click', () => handlePunch(b.dataset.id));
-    });
+    
 
     // Camera Handler
     let scanLoopActive = false;
@@ -1263,16 +1256,9 @@ export class AttendanceModule {
           </button>
         </div>
 
-        <!-- Simulated NFC Card Tap -->
-        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-          <button class="btn btn-primary btn-sm demo-nfc-tap" data-id="TPS-2026-001" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px;">
-            <i data-lucide="zap"></i> Tap: MD Aamir
-          </button>
-          <button class="btn btn-secondary btn-sm demo-nfc-tap" data-id="TPS-2026-003" style="border-radius:9999px;">
-            <i data-lucide="zap"></i> Tap: Jakir Sarkar
-          </button>
-          <button class="btn btn-secondary btn-sm demo-nfc-tap" data-id="TPS-2026-004" style="border-radius:9999px;">
-            <i data-lucide="zap"></i> Tap: Rijuwan Mondal
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:24px;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-nfc-launch-enroller" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; font-weight:700; padding:8px 20px;">
+            <i data-lucide="radio"></i> Launch NFC Card Enroller (Single &amp; Bulk)
           </button>
         </div>
 
@@ -1434,8 +1420,11 @@ export class AttendanceModule {
     if (submitBtn) submitBtn.addEventListener('click', () => handleNfcTap());
     if (nfcCenter) nfcCenter.addEventListener('click', () => handleNfcTap('TPS-2026-001'));
 
-    viewport.querySelectorAll('.demo-nfc-tap').forEach(b => {
-      b.addEventListener('click', () => handleNfcTap(b.dataset.id));
+    viewport.querySelector('#btn-nfc-launch-enroller')?.addEventListener('click', () => {
+      NfcEnrollerModal.open({
+        students: this._students,
+        onUpdate: () => this.renderActiveModeView(viewport)
+      });
     });
 
     // Web NFC Support (Chrome on Android / NFC enabled devices)
@@ -1534,15 +1523,9 @@ export class AttendanceModule {
           </button>
         </div>
 
-        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-          <button class="btn btn-primary btn-sm demo-face-match" data-id="TPS-2026-001" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px;">
-            <i data-lucide="user-check"></i> Match MD Aamir (99.2%)
-          </button>
-          <button class="btn btn-secondary btn-sm demo-face-match" data-id="TPS-2026-002" style="border-radius:9999px;">
-            <i data-lucide="user-check"></i> Match Rehan Islam (98.6%)
-          </button>
-          <button class="btn btn-secondary btn-sm demo-face-match" data-id="TPS-2026-006" style="border-radius:9999px;">
-            <i data-lucide="user-check"></i> Match Awan Ikbal (97.9%)
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:24px;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-face-launch-enroller" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; font-weight:700; padding:8px 20px;">
+            <i data-lucide="scan-face"></i> Record &amp; Enroll Student Face ID
           </button>
         </div>
 
@@ -1743,8 +1726,15 @@ export class AttendanceModule {
       handleFaceMatch(select?.value || null);
     });
 
-    viewport.querySelectorAll('.demo-face-match').forEach(b => {
-      b.addEventListener('click', () => handleFaceMatch(b.dataset.id));
+    viewport.querySelector('#btn-face-launch-enroller')?.addEventListener('click', () => {
+      const targetStudent = this._students.find(s => s.admissionNo === select?.value) || this._students[0];
+      if (targetStudent) {
+        BiometricCredentialModal.open({
+          person: targetStudent,
+          type: 'student',
+          onSave: () => this.renderActiveModeView(viewport)
+        });
+      }
     });
 
     UIComponents.refreshIcons();

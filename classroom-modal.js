@@ -27,6 +27,13 @@ export class ClassroomModal {
    * @param {HTMLElement} [options.container] - Context container
    */
   static async open(options = {}) {
+    // Fetch campus wifi & geofence settings
+    let wifiNetworks = [];
+    let geofenceZones = [];
+    try {
+      wifiNetworks = await StaffGeofenceService.getWifiNetworks();
+      geofenceZones = await StaffGeofenceService.getGeofenceZones();
+    } catch (e) {}
     const esc = (v) => UIComponents.escapeHtml(v);
     const cls = options.classroom || {};
     const isEdit = Boolean(cls.id || cls.name || cls.grade);
@@ -39,13 +46,7 @@ export class ClassroomModal {
       staff = [];
     }
     if (!staff.length) {
-      // Fetch campus wifi & geofence settings
-    let wifiNetworks = [];
-    let geofenceZones = [];
-    try {
-      wifiNetworks = await StaffGeofenceService.getWifiNetworks();
-      geofenceZones = await StaffGeofenceService.getGeofenceZones();
-    } catch (e) {}
+      
 
     staff = [
         { id: 'st-1', name: 'muhammad mubashir', designation: 'Teacher' },

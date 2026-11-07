@@ -3,7 +3,7 @@
  * Robust Network-First Offline Caching
  */
 
-const CACHE_NAME = 'tgcis-erp-cache-v5';
+const CACHE_NAME = 'tgcis-erp-cache-v6';
 const PRECACHE_URLS = [
   './',
   './index.html',
