@@ -69,7 +69,13 @@ class InstitutionService {
   readCache() {
     try {
       const stored = localStorage.getItem(CACHE_KEY);
-      if (stored) return { ...DEFAULT_PROFILE, ...JSON.parse(stored) };
+      if (stored) {
+        if (stored.includes('PUBLIC SCHOOL') || stored.includes('TPS-TAPAN')) {
+          localStorage.removeItem(CACHE_KEY);
+          return { ...DEFAULT_PROFILE };
+        }
+        return { ...DEFAULT_PROFILE, ...JSON.parse(stored) };
+      }
     } catch (e) { /* ignore */ }
     return { ...DEFAULT_PROFILE };
   }
@@ -98,8 +104,12 @@ class InstitutionService {
     try {
       const stored = localStorage.getItem(SCHOOLS_CACHE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (stored.includes('PUBLIC SCHOOL') || stored.includes('TPS-TAPAN')) {
+          localStorage.removeItem(SCHOOLS_CACHE_KEY);
+        } else {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
       }
     } catch (e) { /* ignore */ }
     // Fall back to default initial schools from config
