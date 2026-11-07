@@ -281,6 +281,9 @@ export class AppController {
     const nav = document.getElementById('sidebar-nav-items');
     if (!nav) return;
 
+    const user = authService.getCurrentUser() || {};
+    const isCentralAdmin = institutionService.isUserCentralAdmin(user);
+
     const navSections = [
       {
         title: 'Campus Core',
