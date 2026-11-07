@@ -676,15 +676,6 @@ class InstitutionService {
     return this.getActiveSchool();
   }
 
-      this.syncConfigWithActiveSchool();
-      this._loaded = true;
-      window.dispatchEvent(new CustomEvent('tms_schools_changed', { detail: this.schools }));
-    } catch (err) {
-      console.warn('Could not refresh group & school settings from cloud:', err.message);
-    }
-    return this.getActiveSchool();
-  }
-
   renderStatusCardHtml(customData = null) {
     const d = customData || this.getActiveSchool();
     const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
