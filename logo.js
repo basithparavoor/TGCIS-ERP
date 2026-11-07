@@ -90,7 +90,7 @@ export const TMS_LOGO = {
     const instName = opts.title || 'THAIBA COLLEGE OF INTEGRATED STUDIES';
     const subTitle = opts.subtitle || 'Run by : Thaiba Heritage, Kolkata';
     const address = opts.address || 'Baghait, Tapan, Dakshin Dinajpur • Regd. No. : IV 01894/2011';
-    const website = opts.website || 'tps.clubad.space';
+    const website = opts.website || 'tgcis.clubad.space';
     const email = opts.email || 'tgcis@thaibagarden.com';
     const contact = opts.contact || '+91 8653382851, +91 8167782851';
 

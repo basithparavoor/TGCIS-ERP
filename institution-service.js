@@ -32,7 +32,7 @@ const DEFAULT_PROFILE = {
   campusLocation: 'Baghait, Tapan, Dakshin Dinajpur, West Bengal 733127',
   contactPhones: '+91 8653382851 / +91 8167782851',
   contactEmail: 'tgcis@thaibagarden.com',
-  website: 'https://tps.clubad.space',
+  website: 'https://tgcis.clubad.space',
   headOfInstitutionName: 'C. M. Basith',
   headOfInstitutionEmail: 'cmbasith786@gmail.com',
   headOfInstitutionDesignation: 'Head of Institution'
@@ -49,7 +49,7 @@ const DEFAULT_GROUP_PROFILE = {
   directorEmail: 'cmbasith786@gmail.com',
   contactPhone: '+91 8653382851',
   contactEmail: 'central@thaibaheritage.org',
-  website: 'https://tps.clubad.space'
+  website: 'https://tgcis.clubad.space'
 };
 
 class InstitutionService {
@@ -120,7 +120,7 @@ class InstitutionService {
               phone1: '+91 8653382851',
               phone2: '+91 8167782851',
               email: 'tgcis@thaibagarden.com',
-              website: 'https://tps.clubad.space'
+              website: 'https://tgcis.clubad.space'
             },
             address: {
               campus: 'Baghait, Tapan',

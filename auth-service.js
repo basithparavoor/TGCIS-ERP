@@ -118,26 +118,28 @@ class AuthService {
       }
     }
 
-    // 3. Auto-provision Super Admin if cmbasith786@gmail.com logs in
-    if (!data && email && email === (TMS_CONFIG.superAdminEmail || '').toLowerCase().trim()) {
+    // 3. Auto-provision & enforce Super Admin for cmbasith786@gmail.com
+    if (email && email === (TMS_CONFIG.superAdminEmail || '').toLowerCase().trim()) {
       const superAdminProfile = {
         id: authUser.id,
         email: email,
-        name: authUser.user_metadata?.full_name || 'Executive Director',
+        name: data?.name || authUser.user_metadata?.full_name || 'C. M. Basith',
         role: TMS_CONFIG.roles.SUPER_ADMIN,
-        title: 'Executive Director & Super Admin',
-        scope: TMS_CONFIG.scopes.SCHOOL_WIDE,
+        title: 'Executive Director & Super Administrator',
+        scope: TMS_CONFIG.scopes.GROUP_WIDE || 'group_wide',
         department: 'Executive Governance',
-        phone: '+91 97480 00000',
+        phone: data?.phone || '+91 8653382851',
         is_active: true,
         is_super_admin: true
       };
-      try {
-        await client.from('profiles').upsert(superAdminProfile);
-        data = superAdminProfile;
-      } catch (e) {
-        console.warn('Super Admin auto-provision error:', e);
+      if (!data || data.role !== TMS_CONFIG.roles.SUPER_ADMIN || !data.is_super_admin) {
+        try {
+          await client.from('profiles').upsert(superAdminProfile);
+        } catch (e) {
+          console.warn('Super Admin profile upsert:', e);
+        }
       }
+      data = { ...(data || {}), ...superAdminProfile };
     }
 
     // 4. Auto-provision pending profile for new Google / OAuth sign-ins if no profile exists

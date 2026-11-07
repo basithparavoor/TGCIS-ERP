@@ -454,7 +454,7 @@ class AdmissionService {
       return path;
     }
     const cleanPath = String(path).replace(/^\/+/, '');
-    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://rzcihdpzqrnzcaupjfla.supabase.co';
+    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://oyttyawpiqdfdzaasvvr.supabase.co';
 
     // Public buckets always resolve directly to public URL (instant 0ms, zero signing network errors)
     if (bucket === 'admission-docs' || bucket === 'admissions' || bucket === 'avatars') {
@@ -481,7 +481,7 @@ class AdmissionService {
       return path;
     }
     const cleanPath = String(path).replace(/^\/+/, '');
-    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://rzcihdpzqrnzcaupjfla.supabase.co';
+    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://oyttyawpiqdfdzaasvvr.supabase.co';
     return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
   }
 

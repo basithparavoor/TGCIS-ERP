@@ -575,7 +575,7 @@ export class StaffModule {
     });
     document.getElementById('cred-print').addEventListener('click', () => {
       const filename = `TMS_Staff_Login_${(username || 'staff').replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-      const portalUrl = (typeof window !== 'undefined' && window.location.origin) ? `${window.location.origin}/login` : 'https://tps.clubad.space/login';
+      const portalUrl = (typeof window !== 'undefined' && window.location.origin) ? `${window.location.origin}/login` : 'https://tgcis.clubad.space/login';
       const body = `
         <div style="border: 1.5px solid #16a34a; background: #f0fdf4; border-radius: 8px; padding: 14px 18px; margin-bottom: 18px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #bbf7d0; padding-bottom: 6px; margin-bottom: 10px;">

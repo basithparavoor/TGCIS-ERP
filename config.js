@@ -37,7 +37,7 @@ export const TMS_CONFIG = {
           phone1: "+91 8653382851",
           phone2: "+91 8167782851",
           email: "tgcis@thaibagarden.com",
-          website: "https://tps.clubad.space"
+          website: "https://tgcis.clubad.space"
         },
         address: {
           campus: "Baghait, Tapan",
@@ -121,7 +121,7 @@ export const TMS_CONFIG = {
       phone1: "+91 8653382851",
       phone2: "+91 8167782851",
       email: "tgcis@thaibagarden.com",
-      website: "https://tps.clubad.space"
+      website: "https://tgcis.clubad.space"
     },
     gpsGeofence: {
       latitude: 25.2891,

@@ -84,7 +84,7 @@ export function renderDocumentHeader(opts = {}) {
   const regNo = opts.regNo || inst.regNo || 'IV 01894/2011';
   const address = opts.address || `${inst.address?.campus || 'Baghait, Tapan'}, ${inst.address?.district || 'Dakshin Dinajpur'} - ${inst.address?.pin || '733127'} (W.B.)`;
   const contact = opts.contact || `Helpline: ${inst.contact?.phone1 || '+91 8653382851'}, ${inst.contact?.phone2 || '+91 8167782851'} • Email: ${inst.contact?.email || 'tps@thaibagarden.com'}`;
-  const website = opts.website || inst.contact?.website || 'tps.clubad.space';
+  const website = opts.website || inst.contact?.website || 'tgcis.clubad.space';
   const badge = opts.badge || 'Official Record';
   const title = opts.title || '';
   const subtitle = opts.subtitle || '';
@@ -172,7 +172,7 @@ export function renderDocumentFooter(opts = {}) {
           <span class="tms-footer-dim">• Computer Generated Official Record • Tamper Evident</span>
         </div>
         <div class="tms-footer-center">
-          <span>Portal Verification: <strong>tps.clubad.space</strong></span>
+          <span>Portal Verification: <strong>tgcis.clubad.space</strong></span>
         </div>
         <div class="tms-footer-right">
           <span>Issued: <strong>${attrEsc(currentDate)} ${attrEsc(currentTime)}</strong></span>
