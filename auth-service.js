@@ -289,7 +289,21 @@ class AuthService {
       });
 
       if (error || !data || !data.user) {
-        return { success: false, error: 'Invalid email or password.' };
+        const rawMsg = error?.message || '';
+        let userFacingError = rawMsg || 'Invalid email or password.';
+
+        if (rawMsg.toLowerCase().includes('invalid login credentials')) {
+          if (cleanEmail.includes('@gmail.com') || cleanEmail.includes('@googlemail.com')) {
+            userFacingError = 'Invalid email or password. If this Google account was registered using 1-Click login, please click "Sign In with Google" below instead.';
+          } else {
+            userFacingError = 'Invalid credentials. Please verify your email/username and password.';
+          }
+        } else if (rawMsg.toLowerCase().includes('email not confirmed')) {
+          userFacingError = 'Your email has not been verified yet. Please check your inbox for the Supabase confirmation link or disable "Confirm email" in Supabase Auth settings.';
+        }
+
+        console.warn('TPS Login error details:', rawMsg || error);
+        return { success: false, error: userFacingError, rawError: rawMsg };
       }
 
       const profile = await this.loadProfile(data.user);
