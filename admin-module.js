@@ -7059,6 +7059,7 @@ export class AdminModule {
     UIComponents.refreshIcons();
   }
 
+  static async renderInstitutionDetailsTab(tabContent) {
     const details = await institutionService.refresh();
 
     tabContent.innerHTML = `
