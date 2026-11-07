@@ -61,15 +61,15 @@
                 <!-- Turnout Bar Chart Card -->
                 <div class="tps-t-card">
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                    <span style="font-size: 0.65rem; font-weight: 700; color: #BF9A33; text-transform: uppercase;">Turnout</span>
-                    <span style="font-size: 0.75rem; font-weight: 800; color: #BF9A33;">▲ 96%</span>
+                    <span style="font-size: 0.65rem; font-weight: 700; color: #059669; text-transform: uppercase;">Campus Radar</span>
+                    <span style="font-size: 0.72rem; font-weight: 800; color: #BF9A33;">● Active</span>
                   </div>
                   <svg width="100%" height="40" viewBox="0 0 100 40" fill="none">
                     <rect x="6" y="24" width="10" height="16" rx="2" fill="#E2E8F0"/>
                     <rect x="22" y="18" width="10" height="22" rx="2" fill="#CBD5E1"/>
                     <rect x="38" y="14" width="10" height="26" rx="2" fill="#94A3B8"/>
                     <rect x="54" y="8" width="10" height="32" rx="2" fill="#64748B"/>
-                    <rect x="70" y="4" width="10" height="36" rx="2" fill="#BF9A33"/>
+                    <rect x="70" y="4" width="10" height="36" rx="2" fill="#059669"/>
                     <path d="M10 26L30 20L50 16L78 6" stroke="#BF9A33" stroke-width="2.5" stroke-linecap="round"/>
                     <polygon points="84,4 74,3 79,11" fill="#BF9A33"/>
                   </svg>
@@ -78,14 +78,14 @@
                 <!-- Active Learners Metric Card -->
                 <div class="tps-t-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                   <div>
-                    <div style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Active Learners</div>
-                    <div style="font-size: 1.05rem; font-weight: 800; color: #0F172A; margin: 1px 0;">400+ Enrolled</div>
+                    <div style="font-size: 0.65rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Academic Term</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: #0F172A; margin: 1px 0;">2026-2027</div>
                   </div>
                   <div>
                     <div style="height: 5px; width: 100%; background: #E2E8F0; border-radius: 9999px; overflow: hidden; margin-bottom: 4px;">
-                      <div style="height: 100%; width: 94%; background: #BF9A33; border-radius: 9999px;"></div>
+                      <div style="height: 100%; width: 100%; background: #059669; border-radius: 9999px;"></div>
                     </div>
-                    <div style="height: 4px; width: 75%; background: #BF9A33; border-radius: 9999px;"></div>
+                    <div style="height: 4px; width: 75%; background: #10B981; border-radius: 9999px;"></div>
                   </div>
                 </div>
               </div>
@@ -99,7 +99,7 @@
                     </div>
                     <div>
                       <div style="font-size: 0.72rem; font-weight: 700; color: #0F172A;">TMS Campus</div>
-                      <div style="font-size: 0.6rem; color: #BF9A33; font-weight: 600;">Verified Active</div>
+                      <div style="font-size: 0.6rem; color: #059669; font-weight: 600;">Verified Active</div>
                     </div>
                   </div>
                 </div>
@@ -112,7 +112,7 @@
                   </div>
                   <svg width="100%" height="32" viewBox="0 0 120 32" fill="none">
                     <path d="M2 24C20 12 35 28 55 18C75 8 90 22 118 10" stroke="#06B6D4" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M2 18C18 28 38 10 60 22C82 32 98 12 118 18" stroke="#BF9A33" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round"/>
+                    <path d="M2 18C18 28 38 10 60 22C82 32 98 12 118 18" stroke="#10B981" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round"/>
                   </svg>
                 </div>
               </div>
@@ -148,7 +148,7 @@
             <label class="tps-form-label" for="login-email">Email or Username</label>
             <input type="text" class="tps-form-input" id="login-email" required placeholder="Enter username or email" autofocus autocomplete="username">
             <div style="font-size: 0.74rem; color: #64748B; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="info" style="width: 13px; height: 13px; color: #BF9A33; flex-shrink: 0;"></i>
+              <i data-lucide="info" style="width: 13px; height: 13px; color: #059669; flex-shrink: 0;"></i>
               <span>Parents: sign in using the username printed on your admission form.</span>
             </div>
           </div>
@@ -156,7 +156,7 @@
           <div class="tps-form-group">
             <div class="tps-form-label">
               <span>Password</span>
-              <a href="javascript:void(0)" id="btn-forgot-password" style="font-size: 0.78rem; color: #BF9A33; text-decoration: none; font-weight: 600;">Forgot Password?</a>
+              <a href="javascript:void(0)" id="btn-forgot-password" style="font-size: 0.78rem; color: #059669; text-decoration: none; font-weight: 600;">Forgot Password?</a>
             </div>
             <div class="tps-pw-wrap">
               <input type="password" class="tps-form-input" id="login-password" required placeholder="••••••••••••" autocomplete="current-password">
@@ -379,10 +379,10 @@
     }
 
     function navigateApprovedUser(u) {
-      let redirectUrl = '/#/dashboard';
+      let redirectUrl = '/dashboard';
       if (u.role === TMS_CONFIG.roles.PARENT) redirectUrl = '/parent';
       else if (u.role === TMS_CONFIG.roles.STUDENT) redirectUrl = '/student';
-      else if (u.role === TMS_CONFIG.roles.OFFICE_BOY) redirectUrl = '/#/admissions-entry';
+      else if (u.role === TMS_CONFIG.roles.OFFICE_BOY) redirectUrl = '/dashboard#/admissions-entry';
       window.location.href = redirectUrl;
     }
 
@@ -457,7 +457,7 @@
             ${TMS_LOGO.emblemSvg(38)}
           </div>
           <div>
-            <div style="font-size: 0.72rem; font-weight: 700; color: #F1DFA8; text-transform: uppercase; letter-spacing: 0.06em;">Official Campus Gateway</div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: #A7F3D0; text-transform: uppercase; letter-spacing: 0.06em;">Official Campus Gateway</div>
             <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF; letter-spacing: 0.02em;">THAIBA PUBLIC SCHOOL</div>
           </div>
         </div>
@@ -554,7 +554,7 @@
                       <li style="margin-bottom:6px;">Go to your <strong>Supabase Dashboard</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Providers</strong> &rarr; <strong>Google</strong>.</li>
                       <li style="margin-bottom:6px;">Toggle Google to <strong>Enabled</strong>.</li>
                       <li style="margin-bottom:6px;">Enter your <strong>Google Client ID</strong> and <strong>Client Secret</strong> from Google Cloud Console.</li>
-                      <li style="margin-bottom:6px;">Add the authorized redirect URI: <code class="font-mono" style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem; word-break:break-all;">https://bphjbvvapbefiyacfosm.supabase.co/auth/v1/callback</code></li>
+                      <li style="margin-bottom:6px;">Add the authorized redirect URI: <code class="font-mono" style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:0.75rem; word-break:break-all;">https://rzcihdpzqrnzcaupjfla.supabase.co/auth/v1/callback</code></li>
                     </ol>
                     <p style="font-size:0.8rem; color:var(--text-subtle); margin:0;">
                       Once enabled, any authorized institutional staff member can sign in directly with their Google Account.
@@ -771,8 +771,8 @@
               card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                   <div>
-                    <span style="font-size:0.72rem; text-transform:uppercase; color:#166534; font-weight:700;">Verified Student Record</span>
-                    <h4 style="margin:2px 0; font-size:1rem; color:#14532d;">${UIComponents.escapeHtml(data.student_name)}</h4>
+                    <span style="font-size:0.72rem; text-transform:uppercase; color:#8C6E1E; font-weight:700;">Verified Student Record</span>
+                    <h4 style="margin:2px 0; font-size:1rem; color:#7A611C;">${UIComponents.escapeHtml(data.student_name)}</h4>
                     <span style="font-size:0.78rem; color:var(--text-muted);">Grade: <strong>${UIComponents.escapeHtml(data.grade)}</strong> • Username: <code style="font-weight:700;">${UIComponents.escapeHtml(data.username)}</code></span>
                   </div>
                   <div style="width:34px; height:34px; border-radius:50%; background:#BF9A33; color:white; display:flex; align-items:center; justify-content:center;">
@@ -899,9 +899,9 @@
 
         if (res.success) {
           statusBox.style.display = 'block';
-          statusBox.style.background = '#FDFBF7';
-          statusBox.style.color = '#166534';
-          statusBox.style.border = '1px solid #86efac';
+          statusBox.style.background = '#FDF8E8';
+          statusBox.style.color = '#8C6E1E';
+          statusBox.style.border = '1px solid #F2D88C';
           statusBox.innerHTML = `
             <strong>✓ Reset Link Dispatched!</strong><br>
             A secure recovery link has been sent to <strong>${UIComponents.escapeHtml(email)}</strong>.<br>

@@ -15,11 +15,13 @@
     { "source": "/teachers(.html)?", "destination": "/teacher", "permanent": true },
     { "source": "/faculty(.html)?", "destination": "/teacher", "permanent": true },
     { "source": "/teacher.html", "destination": "/teacher", "permanent": true },
+    { "source": "/dashboard.html", "destination": "/dashboard", "permanent": true },
     { "source": "/login.html", "destination": "/login", "permanent": true },
     { "source": "/admin.html", "destination": "/admin", "permanent": true },
     { "source": "/index.html", "destination": "/", "permanent": true }
   ],
   "rewrites": [
+    { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/admission", "destination": "/admission.html" },
     { "source": "/student", "destination": "/student.html" },
     { "source": "/parent", "destination": "/parent.html" },

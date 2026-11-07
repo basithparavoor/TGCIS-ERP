@@ -10,11 +10,16 @@ import { authService } from './auth-service.js';
 import { auditService } from './audit-service.js';
 import { UIComponents } from './ui-components.js';
 import { TMS_LOGO } from './logo.js';
+import { OnboardingService } from './onboarding-service.js';
 import { admissionService, DEFAULT_INSTRUCTIONS, DEFAULT_POPUP_INSTRUCTIONS, getEmbedVideoUrl, renderVideoPlayerHtml } from './admission-service.js';
 import { notificationService } from './notification-service.js';
 import { brandingService } from './branding-service.js';
+import { institutionService } from './institution-service.js';
 import { WhatsAppService } from './whatsapp-service.js';
 import { downloadCsv, exportPdf, formatPdfFilename, kvTable } from './export-utils.js';
+import { AdminWebsiteCms } from './admin-website-cms.js';
+import { websiteService } from './website-service.js';
+import { WindowPermissionsService, WINDOW_ROLES, ROLE_THEMES, WINDOW_CATEGORIES, DEFAULT_RBAC_MATRIX } from './window-permissions.js';
 
 const esc = (v) => UIComponents.escapeHtml(v);
 const safeOn = (id, event, fn) => {
@@ -31,6 +36,10 @@ const STATUS_BADGE = {
 
 const ROLE_LABELS = {
   super_admin: '👑 Super Administrator',
+  boys_mentor: 'Boys Hostel Mentor',
+  girls_mentor: 'Girls Hostel Mentor',
+  mentor: 'Hostel Mentor',
+  hostel_leader: 'Hostel Leader',
   admin: 'Administrator',
   principal: 'Principal',
   coordinator: 'Coordinator',
@@ -89,7 +98,13 @@ export class AdminModule {
   /* ================================================================== */
 
   static async render(container) {
-    const stats = await admissionService.getStats();
+    const [stats, inqs] = await Promise.all([
+      admissionService.getStats(),
+      websiteService.listInquiries().catch(() => [])
+    ]);
+    this._inquiries = inqs || [];
+    this._newInquiriesCount = (this._inquiries).filter(i => (i.status || 'new') === 'new').length;
+
     const currentUser = authService.getCurrentUser();
     const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
 
@@ -97,10 +112,11 @@ export class AdminModule {
       <div class="tms-content-wrapper">
         ${UIComponents.renderPageHeader({
           title: 'School Administration & Governance',
-          subtitle: 'Admission form builder, fee & payment configuration, application review, notifications and audit trail.',
+          subtitle: 'Admissions hub, public website CMS, hostel setups, notifications, campus governance & disaster recovery.',
           breadcrumbs: [{ label: 'Administration' }],
           badge: isSuperAdmin ? 'Super Admin' : 'Admin Console',
           actionsHtml: `
+            <a href="#/users" class="btn btn-secondary"><i data-lucide="shield-check"></i> User &amp; Permissions</a>
             <a href="/admission" target="_blank" class="btn btn-secondary"><i data-lucide="external-link"></i> Public Admission Gateway</a>
             <button class="btn btn-primary" id="btn-new-notification"><i data-lucide="bell-plus"></i> New Notification</button>
           `
@@ -109,7 +125,7 @@ export class AdminModule {
       <div class="kpi-grid" style="margin-bottom: 22px;">
         ${UIComponents.renderKpiCard({ title: 'Total Applications', value: stats.total, icon: 'file-text', color: 'blue' })}
         ${UIComponents.renderKpiCard({ title: 'Awaiting Verification', value: stats.submitted, icon: 'clock', color: 'amber' })}
-        ${UIComponents.renderKpiCard({ title: 'Approved', value: stats.approved, icon: 'check-circle', color: 'emerald' })}
+        ${UIComponents.renderKpiCard({ title: 'Approved', value: stats.approved, icon: 'check-circle', color: 'Gold' })}
         ${UIComponents.renderKpiCard({ title: 'Fee Collected', value: fmtMoney(stats.collected), icon: 'indian-rupee', color: 'rose' })}
       </div>
 
@@ -118,7 +134,7 @@ export class AdminModule {
           <div style="flex-shrink: 0;">${TMS_LOGO.emblemSvg(64)}</div>
           <div style="flex: 1; min-width: 260px;">
             <h2 style="font-size: 1.3rem; letter-spacing: 0.02em;">${esc(TMS_CONFIG.institution.name)}</h2>
-            <div style="color: #16a34a; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
+            <div style="color: #BF9A33; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
               ${esc(TMS_CONFIG.institution.tagline)}
             </div>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
@@ -131,21 +147,27 @@ export class AdminModule {
       <div id="admin-auth-warning"></div>
 
       <!-- Primary Segmented Tabs Rail (Modern Showcase Style) -->
-      <div class="tms-tab-rail-wrapper">
-        <div class="tms-segmented-tabs" id="admin-primary-tabs">
+      <div class="tms-tab-scroll-wrapper">
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" id="admin-primary-scroll-prev" aria-label="Scroll left" title="Scroll tabs left">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="tms-segmented-tabs tms-tab-scroll-rail" id="admin-primary-tabs">
           <button class="tms-tab-pill active" data-group="admissions">
             <i data-lucide="clipboard-list"></i>
             <span>Admissions Hub</span>
             <span class="tab-badge" id="admin-apps-badge">${stats.total}</span>
           </button>
-          <button class="tms-tab-pill" data-group="users">
-            <i data-lucide="shield-check"></i>
-            <span>Access & Security</span>
-            <span class="tab-badge" id="admin-pending-users-badge" style="display:none; background:#f59e0b; color:#fff;">0</span>
-          </button>
           <button class="tms-tab-pill" data-group="notices">
             <i data-lucide="bell"></i>
             <span>Notifications</span>
+          </button>
+          <button class="tms-tab-pill" data-group="website">
+            <i data-lucide="globe"></i>
+            <span>Institutional Website</span>
+          </button>
+          <button class="tms-tab-pill" data-group="hostel" id="admin-group-tab-hostel" style="${websiteService.isHostelEnabled() ? '' : 'display:none;'}">
+            <i data-lucide="home"></i>
+            <span>Hostel Management</span>
           </button>
           <button class="tms-tab-pill" data-group="system">
             <i data-lucide="sliders"></i>
@@ -159,10 +181,21 @@ export class AdminModule {
           </button>
           ` : ''}
         </div>
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" id="admin-primary-scroll-next" aria-label="Scroll right" title="Scroll tabs right">
+          <i data-lucide="chevron-right"></i>
+        </button>
       </div>
 
-      <!-- Secondary Subtabs Rail -->
-      <div class="tms-subtab-rail" id="admin-subtab-rail"></div>
+      <!-- Secondary Subtabs Rail with Navigation Controls -->
+      <div class="tms-subtab-container-wrap tms-tab-scroll-wrapper">
+        <button type="button" class="tms-subtab-nav-btn tms-tab-nav-btn tms-subtab-nav-prev" id="admin-subtab-scroll-prev" aria-label="Scroll left" title="Scroll subtabs left">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="tms-subtab-rail tms-tab-scroll-rail" id="admin-subtab-rail"></div>
+        <button type="button" class="tms-subtab-nav-btn tms-tab-nav-btn tms-subtab-nav-next" id="admin-subtab-scroll-next" aria-label="Scroll right" title="Scroll subtabs right">
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
 
       <div id="admin-tab-content"></div>
     </div>
@@ -171,6 +204,131 @@ export class AdminModule {
     this.bindEvents(container);
     this.refreshPendingBadges();
     this.switchGroup('admissions', 'applications');
+  }
+
+  /* ================================================================== */
+  /* Dedicated User & Permissions Module View                           */
+  /* ================================================================== */
+
+  static async renderUsers(container, targetTab = 'users') {
+    const currentUser = authService.getCurrentUser();
+    const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
+
+    let profiles = [];
+    try {
+      profiles = await dbService.select('profiles');
+    } catch (e) {
+      profiles = [];
+    }
+
+    const pendingList = profiles.filter((p) => p.role === 'pending' || p.approvalStatus === 'pending');
+    const approvedList = profiles.filter((p) => p.role !== 'pending' && p.role !== 'rejected' && p.isActive !== false);
+    const suspendedList = profiles.filter((p) => p.role === 'rejected' || p.approvalStatus === 'rejected' || p.isActive === false);
+
+    const pendingCount = pendingList.length;
+    const totalCount = profiles.length;
+    const activeCount = approvedList.length;
+    this._pendingApprovalsCount = pendingCount;
+
+    container.innerHTML = `
+      <div class="tms-content-wrapper">
+        ${UIComponents.renderPageHeader({
+          title: 'User & Permissions Management',
+          subtitle: 'Institutional identity governance, pending approval queue, role definitions, and customized window-level access control.',
+          breadcrumbs: [{ label: 'User & Permissions' }],
+          badge: isSuperAdmin ? 'Super Admin' : 'Security Console',
+          actionsHtml: `
+            <a href="#/administration" class="btn btn-secondary"><i data-lucide="settings"></i> School Administration</a>
+            <button class="btn btn-secondary" id="btn-refresh-users-page"><i data-lucide="refresh-cw"></i> Refresh</button>
+          `
+        })}
+
+        <div class="kpi-grid" style="margin-bottom: 22px;">
+          ${UIComponents.renderKpiCard({ title: 'Total Accounts', value: totalCount, icon: 'users', color: 'blue' })}
+          ${UIComponents.renderKpiCard({ title: 'Pending Approvals', value: pendingCount, icon: 'clock', color: pendingCount > 0 ? 'amber' : 'blue' })}
+          ${UIComponents.renderKpiCard({ title: 'Active Accounts', value: activeCount, icon: 'check-circle', color: 'Gold' })}
+          ${UIComponents.renderKpiCard({ title: 'Configured Roles', value: WINDOW_ROLES.length, icon: 'shield-check', color: 'purple' })}
+        </div>
+
+        <!-- Primary Segmented Tabs Rail for Users Module -->
+        <div class="tms-tab-scroll-wrapper">
+          <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" aria-label="Scroll left" title="Scroll tabs left">
+            <i data-lucide="chevron-left"></i>
+          </button>
+          <div class="tms-segmented-tabs tms-tab-scroll-rail" id="users-primary-tabs">
+            <button class="tms-tab-pill ${targetTab === 'users' ? 'active' : ''}" data-tab="users">
+              <i data-lucide="users"></i>
+              <span>User Directory</span>
+            </button>
+            <button class="tms-tab-pill ${targetTab === 'rbac' ? 'active' : ''}" data-tab="rbac">
+              <i data-lucide="shield-check"></i>
+              <span>Assign Windows (RBAC)</span>
+            </button>
+            <button class="tms-tab-pill ${targetTab === 'google-approvals' ? 'active' : ''}" data-tab="google-approvals">
+              <i data-lucide="user-check"></i>
+              <span>Google Approvals</span>
+              ${pendingCount > 0 ? `<span class="tab-badge" style="background:#f59e0b; color:#fff;">${pendingCount}</span>` : ''}
+            </button>
+            <button class="tms-tab-pill ${targetTab === 'staff-onboarding' ? 'active' : ''}" data-tab="staff-onboarding">
+              <i data-lucide="user-cog"></i>
+              <span>Staff Onboarding</span>
+            </button>
+            <button class="tms-tab-pill ${targetTab === 'user-sessions' ? 'active' : ''}" data-tab="user-sessions">
+              <i data-lucide="history"></i>
+              <span>User Sessions</span>
+            </button>
+            <button class="tms-tab-pill ${targetTab === 'audit' ? 'active' : ''}" data-tab="audit">
+              <i data-lucide="shield-alert"></i>
+              <span>Security Audit Logs</span>
+            </button>
+          </div>
+          <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" aria-label="Scroll right" title="Scroll tabs right">
+            <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+
+        <div id="users-view-content" style="margin-top: 18px;"></div>
+      </div>
+    `;
+
+    const switchUsersTab = async (tabKey) => {
+      const contentEl = container.querySelector('#users-view-content');
+      if (!contentEl) return;
+      container.querySelectorAll('#users-primary-tabs .tms-tab-pill').forEach((b) => {
+        b.classList.toggle('active', b.dataset.tab === tabKey);
+      });
+      contentEl.innerHTML = '<div style="padding:2rem;text-align:center;"><div class="tms-spinner"></div></div>';
+      try {
+        if (tabKey === 'users') {
+          await this.renderUsersTab(contentEl);
+        } else if (tabKey === 'rbac') {
+          this.renderRbacMatrixView(contentEl, profiles, isSuperAdmin);
+        } else if (tabKey === 'google-approvals') {
+          await this.renderGoogleApprovalsTab(contentEl);
+        } else if (tabKey === 'staff-onboarding') {
+          await this.renderStaffOnboardingTab(contentEl);
+        } else if (tabKey === 'user-sessions') {
+          await this.renderUserSessionsTab(contentEl);
+        } else if (tabKey === 'audit') {
+          await this.renderAuditTab(contentEl);
+        }
+      } catch (err) {
+        contentEl.innerHTML = `<div class="card"><p style="color:#dc2626;">Failed to load section: ${esc(err.message)}</p></div>`;
+      }
+      UIComponents.refreshIcons();
+    };
+
+    container.querySelectorAll('#users-primary-tabs .tms-tab-pill').forEach((btn) => {
+      btn.addEventListener('click', () => switchUsersTab(btn.dataset.tab));
+    });
+
+    const refreshBtn = container.querySelector('#btn-refresh-users-page');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => this.renderUsers(container, targetTab));
+    }
+
+    await switchUsersTab(targetTab);
+    UIComponents.refreshIcons();
   }
 
   static async refreshPendingBadges() {
@@ -202,34 +360,70 @@ export class AdminModule {
   }
 
   static switchGroup(groupKey, targetSubtab = null) {
+    if (groupKey === 'hostel' && !websiteService.isHostelEnabled()) {
+      groupKey = 'website';
+      targetSubtab = targetSubtab || 'website-hostel';
+    }
+
+    const primaryTabs = document.getElementById('admin-primary-tabs');
+    if (primaryTabs) {
+      primaryTabs.querySelectorAll('.tms-tab-pill').forEach(b => {
+        b.classList.toggle('active', b.dataset.group === groupKey);
+      });
+    }
+
     const currentUser = authService.getCurrentUser();
     const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
 
     const SUBTABS = {
       admissions: [
         { key: 'applications', label: 'Applications Roster', icon: 'file-text' },
+        { key: 'inquiries', label: 'Website Inquiries', icon: 'message-square', showInquiryBadge: true },
         { key: 'form-builder', label: 'Form Field Builder', icon: 'layout-template' },
         { key: 'fees', label: 'Fee Structure Master', icon: 'receipt' },
         { key: 'payment-settings', label: 'Portal Rules & Video', icon: 'settings' }
       ],
       users: [
-        { key: 'google-approvals', label: 'User Authentication (Google)', icon: 'user-check', showPendingBadge: true },
-        { key: 'users', label: 'User Logins & Roles', icon: 'users' },
+        { key: 'users', label: 'User Logins, Roles & Permissions', icon: 'users', showPendingBadge: true },
+        { key: 'google-approvals', label: 'Google Approvals Queue', icon: 'user-check' },
+        { key: 'staff-onboarding', label: 'Staff Onboarding & Governance', icon: 'user-cog' },
         ...(isSuperAdmin ? [{ key: 'user-sessions', label: 'Login & Logout Sessions', icon: 'history' }] : []),
         { key: 'audit', label: 'Security Audit Trail', icon: 'shield-alert' }
+      ],
+      website: [
+        { key: 'website-inquiries', label: 'Admission Inquiries', icon: 'message-square', showInquiryBadge: true },
+        { key: 'website-sections', label: 'Sections & Tabs Visibility (ON/OFF)', icon: 'toggle-right' },
+        { key: 'website-general', label: 'Identity & Brand Colors', icon: 'palette' },
+        { key: 'website-hero', label: 'Hero & Headlines', icon: 'sparkles' },
+        { key: 'website-about', label: 'About & Leadership', icon: 'book-open' },
+        { key: 'website-academics', label: 'Academic Programs', icon: 'graduation-cap' },
+        { key: 'website-facilities', label: 'Campus Facilities', icon: 'building' },
+        { key: 'website-hostel', label: 'Hostel Managing Setup', icon: 'home' },
+        { key: 'website-notices', label: 'Notice Board Bulletins', icon: 'megaphone' },
+        { key: 'website-gallery', label: 'Photo Gallery', icon: 'image' },
+        { key: 'website-testimonials', label: 'Parent Testimonials', icon: 'message-square-quote' },
+        { key: 'website-contact', label: 'Contact, Admission & Footer', icon: 'phone-call' },
+        { key: 'website-backup', label: 'CMS Backup & Reset', icon: 'database' }
+      ],
+      hostel: [
+        { key: 'website-hostel', label: 'Hostel Managing Setup & Button', icon: 'sliders' },
+        { key: 'hostel-wings', label: 'Dormitories & Wings', icon: 'home' },
+        { key: 'hostel-features', label: 'Facilities & Amenities', icon: 'sparkles' },
+        { key: 'hostel-routine', label: 'Daily Life Routine', icon: 'clock' },
+        { key: 'hostel-mess', label: 'Mess & Weekly Menu', icon: 'utensils' },
+        { key: 'hostel-wardens', label: 'Wardens & Contact', icon: 'phone-call' },
+        { key: 'hostel-roster', label: 'Student Bed Allotments', icon: 'users' }
       ],
       notices: [
         { key: 'notifications', label: 'Broadcast Bulletins', icon: 'bell' }
       ],
       system: [
+        { key: 'institution-details', label: 'Institution Profile & Campus Status', icon: 'building-2' },
         { key: 'branding', label: 'Institute Logo & Emblem', icon: 'image' },
         { key: 'backup', label: 'JSON Disaster Recovery', icon: 'database' }
       ],
       superadmin: [
-        { key: 'google-approvals', label: '🛡️ Google Auth Approvals', icon: 'user-check', showPendingBadge: true },
         { key: 'system-doctor', label: '🩺 System Doctor (Find & Fix)', icon: 'wrench' },
-        { key: 'user-sessions', label: '👤 User Login / Logout Sessions', icon: 'history' },
-        { key: 'audit', label: '🛡️ Security Audit Logs', icon: 'shield-alert' },
         { key: 'developer-tools', label: '⚡ Developer DB Explorer', icon: 'terminal' }
       ]
     };
@@ -246,6 +440,7 @@ export class AdminModule {
         <i data-lucide="${st.icon}" style="width: 14px; height: 14px;"></i>
         <span>${st.label}</span>
         ${st.showPendingBadge && pendingCount > 0 ? `<span class="badge" style="background:#ef4444; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${pendingCount}</span>` : ''}
+        ${st.showInquiryBadge && (this._newInquiriesCount || 0) > 0 ? `<span class="badge" style="background:#BF9A33; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${this._newInquiriesCount} New</span>` : ''}
       </button>
     `).join('');
 
@@ -253,12 +448,70 @@ export class AdminModule {
       btn.addEventListener('click', (e) => {
         subRail.querySelectorAll('.tms-subtab-pill').forEach(b => b.classList.remove('active'));
         e.currentTarget.classList.add('active');
+        e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         this.renderTab(e.currentTarget.dataset.tab);
+        setTimeout(updateSubtabScrollState, 200);
       });
     });
 
+    // Setup horizontal scroll controls and wheel scrolling
+    const updateSubtabScrollState = () => {
+      if (!subRail) return;
+      const prevBtn = document.getElementById('admin-subtab-scroll-prev');
+      const nextBtn = document.getElementById('admin-subtab-scroll-next');
+      const maxScroll = Math.max(0, subRail.scrollWidth - subRail.clientWidth);
+      const canScrollLeft = subRail.scrollLeft > 6;
+      const canScrollRight = subRail.scrollLeft < maxScroll - 6;
+
+      if (prevBtn) {
+        prevBtn.style.display = 'inline-flex';
+        prevBtn.style.opacity = canScrollLeft ? '1' : '0.35';
+        prevBtn.style.pointerEvents = canScrollLeft ? 'auto' : 'none';
+      }
+      if (nextBtn) {
+        nextBtn.style.display = 'inline-flex';
+        nextBtn.style.opacity = canScrollRight ? '1' : '0.35';
+        nextBtn.style.pointerEvents = canScrollRight ? 'auto' : 'none';
+      }
+    };
+
+    if (!subRail._scrollInitialized) {
+      subRail._scrollInitialized = true;
+      subRail.addEventListener('scroll', updateSubtabScrollState, { passive: true });
+      window.addEventListener('resize', updateSubtabScrollState, { passive: true });
+
+      subRail.addEventListener('wheel', (e) => {
+        if (e.deltaY !== 0 && subRail.scrollWidth > subRail.clientWidth) {
+          e.preventDefault();
+          subRail.scrollLeft += e.deltaY;
+          updateSubtabScrollState();
+        }
+      }, { passive: false });
+
+      const prevBtn = document.getElementById('admin-subtab-scroll-prev');
+      const nextBtn = document.getElementById('admin-subtab-scroll-next');
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+          subRail.scrollBy({ left: -260, behavior: 'smooth' });
+          setTimeout(updateSubtabScrollState, 300);
+        });
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          subRail.scrollBy({ left: 260, behavior: 'smooth' });
+          setTimeout(updateSubtabScrollState, 300);
+        });
+      }
+    }
+
     UIComponents.refreshIcons();
     this.renderTab(activeSubKey);
+
+    const activePill = subRail.querySelector(`.tms-subtab-pill[data-tab="${activeSubKey}"]`);
+    if (activePill) {
+      activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    setTimeout(updateSubtabScrollState, 150);
   }
 
   static bindEvents(container) {
@@ -272,6 +525,17 @@ export class AdminModule {
 
     const bell = container.querySelector('#btn-new-notification');
     if (bell) bell.addEventListener('click', () => this.openNotificationModal());
+
+    window.addEventListener('tms_hostel_toggled', (e) => {
+      const isEnabled = !!(e.detail && e.detail.enabled);
+      const hostelPill = container.querySelector('#admin-group-tab-hostel');
+      if (hostelPill) {
+        hostelPill.style.display = isEnabled ? 'inline-flex' : 'none';
+      }
+      if (!isEnabled && this._activeGroup === 'hostel') {
+        this.switchGroup('website', 'website-hostel');
+      }
+    });
   }
 
   static async renderTab(tabKey) {
@@ -279,13 +543,33 @@ export class AdminModule {
     if (!tabContent) return;
 
     try {
-      if (tabKey === 'applications') await this.renderApplicationsTab(tabContent);
+      if (tabKey === 'inquiries' || tabKey === 'website-inquiries') await this.renderInquiriesTab(tabContent);
+      else if (tabKey.startsWith('website-')) await AdminWebsiteCms.render(tabContent, tabKey);
+      else if (tabKey.startsWith('hostel-')) {
+        await AdminWebsiteCms.render(tabContent, 'website-hostel');
+        const targetMap = {
+          'hostel-wings': 'hostel-sec-wings',
+          'hostel-features': 'hostel-sec-features',
+          'hostel-routine': 'hostel-sec-routine',
+          'hostel-mess': 'hostel-sec-mess',
+          'hostel-wardens': 'hostel-sec-wardens',
+          'hostel-roster': 'hostel-sec-roster'
+        };
+        const targetId = targetMap[tabKey];
+        if (targetId) {
+          const pill = tabContent.querySelector(`.hostel-sub-pill[data-target="${targetId}"]`);
+          if (pill) pill.click();
+        }
+      }
+      else if (tabKey === 'applications') await this.renderApplicationsTab(tabContent);
       else if (tabKey === 'form-builder') await this.renderFormBuilderTab(tabContent);
       else if (tabKey === 'fees') await this.renderFeesTab(tabContent);
       else if (tabKey === 'payment-settings') await this.renderPaymentSettingsTab(tabContent);
       else if (tabKey === 'notifications') await this.renderNotificationsTab(tabContent);
       else if (tabKey === 'users') await this.renderUsersTab(tabContent);
+      else if (tabKey === 'staff-onboarding') await this.renderStaffOnboardingTab(tabContent);
       else if (tabKey === 'google-approvals') await this.renderGoogleApprovalsTab(tabContent);
+      else if (tabKey === 'institution-details') await this.renderInstitutionDetailsTab(tabContent);
       else if (tabKey === 'branding') await this.renderBrandingTab(tabContent);
       else if (tabKey === 'audit') await this.renderAuditTab(tabContent);
       else if (tabKey === 'backup') await this.renderBackupTab(tabContent);
@@ -321,6 +605,7 @@ export class AdminModule {
             <button class="btn btn-secondary btn-sm" id="btn-export-csv"><i data-lucide="file-spreadsheet"></i> Export CSV</button>
             <button class="btn btn-secondary btn-sm" id="btn-export-pdf"><i data-lucide="file-text"></i> Export PDF</button>
             <button class="btn btn-secondary btn-sm" id="btn-delete-pending" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Pending</button>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-apps" title="Fetch fresh applications from server"><i data-lucide="refresh-cw"></i> Refresh</button>
             <a href="/admission" target="_blank" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> New Entry</a>
           </div>
         </div>
@@ -378,6 +663,7 @@ export class AdminModule {
     safeOn('btn-view-merit-list', 'click', () => this.openMeritListModal());
     safeOn('btn-export-csv', 'click', () => this.exportApplicationsCsv());
     safeOn('btn-export-pdf', 'click', () => this.exportApplicationsPdf());
+    safeOn('btn-refresh-apps', 'click', () => this.refreshApplications(tabContent));
     safeOn('btn-delete-pending', 'click', () => this.deletePendingApplications());
     safeOn('btn-select-visible', 'click', () => this.toggleSelectAll(true, tabContent));
     safeOn('btn-clear-selection', 'click', () => this.toggleSelectAll(false, tabContent));
@@ -413,10 +699,22 @@ export class AdminModule {
     }
 
     body.innerHTML = rows.map((a) => {
-      const photoName = (a.payload || {}).photo;
-      const photoCell = photoName
-        ? `<img class="app-photo-thumb" data-path="${esc(photoName)}" alt="Applicant photo"
+      const pld = a.payload || {};
+      const photoName = pld.photo || pld.candidatePassportPhoto || pld.passportPhoto || pld.studentPassportPhoto || pld.studentProfilePhoto || pld.candidatePhoto;
+      let photoSrc = '';
+      if (photoName) {
+        if (typeof photoName === 'string' && photoName.includes('/storage/v1/object/sign/')) {
+          photoSrc = photoName.replace('/storage/v1/object/sign/', '/storage/v1/object/public/').split('?')[0];
+        } else if (typeof photoName === 'string' && (photoName.startsWith('http') || photoName.startsWith('data:'))) {
+          photoSrc = photoName;
+        } else {
+          photoSrc = admissionService.getPublicUrl('admission-docs', photoName);
+        }
+      }
+      const photoCell = photoSrc
+        ? `<img class="app-photo-thumb" src="${esc(photoSrc)}" data-path="${esc(photoName)}" alt="Applicant photo"
              style="width:30px;height:36px;object-fit:cover;border:1px solid var(--border-color);border-radius:4px;background:#f1f5f9;cursor:pointer;"
+             onerror="this.onerror=null; this.src='data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2230%22%20height%3D%2236%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22M19%2021v-2a4%204%200%200%200-4-4H9a4%204%200%200%200-4%204v2%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%227%22%20r%3D%224%22%2F%3E%3C%2Fsvg%3E';"
              title="Click to view the photographed applicant">`
         : '<span style="color:var(--text-subtle);">—</span>';
       return `
@@ -465,12 +763,7 @@ export class AdminModule {
         await this.deleteApplications([id]);
       }));
 
-    // Hydrate applicant photo thumbnails with signed URLs (private bucket).
-    body.querySelectorAll('.app-photo-thumb').forEach((img) =>
-      admissionService.getSignedUrl('admission-docs', img.dataset.path, 3600).then((url) => {
-        if (url) img.src = url;
-        else img.style.display = 'none';
-      }));
+    // Click applicant photo thumbnail to open preview modal
     body.querySelectorAll('.app-photo-thumb').forEach((img) =>
       img.addEventListener('click', () => {
         const app = rows.find((a) => (a.payload || {}).photo === img.dataset.path);
@@ -535,7 +828,8 @@ export class AdminModule {
   static async deletePendingApplications() {
     const pending = (this._apps || []).filter((a) => a.status === 'Submitted' || a.status === 'Under Verification');
     if (!pending.length) { UIComponents.showToast('No pending applications to delete.', 'info'); return; }
-    if (!confirm(`Delete ALL ${pending.length} pending application(s) (Submitted / Under Verification)? This cannot be undone.`)) return;
+    const confirmName = prompt(`CAUTION: You are about to delete ALL ${pending.length} pending application(s). Type "DELETE" to confirm:`);
+    if (confirmName !== 'DELETE') return;
     await this.deleteApplications(pending.map((a) => a.id));
   }
 
@@ -576,8 +870,20 @@ export class AdminModule {
     const docFields = fields.filter((f) => (f.fieldType || 'text') === 'file');
     const textFields = fields.filter((f) => (f.fieldType || 'text') !== 'file');
 
+    const pld = app.payload || {};
     const detailsRows = textFields.map((f) => {
-      const raw = (app.payload || {})[f.fieldKey];
+      let raw = pld[f.fieldKey];
+      if (raw == null || raw === '') {
+        if (f.fieldKey === 'candidateName') raw = app.studentName || app.student_name || pld.studentName;
+        else if (f.fieldKey === 'applyingClass') raw = app.grade || pld.grade;
+        else if (f.fieldKey === 'fatherName') raw = app.guardianName || app.guardian_name || pld.guardianName;
+        else if (f.fieldKey === 'phone') raw = app.phone;
+        else if (f.fieldKey === 'email') raw = app.email;
+        else if (f.fieldKey === 'dob') raw = app.dob;
+        else if (f.fieldKey === 'gender') raw = app.gender;
+        else if (f.fieldKey === 'village' && app.address) raw = app.address;
+        else raw = app[f.fieldKey];
+      }
       return `
         <tr>
           <th style="width:36%; background:#f8fafc; font-weight:700; color:#475569; font-size:0.75rem; border-bottom:1px solid #f1f5f9; padding:8px 12px; white-space:normal;">${esc(f.label)}</th>
@@ -586,6 +892,29 @@ export class AdminModule {
       `;
     }).join('');
 
+    // Append any extra payload attributes not already captured in textFields
+    const knownKeys = new Set(fields.map(f => f.fieldKey));
+    knownKeys.add('photo');
+    knownKeys.add('candidatePhoto');
+    knownKeys.add('passportPhoto');
+    knownKeys.add('candidateName');
+    knownKeys.add('studentName');
+    knownKeys.add('applyingClass');
+    knownKeys.add('grade');
+    knownKeys.add('fatherName');
+    knownKeys.add('guardianName');
+    const extraRows = Object.entries(pld)
+      .filter(([k, v]) => !knownKeys.has(k) && v != null && v !== '' && typeof v !== 'object')
+      .map(([k, v]) => {
+        const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        return `
+          <tr>
+            <th style="width:36%; background:#f8fafc; font-weight:700; color:#475569; font-size:0.75rem; border-bottom:1px solid #f1f5f9; padding:8px 12px; white-space:normal;">${esc(label)}</th>
+            <td style="font-size:0.82rem; color:#1e293b; border-bottom:1px solid #f1f5f9; padding:8px 12px;">${esc(v)}</td>
+          </tr>
+        `;
+      }).join('');
+
     const docsListHtml = docFields.length ? docFields.map((f) => {
       const raw = (app.payload || {})[f.fieldKey];
       const ver = (app.docVerifications || {})[f.fieldKey];
@@ -593,7 +922,7 @@ export class AdminModule {
         ? `<span class="badge badge-success" style="font-size:0.7rem; padding:3px 8px; font-weight:700;"><i data-lucide="shield-check" style="width:12px;height:12px;"></i> Verified &amp; Stamped</span>`
         : `<span class="badge badge-warning" style="font-size:0.7rem; padding:3px 8px;">Pending Verification</span>`;
       const stampBtn = (raw && !ver)
-        ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:2px 8px; font-size:0.72rem; color:#15803d; border-color:#86efac; font-weight:600;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
+        ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:2px 8px; font-size:0.72rem; color:#8C6E1E; border-color:#F2D88C; font-weight:600;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
         : '';
       
       return `
@@ -627,7 +956,7 @@ export class AdminModule {
           <td style="font-size:0.78rem;">${fmtDate(p.date)}</td>
           <td style="font-size:0.78rem;"><span class="badge badge-info" style="font-size:0.7rem;">${esc(p.mode)}</span></td>
           <td style="font-size:0.78rem;" class="font-mono">${esc(p.reference || '—')}</td>
-          <td style="text-align:right; font-weight:700; font-size:0.82rem; color:#16a34a;">${fmtMoney(p.amount)}</td>
+          <td style="text-align:right; font-weight:700; font-size:0.82rem; color:#BF9A33;">${fmtMoney(p.amount)}</td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:12px; font-size:0.8rem;">No payment transactions recorded.</td></tr>';
 
@@ -638,7 +967,7 @@ export class AdminModule {
 
     const bodyHtml = `
       <!-- Top Candidate Profile Banner -->
-      <div style="background:linear-gradient(135deg, rgba(22, 163, 74, 0.05), rgba(37, 99, 235, 0.06)); border:1.5px solid var(--border-color); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+      <div style="background:linear-gradient(135deg, rgba(191, 154, 51, 0.05), rgba(37, 99, 235, 0.06)); border:1.5px solid var(--border-color); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           ${photoPath
             ? `<img id="app-photo-img" alt="Applicant photo" style="width:72px; height:88px; object-fit:cover; border-radius:8px; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.06); background:#f1f5f9;">`
@@ -673,7 +1002,7 @@ export class AdminModule {
           </div>
           <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
             <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Paid Amount</div>
-            <div style="font-size:1.15rem; font-weight:800; color:#16a34a;">${fmtMoney(totalPaidCalc)}</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#BF9A33;">${fmtMoney(totalPaidCalc)}</div>
           </div>
           <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
             <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Balance Due</div>
@@ -693,7 +1022,7 @@ export class AdminModule {
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Profile Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="user-check" style="width:16px; height:16px;"></i> Applicant &amp; Family Dossier</span>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-edit-dossier-card" style="font-size:0.75rem; padding:2px 8px; color:#0284c7; border-color:#bae6fd; font-weight:700;"><i data-lucide="edit-3"></i> Edit Data</button>
             </div>
@@ -709,6 +1038,7 @@ export class AdminModule {
                     <td style="font-size:0.82rem; border-bottom:1px solid #f1f5f9; padding:8px 12px;">${fmtDate(app.createdAt)}</td>
                   </tr>
                   ${detailsRows}
+                  ${extraRows}
                 </tbody>
               </table>
             </div>
@@ -716,7 +1046,7 @@ export class AdminModule {
 
           <!-- Uploaded Documents Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
               <i data-lucide="files" style="width:16px; height:16px;"></i> Attached Documents &amp; Verification
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -729,7 +1059,7 @@ export class AdminModule {
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Fee Structure & Payment Ledger Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
               <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="receipt" style="width:16px;height:16px;"></i> Fee Assessment &amp; Ledger</span>
               <span style="font-size:0.85rem; font-weight:800; color:#1e293b;">Total: ${fmtMoney(app.feeTotal)}</span>
             </div>
@@ -751,7 +1081,7 @@ export class AdminModule {
             <!-- Record a Payment Form (Spacious 2-row layout) -->
             <div style="background:var(--bg-subtle, #f8fafc); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
               <div style="font-weight:700; font-size:0.82rem; margin-bottom:8px; color:#1e293b; display:flex; align-items:center; gap:5px;">
-                <i data-lucide="plus-circle" style="width:14px; height:14px; color:#16a34a;"></i> Record Payment Transaction
+                <i data-lucide="plus-circle" style="width:14px; height:14px; color:#BF9A33;"></i> Record Payment Transaction
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
                 <div>
@@ -822,7 +1152,7 @@ export class AdminModule {
               <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-save-credential"><i data-lucide="save"></i> Save</button>
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-parent-cred" style="color:#0284c7;"><i data-lucide="share-2"></i> Copy Login Message</button>
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-parent-cred" style="color:#16a34a;"><i data-lucide="send"></i> WhatsApp</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-parent-cred" style="color:#BF9A33;"><i data-lucide="send"></i> WhatsApp</button>
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-resend-credential"><i data-lucide="send"></i> Resend</button>
                 ${(credential.userId || app.parentUserId) ? '' : '<button type="button" class="btn btn-primary btn-sm" id="btn-activate-credential"><i data-lucide="key-round"></i> Activate Login</button>'}
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-delete-credential" style="color:#ef4444; margin-left:auto;"><i data-lucide="trash-2"></i> Delete</button>
@@ -861,8 +1191,8 @@ export class AdminModule {
             <i data-lucide="check-circle"></i> Approve
           </button>
           ${isEnrolled
-            ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-view-enrolled" style="color:#16a34a; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
-            : `<button type="button" class="btn btn-success btn-sm" id="btn-app-enroll" style="background:#16a34a; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
+            ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-view-enrolled" style="color:#BF9A33; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
+            : `<button type="button" class="btn btn-success btn-sm" id="btn-app-enroll" style="background:#BF9A33; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
           }
           <button type="button" class="btn btn-secondary btn-sm" id="btn-app-delete-modal" style="color:#ef4444;" title="Delete Application">
             <i data-lucide="trash-2"></i>
@@ -1006,19 +1336,21 @@ export class AdminModule {
       });
     }
 
-    // Applicant photo (signed URL from the private bucket).
+    // Applicant photo
     if (photoPath) {
-      admissionService.getSignedUrl('admission-docs', photoPath).then((url) => {
-        const img = document.getElementById('app-photo-img');
-        if (img && url) img.src = url;
-      });
+      const url = admissionService.getPublicUrl('admission-docs', photoPath);
+      const img = document.getElementById('app-photo-img');
+      if (img && url) {
+        img.src = url;
+        img.onerror = () => { img.style.display = 'none'; };
+      }
     }
 
-    // Document links open via short-lived signed URLs.
+    // Document links open via direct URL
     document.querySelectorAll('.doc-link').forEach((link) =>
       link.addEventListener('click', async (e) => {
         e.preventDefault();
-        const url = await admissionService.getSignedUrl('admission-docs', link.dataset.path);
+        const url = admissionService.getPublicUrl('admission-docs', link.dataset.path);
         if (url) window.open(url, '_blank');
         else UIComponents.showToast('Could not open the document (storage not configured).', 'warning');
       }));
@@ -1178,8 +1510,8 @@ export class AdminModule {
     const suggestedRoll = (sameGradeStudents.length + 1).toString().padStart(2, '0');
 
     const bodyHtml = `
-      <div style="margin-bottom:14px; padding:12px; border-radius:8px; background:rgba(22,163,74,0.08); border:1px solid #16a34a;">
-        <div style="font-size:0.95rem; font-weight:700; color:#15803d; margin-bottom:4px;">
+      <div style="margin-bottom:14px; padding:12px; border-radius:8px; background:rgba(191, 154, 51,0.08); border:1px solid #BF9A33;">
+        <div style="font-size:0.95rem; font-weight:700; color:#8C6E1E; margin-bottom:4px;">
           <i data-lucide="user-check"></i> Convert Application to Enrolled Student
         </div>
         <p style="font-size:0.8rem; color:var(--text-main); margin:0;">
@@ -1223,7 +1555,7 @@ export class AdminModule {
 
     const footerHtml = `
       <button class="btn btn-secondary" id="btn-enr-cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-enr-confirm" style="background:#16a34a; border-color:#16a34a;">
+      <button class="btn btn-primary" id="btn-enr-confirm" style="background:#BF9A33; border-color:#BF9A33;">
         <i data-lucide="check-circle-2"></i> Confirm Enrollment
       </button>
     `;
@@ -1262,14 +1594,14 @@ export class AdminModule {
         title: 'Enrollment Confirmed',
         bodyHtml: `
           <div style="text-align:center; padding:10px 0 16px;">
-            <div style="width:54px; height:54px; border-radius:50%; background:rgba(22,163,74,0.14); color:#16a34a; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+            <div style="width:54px; height:54px; border-radius:50%; background:rgba(191, 154, 51,0.14); color:#BF9A33; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
               <i data-lucide="graduation-cap" style="width:32px; height:32px;"></i>
             </div>
             <h3 style="font-size:1.25rem; font-weight:800; color:var(--text-main); margin:0 0 6px;">${esc(name)} is Now Officially Enrolled!</h3>
             <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 14px;">The student record has been added to the master directory.</p>
-            <div style="background:var(--bg-subtle); border:1.5px dashed #16a34a; border-radius:10px; padding:12px; display:inline-block;">
+            <div style="background:var(--bg-subtle); border:1.5px dashed #BF9A33; border-radius:10px; padding:12px; display:inline-block;">
               <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; display:block;">Permanent Admission Number</span>
-              <span class="font-mono" style="font-size:1.35rem; font-weight:800; color:#15803d;">${esc(res.admissionNo)}</span>
+              <span class="font-mono" style="font-size:1.35rem; font-weight:800; color:#8C6E1E;">${esc(res.admissionNo)}</span>
             </div>
           </div>
         `,
@@ -1302,13 +1634,13 @@ export class AdminModule {
         const exam = a.entranceExam || {};
         return `
           <tr>
-            <td style="font-weight:800; color:#16a34a; text-align:center;">#${i + 1}</td>
+            <td style="font-weight:800; color:#BF9A33; text-align:center;">#${i + 1}</td>
             <td class="font-mono">${esc(a.appId || a.id)}</td>
             <td style="font-weight:700;">${esc(a.studentName || '—')}</td>
             <td>${esc(a.grade || '—')}</td>
             <td class="font-mono" style="text-align:center;">${exam.writtenScore ?? '—'}</td>
             <td class="font-mono" style="text-align:center;">${exam.interviewScore ?? '—'}</td>
-            <td class="font-mono" style="text-align:center; font-weight:800; color:#15803d; font-size:1rem;">${exam.totalScore ?? '—'}</td>
+            <td class="font-mono" style="text-align:center; font-weight:800; color:#8C6E1E; font-size:1rem;">${exam.totalScore ?? '—'}</td>
             <td><span class="badge ${a.status === 'Enrolled' ? 'badge-success' : 'badge-info'}">${esc(a.status || '—')}</span></td>
           </tr>
         `;
@@ -1446,7 +1778,7 @@ export class AdminModule {
     const photoPath = (app.payload || {})[photoKey] || '';
     let photoUrl = '';
     if (photoPath) {
-      photoUrl = (await admissionService.getSignedUrl('admission-docs', photoPath, 3600)) || '';
+      photoUrl = admissionService.getPublicUrl('admission-docs', photoPath) || '';
     }
     const photoBox = `
       <div style="width:105px;height:128px;border:1.5px solid #0f172a;margin-left:auto;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;font-size:8.5px;background:#fafafa;padding:2px;border-radius:4px;">
@@ -1465,10 +1797,22 @@ export class AdminModule {
 
     let details = '';
     groups.forEach((sectionFields, section) => {
-      details += `<div style="font-size:11.5px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #bbf7d0; padding-bottom:2px;">${esc(section)}</div>`;
+      details += `<div style="font-size:11.5px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">${esc(section)}</div>`;
       details += '<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:8px;"><tbody>';
       sectionFields.forEach((f) => {
-        const raw = (app.payload || {})[f.fieldKey];
+        const pld = app.payload || {};
+        let raw = pld[f.fieldKey];
+        if (raw == null || raw === '') {
+          if (f.fieldKey === 'candidateName') raw = app.studentName || app.student_name || pld.studentName;
+          else if (f.fieldKey === 'applyingClass') raw = app.grade || pld.grade;
+          else if (f.fieldKey === 'fatherName') raw = app.guardianName || app.guardian_name || pld.guardianName;
+          else if (f.fieldKey === 'phone') raw = app.phone;
+          else if (f.fieldKey === 'email') raw = app.email;
+          else if (f.fieldKey === 'dob') raw = app.dob;
+          else if (f.fieldKey === 'gender') raw = app.gender;
+          else if (f.fieldKey === 'village' && app.address) raw = app.address;
+          else raw = app[f.fieldKey];
+        }
         const isFile = (f.fieldType || 'text') === 'file';
         const shown = isFile
           ? (raw ? esc(String(raw).split('/').pop()) : 'Not attached')
@@ -1490,18 +1834,18 @@ export class AdminModule {
       : 'https://tps.clubad.space/parent';
 
     const credBlock = cred ? `
-      <div style="border:1.5px solid #16a34a; background:#f0fdf4; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #bbf7d0; padding-bottom:4px; margin-bottom:6px;">
-          <div style="font-size:11px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px;">
+      <div style="border:1.5px solid #BF9A33; background:#FDF8E8; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F7E8B5; padding-bottom:4px; margin-bottom:6px;">
+          <div style="font-size:11px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px;">
             🔐 Parent &amp; Student Portal Login Credentials (Official)
           </div>
-          <span style="font-size:8.5px; font-weight:700; color:#15803d; background:#dcfce7; padding:2px 8px; border-radius:10px;">Status: Active</span>
+          <span style="font-size:8.5px; font-weight:700; color:#8C6E1E; background:#FCF4D9; padding:2px 8px; border-radius:10px;">Status: Active</span>
         </div>
         <table style="width:100%; font-size:10.5px; border-collapse:collapse; margin-bottom:4px; border:none;">
           <tbody>
             <tr style="border:none;">
               <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Tracking Portal:</strong></td>
-              <td style="padding:3px 0; color:#15803d; font-family:monospace; border:none;"><strong>${esc(portalUrl)}</strong></td>
+              <td style="padding:3px 0; color:#8C6E1E; font-family:monospace; border:none;"><strong>${esc(portalUrl)}</strong></td>
               <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Authorized Role:</strong></td>
               <td style="padding:3px 0; border:none;">Parent / Student Tracking</td>
             </tr>
@@ -1533,13 +1877,13 @@ export class AdminModule {
           ${TMS_LOGO.emblemSvg(70)}
         </div>
         <div style="text-align: center; flex: 1;">
-          <div style="font-size: 10px; font-weight: 700; color: #16a34a; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
+          <div style="font-size: 10px; font-weight: 700; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
           <h1 style="font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 900; color: #0f172a; margin: 1px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px;">${esc(TMS_CONFIG.institution.name)}</h1>
           <div style="font-size: 9px; color: #334155;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.district)} - ${esc(TMS_CONFIG.institution.address.pin)} • Regd. No. : ${esc(TMS_CONFIG.institution.regNo)}</div>
           <div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">Helpline: ${esc(TMS_CONFIG.institution.contact.phone1)}, ${esc(TMS_CONFIG.institution.contact.phone2)} • Web: tps.clubad.space</div>
         </div>
         <div style="width: 105px; text-align: right; flex-shrink: 0;">
-          <div style="display: inline-block; padding: 3px 8px; background: #f0fdf4; border: 1.5px solid #16a34a; color: #15803d; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
+          <div style="display: inline-block; padding: 3px 8px; background: #FDF8E8; border: 1.5px solid #BF9A33; color: #8C6E1E; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
           <div style="font-size: 8.5px; color: #475569; margin-top: 3px;">Session: <strong>${esc(TMS_CONFIG.academic?.currentYear || '2027 - 2028')}</strong></div>
         </div>
       </div>
@@ -1550,7 +1894,7 @@ export class AdminModule {
           <tbody>
             <tr>
               <th style="width:28%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Form Number</th>
-              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong class="font-mono" style="font-size:12px; color:#15803d;">${esc(app.appId || app.id)}</strong></td>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong class="font-mono" style="font-size:12px; color:#8C6E1E;">${esc(app.appId || app.id)}</strong></td>
               <th style="width:24%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Class Applied</th>
               <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong>${esc(applyingGrade)}</strong></td>
             </tr>
@@ -1575,13 +1919,13 @@ export class AdminModule {
       ${details}
 
       <!-- Fees & Payment Details -->
-      <div style="font-size:11.5px; font-weight:800; color:#166534; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #bbf7d0; padding-bottom:2px;">Fees &amp; Payment Ledger</div>
+      <div style="font-size:11.5px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">Fees &amp; Payment Ledger</div>
       <table style="width:65%; font-size:10px; border-collapse:collapse; margin-bottom:8px;">
         <tbody>
           ${feeRows || '<tr><td style="padding:3px 6px; border:1px solid #e2e8f0;">Admission Registration Fee</td><td style="text-align:right; padding:3px 6px; border:1px solid #e2e8f0;">₹ 0</td></tr>'}
           <tr style="background:#f8fafc;">
             <td style="border:1px solid #cbd5e1; font-weight:800; padding:4px 6px;">Total Fee Amount</td>
-            <td style="border:1px solid #cbd5e1; text-align:right; font-weight:800; padding:4px 6px; color:#15803d;">${fmtMoney(app.feeTotal)}</td>
+            <td style="border:1px solid #cbd5e1; text-align:right; font-weight:800; padding:4px 6px; color:#8C6E1E;">${fmtMoney(app.feeTotal)}</td>
           </tr>
           <tr>
             <td style="border:1px solid #e2e8f0; padding:3px 6px;">Payment Clearance Status</td>
@@ -1590,7 +1934,7 @@ export class AdminModule {
         </tbody>
       </table>
 
-      ${app.remarks ? `<div style="margin:8px 0; font-size:10px; background:#f8fafc; padding:6px 10px; border-left:3px solid #16a34a; border-radius:3px;"><strong>Official Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
+      ${app.remarks ? `<div style="margin:8px 0; font-size:10px; background:#f8fafc; padding:6px 10px; border-left:3px solid #BF9A33; border-radius:3px;"><strong>Official Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
 
       <!-- User Credentials Block -->
       ${credBlock}
@@ -1639,7 +1983,7 @@ export class AdminModule {
             <tbody>
               <tr>
                 <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Form No. :</strong></td>
-                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong class="font-mono" style="color:#15803d;">${esc(app.appId || app.id)}</strong></td>
+                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong class="font-mono" style="color:#8C6E1E;">${esc(app.appId || app.id)}</strong></td>
                 <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Applying Class :</strong></td>
                 <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong>${esc(applyingGrade)}</strong></td>
               </tr>
@@ -1655,12 +1999,12 @@ export class AdminModule {
                 <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Address :</strong></td>
                 <td style="padding:3px 4px; border:1px solid #cbd5e1;">${esc(addressStr)}</td>
               </tr>
-              <tr style="background:#f0fdf4;">
-                <td style="padding:3px 4px; border:1.5px solid #16a34a; font-weight:800; color:#166534;"><strong>Portal Credentials :</strong></td>
-                <td colspan="3" style="padding:3px 4px; border:1.5px solid #16a34a;">
-                  User: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? cred.username : '—')}</strong> &nbsp;|&nbsp;
-                  Password: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #86efac; border-radius:3px;">${esc(cred ? (cred.password || '******') : '—')}</strong> &nbsp;|&nbsp;
-                  Portal: <span class="font-mono" style="color:#15803d; font-size:9px;">tps.clubad.space</span>
+              <tr style="background:#FDF8E8;">
+                <td style="padding:3px 4px; border:1.5px solid #BF9A33; font-weight:800; color:#8C6E1E;"><strong>Portal Credentials :</strong></td>
+                <td colspan="3" style="padding:3px 4px; border:1.5px solid #BF9A33;">
+                  User: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #F2D88C; border-radius:3px;">${esc(cred ? cred.username : '—')}</strong> &nbsp;|&nbsp;
+                  Password: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #F2D88C; border-radius:3px;">${esc(cred ? (cred.password || '******') : '—')}</strong> &nbsp;|&nbsp;
+                  Portal: <span class="font-mono" style="color:#8C6E1E; font-size:9px;">tps.clubad.space</span>
                 </td>
               </tr>
               <tr>
@@ -1808,7 +2152,7 @@ export class AdminModule {
         <div class="card section-customizer-card" style="margin-bottom:22px; border:1.5px solid var(--border-color); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-sm);">
           <div class="card-header" style="background:#F8FAFC; border-bottom:1.5px solid var(--border-color); padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="width:34px; height:34px; border-radius:8px; background:#DCFCE7; color:#15803d; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; font-family:var(--font-mono);">
+              <span style="width:34px; height:34px; border-radius:8px; background:#FCF4D9; color:#8C6E1E; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; font-family:var(--font-mono);">
                 ${String(secIdx).padStart(2, '0')}
               </span>
               <div>
@@ -1818,7 +2162,7 @@ export class AdminModule {
                 <div style="display:flex; gap:8px; align-items:center; font-size:0.75rem; color:var(--text-muted);">
                   <span>${secFields.length} question(s)</span>
                   <span>•</span>
-                  <span style="color:#15803d; font-weight:600;">${secActiveCount} active</span>
+                  <span style="color:#8C6E1E; font-weight:600;">${secActiveCount} active</span>
                   ${secFields.length - secActiveCount > 0 ? `<span>•</span><span style="color:#b45309;">${secFields.length - secActiveCount} disabled</span>` : ''}
                 </div>
               </div>
@@ -1827,6 +2171,9 @@ export class AdminModule {
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <button class="btn btn-secondary btn-sm btn-rename-section" data-section="${esc(secName)}" title="Rename this section">
                 <i data-lucide="edit-3"></i> Rename Section
+              </button>
+              <button class="btn btn-secondary btn-sm btn-add-photo-to-sec" data-section="${esc(secName)}" style="color:#059669; border-color:#F2D88C; font-weight:700;">
+                <i data-lucide="camera"></i> + Add Photo
               </button>
               <button class="btn btn-primary btn-sm btn-add-field-to-sec" data-section="${esc(secName)}">
                 <i data-lucide="plus"></i> Add Question
@@ -1861,7 +2208,14 @@ export class AdminModule {
                       ${f.placeholder ? `<br><span style="font-size:0.72rem; color:var(--text-muted);">${esc(f.placeholder)}</span>` : ''}
                     </td>
                     <td class="font-mono" style="font-size:0.78rem; color:#475569;">${esc(f.fieldKey)}</td>
-                    <td><span class="badge badge-info" style="font-size:0.72rem;">${esc(f.fieldType)}</span></td>
+                    <td>
+                      ${(f.fieldType === 'photo' || f.fieldType === 'image')
+                        ? `<span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-weight:700; font-size:0.72rem; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="camera" style="width:11px;height:11px;"></i> Photo</span>`
+                        : (f.fieldType === 'file')
+                        ? `<span class="badge" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-size:0.72rem; display:inline-flex; align-items:center; gap:4px;"><i data-lucide="file-text" style="width:11px;height:11px;"></i> Document</span>`
+                        : `<span class="badge badge-info" style="font-size:0.72rem;">${esc(f.fieldType)}</span>`
+                      }
+                    </td>
                     <td>
                       <button type="button" class="badge btn-toggle-required ${f.required ? 'badge-success' : ''}" data-key="${esc(f.fieldKey)}" style="cursor:pointer; border:none;" title="Click to toggle required">
                         ${f.required ? '✓ Required' : 'Optional'}
@@ -1906,7 +2260,9 @@ export class AdminModule {
                 <button class="btn btn-secondary btn-sm" id="btn-select-all-fields"><i data-lucide="check-square"></i> Select All</button>
                 <button class="btn btn-secondary btn-sm" id="btn-bulk-del-fields" style="color:#ef4444;"><i data-lucide="trash-2"></i> Delete Selected (<span id="field-selected-count">0</span>)</button>
               `}
+              <button class="btn btn-secondary btn-sm" id="btn-restore-defaults" title="Restore standard questions without deleting custom questions"><i data-lucide="rotate-ccw"></i> Restore Standard Questions</button>
               <button class="btn btn-secondary btn-sm" id="btn-add-section"><i data-lucide="folder-plus"></i> Add New Section</button>
+              <button class="btn btn-secondary btn-sm" id="btn-add-photo-field" style="color:#059669; border-color:#F2D88C; font-weight:700;"><i data-lucide="camera"></i> + Add Photo Question</button>
               <button class="btn btn-primary btn-sm" id="btn-add-field"><i data-lucide="plus"></i> Add Question</button>
             </div>
           </div>
@@ -1926,9 +2282,17 @@ export class AdminModule {
 
     const seedBtn = document.getElementById('btn-seed-fields');
     if (seedBtn) seedBtn.addEventListener('click', async () => {
-      await admissionService.seedDefaultFields();
+      await admissionService.seedDefaultFields(true);
       await auditService.log('ADMISSION_FORM_FIELDS_SEEDED', 'GOVERNANCE', {});
       UIComponents.showToast('Default form sections saved.', 'success');
+      this.renderTab('form-builder');
+    });
+
+    const restoreBtn = document.getElementById('btn-restore-defaults');
+    if (restoreBtn) restoreBtn.addEventListener('click', async () => {
+      await admissionService.seedDefaultFields(true);
+      await auditService.log('ADMISSION_FORM_FIELDS_RESTORED', 'GOVERNANCE', {});
+      UIComponents.showToast('Standard admission questions restored successfully.', 'success');
       this.renderTab('form-builder');
     });
 
@@ -1966,6 +2330,35 @@ export class AdminModule {
       await auditService.log('ADMISSION_FORM_FIELDS_BULK_DELETED', 'GOVERNANCE', { count: ids.length });
       UIComponents.showToast(`${ids.length} question(s) deleted.`, 'success');
       this.renderTab('form-builder');
+    });
+
+    // Add photo question global
+    safeOn('btn-add-photo-field', 'click', () => {
+      this.openFieldModal({
+        fieldType: 'photo',
+        label: 'Candidate Passport Photograph',
+        fieldKey: 'candidatePassportPhoto',
+        placeholder: 'Recent colour passport-size photograph (JPG or PNG up to 2 MB). Required for admit card.',
+        helpText: 'Recent colour passport-size photograph (JPG or PNG up to 2 MB). Required for admit card.',
+        required: true,
+        isActive: true
+      }, 'Photo & Documents');
+    });
+
+    // Add photo to specific section
+    tabContent.querySelectorAll('.btn-add-photo-to-sec').forEach((b) => {
+      b.addEventListener('click', () => {
+        const secName = b.dataset.section || 'General Information';
+        this.openFieldModal({
+          fieldType: 'photo',
+          label: 'Photograph',
+          fieldKey: 'photo_' + Date.now().toString(36),
+          placeholder: 'Recent colour photograph (JPG or PNG up to 2 MB)',
+          helpText: 'Recent colour photograph (JPG or PNG up to 2 MB)',
+          required: false,
+          isActive: true
+        }, secName);
+      });
     });
 
     // Add field global
@@ -2061,7 +2454,7 @@ export class AdminModule {
             <div class="form-group">
               <label class="form-label">Response Type</label>
               <select class="form-select" id="new-sec-fld-type">
-                ${['text', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox', 'file'].map(t => `<option>${t}</option>`).join('')}
+                ${['text', 'photo', 'file', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox'].map(t => `<option>${t}</option>`).join('')}
               </select>
             </div>
             <label style="display:flex; gap:8px; align-items:center; grid-column:1/-1;">
@@ -2163,18 +2556,51 @@ export class AdminModule {
 
     const bodyHtml = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <!-- Quick Photo Templates Toolbar -->
+        <div style="grid-column:1/-1; background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
+          <div style="font-size:0.78rem; font-weight:700; color:#8C6E1E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="sparkles" style="width:14px;height:14px;color:#059669;"></i> Quick Photo Templates (Click to auto-fill):
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Candidate Passport Photograph" data-key="candidatePassportPhoto" data-help="Recent colour passport-size photograph (JPG or PNG up to 2 MB). Required for admit card." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:700;">
+              📸 Candidate Passport Photo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Student Profile Photo" data-key="studentProfilePhoto" data-help="Front-facing portrait profile picture (JPG or PNG up to 2 MB)." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:700;">
+              👤 Student Profile Photo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Father's Photograph" data-key="fatherPhoto" data-help="Recent passport-size photo of father / male guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+              👨 Father's Photo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Mother's Photograph" data-key="motherPhoto" data-help="Recent passport-size photo of mother / female guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+              👩 Mother's Photo
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Guardian's Photograph" data-key="guardianPhoto" data-help="Recent passport-size photo of legal guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+              👥 Guardian's Photo
+            </button>
+          </div>
+        </div>
+
         <div class="form-group" style="grid-column:1/-1;">
-          <label class="form-label">Question / Field Label *</label>
-          <input class="form-input" id="fld-label" value="${esc(f.label || '')}" placeholder="e.g. Mother's Name">
+          <label class="form-label" style="font-weight:700;">Question / Field Label *</label>
+          <input class="form-input" id="fld-label" value="${esc(f.label || '')}" placeholder="e.g. Candidate Passport Photograph">
         </div>
         <div class="form-group">
-          <label class="form-label">Field Key (unique, no spaces) *</label>
-          <input class="form-input font-mono" id="fld-key" value="${esc(f.fieldKey || '')}" placeholder="e.g. motherName">
+          <label class="form-label" style="font-weight:700;">Field Key (unique, no spaces) *</label>
+          <input class="form-input font-mono" id="fld-key" value="${esc(f.fieldKey || '')}" placeholder="e.g. candidatePassportPhoto">
         </div>
         <div class="form-group">
-          <label class="form-label">Response Type</label>
-          <select class="form-select" id="fld-type">
-            ${['text', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox', 'file'].map((t) => `<option ${f.fieldType === t ? 'selected' : ''}>${t}</option>`).join('')}
+          <label class="form-label" style="font-weight:700;">Response Type *</label>
+          <select class="form-select" id="fld-type" style="font-weight:600;">
+            <option value="photo" ${(f.fieldType === 'photo' || f.fieldType === 'image') ? 'selected' : ''}>📸 Photo / Passport / Profile Image</option>
+            <option value="file" ${f.fieldType === 'file' ? 'selected' : ''}>📁 Document / PDF Attachment</option>
+            <option value="text" ${(!f.fieldType || f.fieldType === 'text') ? 'selected' : ''}>📝 Single-line Text</option>
+            <option value="textarea" ${f.fieldType === 'textarea' ? 'selected' : ''}>📄 Multi-line Paragraph</option>
+            <option value="select" ${f.fieldType === 'select' ? 'selected' : ''}>🔽 Dropdown Selection</option>
+            <option value="date" ${f.fieldType === 'date' ? 'selected' : ''}>📅 Date Picker</option>
+            <option value="tel" ${f.fieldType === 'tel' ? 'selected' : ''}>📞 Phone Number</option>
+            <option value="email" ${f.fieldType === 'email' ? 'selected' : ''}>✉️ Email Address</option>
+            <option value="number" ${f.fieldType === 'number' ? 'selected' : ''}>🔢 Numeric Value</option>
+            <option value="checkbox" ${f.fieldType === 'checkbox' ? 'selected' : ''}>☑️ Checkbox Confirmation</option>
           </select>
         </div>
         <div class="form-group">
@@ -2203,7 +2629,61 @@ export class AdminModule {
       <button class="btn btn-primary" id="fld-save"><i data-lucide="save"></i> Save Question</button>
     `;
 
-    UIComponents.openModal({ title: field ? 'Edit Question' : 'Add Question', bodyHtml, footerHtml });
+    const modalTitle = (field && field.id) ? 'Edit Question' : ((f.fieldType === 'photo' || f.fieldType === 'image') ? 'Add Photo Question' : 'Add Question');
+    UIComponents.openModal({ title: modalTitle, bodyHtml, footerHtml });
+
+    // Quick Photo Preset template buttons
+    document.querySelectorAll('.btn-photo-preset').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const labelInp = document.getElementById('fld-label');
+        const keyInp = document.getElementById('fld-key');
+        const typeSel = document.getElementById('fld-type');
+        const helpInp = document.getElementById('fld-placeholder');
+        const secInp = document.getElementById('fld-section');
+        if (labelInp) labelInp.value = btn.dataset.label || '';
+        if (keyInp) {
+          keyInp.value = btn.dataset.key || '';
+          keyInp.dataset.userEdited = 'true';
+        }
+        if (typeSel) typeSel.value = 'photo';
+        if (helpInp && btn.dataset.help) helpInp.value = btn.dataset.help;
+        if (secInp && (!secInp.value || secInp.value === 'General Information')) {
+          secInp.value = 'Photo & Documents';
+        }
+        UIComponents.showToast(`Applied template: ${btn.dataset.label}`, 'info');
+      });
+    });
+
+    // Auto-generate unique field key from question label for new questions
+    const labelInp = document.getElementById('fld-label');
+    const keyInp = document.getElementById('fld-key');
+    if (labelInp && keyInp && (!field || !field.id)) {
+      labelInp.addEventListener('input', () => {
+        if (!keyInp.dataset.userEdited) {
+          const words = labelInp.value.trim().replace(/[^a-zA-Z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+          if (words.length > 0) {
+            keyInp.value = words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+          } else {
+            keyInp.value = '';
+          }
+        }
+      });
+      keyInp.addEventListener('input', () => {
+        keyInp.dataset.userEdited = 'true';
+      });
+    }
+
+    // Response type change helper
+    const typeSel = document.getElementById('fld-type');
+    if (typeSel) {
+      typeSel.addEventListener('change', () => {
+        const helpInp = document.getElementById('fld-placeholder');
+        if ((typeSel.value === 'photo' || typeSel.value === 'image') && helpInp && !helpInp.value) {
+          helpInp.value = 'Recent passport-size colour photograph (JPG or PNG up to 2 MB)';
+        }
+      });
+    }
+
     document.getElementById('fld-cancel').addEventListener('click', () => UIComponents.closeModal());
     document.getElementById('fld-save').addEventListener('click', async () => {
       const options = document.getElementById('fld-options').value.split(',').map((s) => s.trim()).filter(Boolean);
@@ -2226,6 +2706,7 @@ export class AdminModule {
           displayOrder: Number(document.getElementById('fld-order').value || 1),
           options,
           placeholder: document.getElementById('fld-placeholder').value.trim(),
+          helpText: document.getElementById('fld-placeholder').value.trim(),
           required: document.getElementById('fld-required').checked,
           isActive: document.getElementById('fld-active').checked
         });
@@ -2449,7 +2930,7 @@ export class AdminModule {
       }
       container.innerHTML = currentPopupInstructions.map((item, idx) => `
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; background:var(--bg-subtle, #f8fafc); padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-          <span style="font-weight:700; color:#16a34a; font-size:0.85rem; min-width:22px;">${idx + 1}.</span>
+          <span style="font-weight:700; color:#BF9A33; font-size:0.85rem; min-width:22px;">${idx + 1}.</span>
           <input type="text" class="form-input popup-item-input" data-index="${idx}" value="${esc(item)}" style="flex:1; font-size:0.88rem;">
           <button type="button" class="btn btn-secondary btn-sm btn-del-popup-item" data-index="${idx}" title="Delete Item" style="color:#ef4444; padding:4px 8px;">
             <i data-lucide="trash-2"></i>
@@ -2493,9 +2974,9 @@ export class AdminModule {
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:22px;">
         
         <!-- CARD 1: FORM HEADINGS & BRANDING CUSTOMIZER -->
-        <div class="card" style="border-left: 4px solid #16a34a;">
+        <div class="card" style="border-left: 4px solid #BF9A33;">
           <div class="card-header">
-            <h3 class="card-title"><i data-lucide="heading" style="color:#16a34a;"></i> Form Headings &amp; Title Customization</h3>
+            <h3 class="card-title"><i data-lucide="heading" style="color:#BF9A33;"></i> Form Headings &amp; Title Customization</h3>
           </div>
           <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">
             Configure the main titles, organization line, and session shown on the public admission form, A4 printout, and Admit Card.
@@ -2517,7 +2998,7 @@ export class AdminModule {
           </div>
 
           <div style="border-top:1px solid var(--border-color); padding-top:14px; margin-top:14px;">
-            <h4 style="font-size:0.92rem; color:#15803d; margin-bottom:10px;">Admit Card Slip Titles</h4>
+            <h4 style="font-size:0.92rem; color:#8C6E1E; margin-bottom:10px;">Admit Card Slip Titles</h4>
             <div class="form-group" style="margin-bottom:10px;">
               <label class="form-label">Admit Card Title</label>
               <input class="form-input" id="set-admit-title" value="${esc(s.admitCardTitle || 'ADMIT CARD')}" placeholder="e.g. ADMIT CARD">
@@ -2699,7 +3180,7 @@ export class AdminModule {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-          .switch input:checked + .slider { background-color: #16a34a !important; }
+          .switch input:checked + .slider { background-color: #BF9A33 !important; }
           .switch input:checked + .slider:before { transform: translateX(24px); }
           .slider:before {
             position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
@@ -2868,6 +3349,527 @@ export class AdminModule {
   }
 
   /* ================================================================== */
+  /* Admission Inquiries                                                */
+  /* ================================================================== */
+
+  static async renderInquiriesTab(tabContent) {
+    let inquiries = await websiteService.listInquiries();
+    this._inquiries = inquiries || [];
+    this._inqSearch = '';
+    this._inqStatusFilter = '';
+    this._inqGradeFilter = '';
+
+    const newCount = this._inquiries.filter(i => (i.status || 'new') === 'new').length;
+    const contactedCount = this._inquiries.filter(i => i.status === 'contacted').length;
+    const admittedCount = this._inquiries.filter(i => i.status === 'admitted').length;
+    const closedCount = this._inquiries.filter(i => i.status === 'closed').length;
+    this._newInquiriesCount = newCount;
+
+    tabContent.innerHTML = `
+      <div class="card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="message-square" style="color:var(--brand-theme-primary, #BF9A33);"></i>
+              <span>Website Admission Inquiries</span>
+              ${newCount > 0 ? `<span class="badge" style="background:#BF9A33; color:#fff; font-size:0.75rem; padding:3px 9px; border-radius:999px;">${newCount} New</span>` : ''}
+            </h3>
+            <p class="card-desc">Review, follow up, and track prospective parents and students who submitted inquiries through the institutional website contact form.</p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-inquiries" title="Reload from server">
+              <i data-lucide="refresh-cw"></i> Refresh
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-export-inquiries-csv">
+              <i data-lucide="file-spreadsheet"></i> Export CSV
+            </button>
+            <button class="btn btn-primary btn-sm" id="btn-manual-inquiry">
+              <i data-lucide="plus"></i> Log Manual Inquiry
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:18px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px;">
+            <div style="font-size:0.74rem; color:#64748b; font-weight:700; text-transform:uppercase;">Total Inquiries</div>
+            <div style="font-size:1.55rem; font-weight:800; color:#0f172a; margin-top:2px;">${this._inquiries.length}</div>
+          </div>
+          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
+            <div style="font-size:0.74rem; color:#8C6E1E; font-weight:700; text-transform:uppercase;">New / Needs Call</div>
+            <div style="font-size:1.55rem; font-weight:800; color:#BF9A33; margin-top:2px;">${newCount}</div>
+          </div>
+          <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px 14px;">
+            <div style="font-size:0.74rem; color:#0369a1; font-weight:700; text-transform:uppercase;">Contacted / In Progress</div>
+            <div style="font-size:1.55rem; font-weight:800; color:#0284c7; margin-top:2px;">${contactedCount}</div>
+          </div>
+          <div style="background:#fefce8; border:1px solid #fef08a; border-radius:10px; padding:12px 14px;">
+            <div style="font-size:0.74rem; color:#854d0e; font-weight:700; text-transform:uppercase;">Converted / Admitted</div>
+            <div style="font-size:1.55rem; font-weight:800; color:#ca8a04; margin-top:2px;">${admittedCount}</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; align-items:center;">
+          <input class="form-input" id="inq-search" placeholder="Search guardian, phone, class, questions…" style="max-width: 280px;">
+          <select class="form-select" id="inq-status-filter" style="max-width: 190px;">
+            <option value="">All Statuses</option>
+            <option value="new">✨ New (Awaiting Call)</option>
+            <option value="contacted">📞 Contacted</option>
+            <option value="admitted">🎓 Converted / Admitted</option>
+            <option value="closed">📁 Closed / Archived</option>
+          </select>
+          <select class="form-select" id="inq-grade-filter" style="max-width: 210px;">
+            <option value="">All Grades / Wings</option>
+            <option value="Nursery">Nursery / LKG / UKG</option>
+            <option value="Primary">Primary School (Grades 1–5)</option>
+            <option value="Middle">Middle School (Grades 6–8)</option>
+            <option value="Secondary">Secondary (Grades 9–10)</option>
+            <option value="Higher Secondary">Senior Secondary (11–12)</option>
+            <option value="Hostel">Hostel &amp; Residential Wing</option>
+            <option value="Moral Wing">Islamic &amp; Moral Studies</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" id="btn-clear-inq-filters">Reset Filters</button>
+        </div>
+
+        <!-- Inquiries Table -->
+        <div class="table-responsive">
+          <table class="tms-table" style="font-size: 0.85rem;">
+            <thead>
+              <tr>
+                <th>Received Date</th>
+                <th>Guardian / Parent</th>
+                <th>Target Class</th>
+                <th>Contact &amp; WhatsApp</th>
+                <th>Message / Questions</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inq-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    this.renderInquiryRows(tabContent);
+
+    safeOn('inq-search', 'input', (e) => {
+      this._inqSearch = e.target.value.toLowerCase().trim();
+      this.renderInquiryRows(tabContent);
+    });
+
+    safeOn('inq-status-filter', 'change', (e) => {
+      this._inqStatusFilter = e.target.value;
+      this.renderInquiryRows(tabContent);
+    });
+
+    safeOn('inq-grade-filter', 'change', (e) => {
+      this._inqGradeFilter = e.target.value;
+      this.renderInquiryRows(tabContent);
+    });
+
+    safeOn('btn-clear-inq-filters', 'click', () => {
+      const s = document.getElementById('inq-search');
+      const sf = document.getElementById('inq-status-filter');
+      const gf = document.getElementById('inq-grade-filter');
+      if (s) s.value = '';
+      if (sf) sf.value = '';
+      if (gf) gf.value = '';
+      this._inqSearch = '';
+      this._inqStatusFilter = '';
+      this._inqGradeFilter = '';
+      this.renderInquiryRows(tabContent);
+    });
+
+    safeOn('btn-refresh-inquiries', 'click', async () => {
+      UIComponents.showToast('Refreshing inquiries from campus database...', 'info');
+      await this.renderInquiriesTab(tabContent);
+    });
+
+    safeOn('btn-export-inquiries-csv', 'click', () => {
+      this.exportInquiriesCsv();
+    });
+
+    safeOn('btn-manual-inquiry', 'click', () => {
+      this.openManualInquiryModal(tabContent);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static renderInquiryRows(tabContent) {
+    const body = document.getElementById('inq-table-body');
+    if (!body) return;
+
+    let rows = this._inquiries || [];
+    if (this._inqSearch) {
+      const q = this._inqSearch;
+      rows = rows.filter(i => {
+        const str = `${i.guardianName || ''} ${i.phone || ''} ${i.email || ''} ${i.grade || ''} ${i.message || ''} ${i.notes || ''}`.toLowerCase();
+        return str.includes(q);
+      });
+    }
+
+    if (this._inqStatusFilter) {
+      rows = rows.filter(i => (i.status || 'new') === this._inqStatusFilter);
+    }
+
+    if (this._inqGradeFilter) {
+      rows = rows.filter(i => (i.grade || '').toLowerCase().includes(this._inqGradeFilter.toLowerCase()));
+    }
+
+    if (!rows.length) {
+      body.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 36px 20px;">
+            <div style="margin-bottom:8px;"><i data-lucide="inbox" style="width:36px; height:36px; color:#cbd5e1;"></i></div>
+            <p style="font-weight:600; margin:0 0 6px 0; color:#475569;">No admission inquiries match the selected criteria.</p>
+            <span style="font-size:0.8rem; color:#94a3b8;">Prospective inquiries submitted on the website homepage will appear here automatically.</span>
+          </td>
+        </tr>
+      `;
+      UIComponents.refreshIcons();
+      return;
+    }
+
+    body.innerHTML = rows.map(inq => {
+      const dateStr = inq.createdAt ? new Date(inq.createdAt).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      }) : '—';
+
+      const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
+      const waNumber = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+      const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba Public School Admissions Desk. We received your admission inquiry for ${inq.grade || 'our academic program'}. How may we assist you with admissions for 2026-27?`);
+      const waUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${waText}`;
+
+      let statusBadge = '<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700; border:1px solid #fde68a;">✨ New</span>';
+      if (inq.status === 'contacted') {
+        statusBadge = '<span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700; border:1px solid #bae6fd;">📞 Contacted</span>';
+      } else if (inq.status === 'admitted') {
+        statusBadge = '<span class="badge" style="background:#FCF4D9; color:#8C6E1E; font-weight:700; border:1px solid #F7E8B5;">🎓 Admitted</span>';
+      } else if (inq.status === 'closed') {
+        statusBadge = '<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:700; border:1px solid #e2e8f0;">Closed</span>';
+      }
+
+      const msgPreview = inq.message ? esc(inq.message.length > 55 ? inq.message.slice(0, 55) + '…' : inq.message) : '<span style="color:#94a3b8; font-style:italic;">No question attached</span>';
+
+      return `
+        <tr>
+          <td style="white-space:nowrap; color:#64748b; font-size:0.8rem;">
+            <div>${dateStr}</div>
+            <div style="font-size:0.7rem; color:#94a3b8;">${esc(inq.source || 'Website')}</div>
+          </td>
+          <td>
+            <div style="font-weight:700; color:#0f172a; font-size:0.9rem;">${esc(inq.guardianName)}</div>
+            ${inq.email ? `<div style="font-size:0.75rem; color:#64748b;"><a href="mailto:${esc(inq.email)}" style="color:inherit; text-decoration:none;">${esc(inq.email)}</a></div>` : ''}
+          </td>
+          <td>
+            <span class="badge" style="background:#f1f5f9; color:#0f172a; font-weight:700; border:1px solid #cbd5e1; white-space:nowrap;">
+              ${esc(inq.grade)}
+            </span>
+          </td>
+          <td style="white-space:nowrap;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <a href="tel:${esc(inq.phone)}" class="font-mono" style="font-weight:700; color:#0f172a; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                <i data-lucide="phone" style="width:13px; height:13px; color:#BF9A33;"></i>
+                <span>${esc(inq.phone)}</span>
+              </a>
+              ${cleanPhone ? `
+                <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" title="Chat on WhatsApp"
+                   style="background:#D4AF37; color:#fff; padding:3px 7px; font-size:0.7rem; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:3px;">
+                  <i data-lucide="message-circle" style="width:12px; height:12px;"></i>
+                  <span>WA</span>
+                </a>
+              ` : ''}
+            </div>
+          </td>
+          <td>
+            <div style="max-width:240px; color:#334155; line-height:1.4;">${msgPreview}</div>
+            ${inq.notes ? `<div style="font-size:0.72rem; color:#BF9A33; margin-top:2px; font-weight:600;"><i data-lucide="bookmark" style="width:10px; height:10px;"></i> ${esc(inq.notes.slice(0, 35))}</div>` : ''}
+          </td>
+          <td>
+            ${statusBadge}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn btn-secondary btn-sm btn-view-inquiry" data-id="${esc(inq.id)}" title="View full details and update follow-up notes" style="padding:4px 8px;">
+                <i data-lucide="eye" style="width:13px; height:13px;"></i> Details
+              </button>
+              <button class="btn btn-secondary btn-sm btn-del-inquiry" data-id="${esc(inq.id)}" title="Delete inquiry" style="color:#ef4444; padding:4px 7px;">
+                <i data-lucide="trash-2" style="width:13px; height:13px;"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    body.querySelectorAll('.btn-view-inquiry').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const inq = (this._inquiries || []).find(i => i.id === id);
+        if (inq) this.openInquiryDetailsModal(inq, tabContent);
+      });
+    });
+
+    body.querySelectorAll('.btn-del-inquiry').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const confirmed = await UIComponents.confirm({
+          title: 'Delete Admission Inquiry?',
+          message: 'Are you sure you want to delete this website inquiry? This action cannot be undone.',
+          confirmText: 'Delete Inquiry',
+          cancelText: 'Keep'
+        });
+        if (confirmed) {
+          await websiteService.deleteInquiry(id);
+          this._inquiries = (this._inquiries || []).filter(i => i.id !== id);
+          UIComponents.showToast('Inquiry deleted successfully.', 'success');
+          this.renderInquiryRows(tabContent);
+        }
+      });
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static openInquiryDetailsModal(inq, tabContent) {
+    const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
+    const waNumber = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+    const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba Public School Admissions Desk regarding your admission inquiry for ${inq.grade || 'our academic program'}.`);
+    const waUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${waText}`;
+
+    const dateStr = inq.createdAt ? new Date(inq.createdAt).toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    }) : '—';
+
+    const modalContent = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Top Info Header -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Inquiry ID: <span class="font-mono">${esc(inq.id)}</span></div>
+              <h3 style="font-family:var(--font-display); font-size:1.25rem; font-weight:800; color:#0f172a; margin:4px 0;">${esc(inq.guardianName)}</h3>
+              <div style="font-size:0.82rem; color:#475569;">Received on <strong>${dateStr}</strong> via ${esc(inq.source || 'Website Contact Form')}</div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <a href="tel:${esc(inq.phone)}" class="btn btn-secondary btn-sm" style="font-weight:700;">
+                <i data-lucide="phone" style="width:14px; height:14px; color:#BF9A33;"></i> Call
+              </a>
+              <a href="${waUrl}" target="_blank" class="btn btn-sm" style="background:#D4AF37; color:#fff; font-weight:700;">
+                <i data-lucide="message-circle" style="width:14px; height:14px;"></i> WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact & Target Grid -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:700;">Contact Phone</label>
+            <input class="form-input font-mono" id="modal-inq-phone" value="${esc(inq.phone)}" readonly style="background:#f8fafc; font-weight:700;">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.78rem; font-weight:700;">Email Address</label>
+            <input class="form-input" id="modal-inq-email" value="${esc(inq.email || 'None provided')}" readonly style="background:#f8fafc;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.78rem; font-weight:700;">Target Grade / Campus Wing</label>
+          <input class="form-input" value="${esc(inq.grade || '—')}" readonly style="background:#f8fafc; font-weight:700; color:#BF9A33;">
+        </div>
+
+        <!-- Message from Parent -->
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.78rem; font-weight:700;">Parent Inquiry / Questions</label>
+          <div style="background:#ffffff; border:1.5px solid #cbd5e1; border-radius:8px; padding:12px; font-size:0.9rem; line-height:1.6; color:#1e293b; min-height:64px; white-space:pre-wrap;">${esc(inq.message || 'No additional message was submitted.')}</div>
+        </div>
+
+        <!-- Follow-up Status & Admin Notes -->
+        <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:14px;">
+          <div style="font-size:0.85rem; font-weight:800; color:#8C6E1E; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <i data-lucide="clipboard-edit" style="width:16px; height:16px;"></i>
+            <span>Admission Desk Follow-up</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr; gap:12px;">
+            <div class="form-group">
+              <label class="form-label" style="font-size:0.8rem; font-weight:700;">Inquiry Status</label>
+              <select class="form-select" id="modal-inq-status" style="font-weight:700;">
+                <option value="new" ${inq.status === 'new' ? 'selected' : ''}>✨ New (Awaiting Call)</option>
+                <option value="contacted" ${inq.status === 'contacted' ? 'selected' : ''}>📞 Contacted (Follow-up In Progress)</option>
+                <option value="admitted" ${inq.status === 'admitted' ? 'selected' : ''}>🎓 Converted to Admission / Enrolled</option>
+                <option value="closed" ${inq.status === 'closed' ? 'selected' : ''}>📁 Closed / Not Interested</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:0.8rem; font-weight:700;">Office Follow-up Notes &amp; Remarks</label>
+              <textarea class="form-textarea" id="modal-inq-notes" rows="3" placeholder="e.g. Called guardian on 6th Nov. Interested in Class 5 Hostel admission. Scheduled campus visit for Saturday...">${esc(inq.notes || '')}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversion Button to Formal Admission Entry -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:8px;">
+          <a href="/admission" target="_blank" class="btn btn-secondary btn-sm" style="color:var(--brand-theme-primary); font-weight:700;">
+            <i data-lucide="external-link" style="width:14px; height:14px;"></i> Open Public Admission Gateway
+          </a>
+          <button type="button" class="btn btn-primary" id="btn-save-inquiry-modal" style="font-weight:700;">
+            <i data-lucide="save" style="width:15px; height:15px;"></i> Save Follow-up Changes
+          </button>
+        </div>
+      </div>
+    `;
+
+    UIComponents.showModal({
+      title: `Admission Inquiry — ${esc(inq.guardianName)}`,
+      content: modalContent,
+      confirmText: 'Done',
+      showCancel: false
+    });
+
+    safeOn('btn-save-inquiry-modal', 'click', async () => {
+      const nextStatus = document.getElementById('modal-inq-status').value;
+      const nextNotes = document.getElementById('modal-inq-notes').value.trim();
+
+      await websiteService.updateInquiry(inq.id, {
+        status: nextStatus,
+        notes: nextNotes
+      });
+
+      inq.status = nextStatus;
+      inq.notes = nextNotes;
+      UIComponents.showToast('Inquiry follow-up notes & status saved!', 'success');
+      this.renderInquiryRows(tabContent);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static openManualInquiryModal(tabContent) {
+    const modalContent = `
+      <form id="form-manual-inquiry" style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label" style="font-weight:700; font-size:0.82rem;">Guardian / Parent Name *</label>
+            <input class="form-input" id="man-inq-name" placeholder="e.g. Dr. Rafiqul Islam" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight:700; font-size:0.82rem;">Contact Phone *</label>
+            <input class="form-input" id="man-inq-phone" placeholder="+91 XXXXX XXXXX" required>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div class="form-group">
+            <label class="form-label" style="font-weight:700; font-size:0.82rem;">Target Class / Wing *</label>
+            <select class="form-select" id="man-inq-grade" required>
+              <option value="Pre-Primary (Nursery/KG)">Pre-Primary (Nursery / KG)</option>
+              <option value="Primary School (Grades 1–5)">Primary School (Grades 1–5)</option>
+              <option value="Middle School (Grades 6–8)">Middle School (Grades 6–8)</option>
+              <option value="Secondary (Grades 9–10)">Secondary (Grades 9–10)</option>
+              <option value="Senior Secondary (Grades 11–12)">Senior Secondary (Grades 11–12)</option>
+              <option value="Hostel & Residential Wing">Hostel &amp; Residential Wing</option>
+              <option value="Islamic & Moral Studies Wing">Islamic &amp; Moral Studies Wing</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-weight:700; font-size:0.82rem;">Email Address (Optional)</label>
+            <input class="form-input" id="man-inq-email" placeholder="guardian@example.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; font-size:0.82rem;">Inquiry Source</label>
+          <select class="form-select" id="man-inq-source">
+            <option value="Campus Office Walk-in">Campus Office Walk-in</option>
+            <option value="Telephone Call">Telephone Call</option>
+            <option value="WhatsApp Direct">WhatsApp Direct</option>
+            <option value="Institutional Website">Institutional Website</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700; font-size:0.82rem;">Parent Questions / Requirements</label>
+          <textarea class="form-textarea" id="man-inq-msg" rows="3" placeholder="Requirements regarding transport, hostel boarding, fee concessions..."></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+          <button type="submit" class="btn btn-primary" style="font-weight:700;">
+            <i data-lucide="plus"></i> Record Inquiry
+          </button>
+        </div>
+      </form>
+    `;
+
+    UIComponents.showModal({
+      title: 'Log New Admission Inquiry',
+      content: modalContent,
+      showConfirm: false,
+      cancelText: 'Cancel'
+    });
+
+    safeOn('form-manual-inquiry', 'submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('man-inq-name').value.trim();
+      const phone = document.getElementById('man-inq-phone').value.trim();
+      const grade = document.getElementById('man-inq-grade').value;
+      const email = document.getElementById('man-inq-email').value.trim();
+      const source = document.getElementById('man-inq-source').value;
+      const message = document.getElementById('man-inq-msg').value.trim();
+
+      const newInquiry = {
+        guardianName: name,
+        phone,
+        grade,
+        email,
+        source,
+        message,
+        status: 'new'
+      };
+
+      const saved = await websiteService.saveInquiry(newInquiry);
+      if (!this._inquiries) this._inquiries = [];
+      this._inquiries.unshift(saved);
+
+      UIComponents.closeModal();
+      UIComponents.showToast('Admission inquiry recorded successfully!', 'success');
+      this.renderInquiryRows(tabContent);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static exportInquiriesCsv() {
+    const list = this._inquiries || [];
+    if (!list.length) {
+      UIComponents.showToast('No admission inquiries to export.', 'warning');
+      return;
+    }
+    const headers = ['Inquiry ID', 'Received Date', 'Guardian Name', 'Phone', 'Email', 'Target Grade', 'Message', 'Source', 'Status', 'Admin Notes'];
+    const data = list.map(i => [
+      i.id || '',
+      i.createdAt ? new Date(i.createdAt).toISOString() : '',
+      i.guardianName || '',
+      i.phone || '',
+      i.email || '',
+      i.grade || '',
+      (i.message || '').replace(/\r?\n/g, ' '),
+      i.source || '',
+      i.status || '',
+      (i.notes || '').replace(/\r?\n/g, ' ')
+    ]);
+    downloadCsv(`TMS-Admission-Inquiries-${new Date().toISOString().slice(0, 10)}.csv`, [headers, ...data]);
+    UIComponents.showToast('Exported admission inquiries to CSV.', 'success');
+  }
+
+  /* ================================================================== */
   /* Notifications                                                      */
   /* ================================================================== */
 
@@ -3024,9 +4026,45 @@ export class AdminModule {
 
     let profiles = [];
     try {
-      profiles = await dbService.select('profiles');
+      profiles = await dbService.select('profiles', null, true);
     } catch (e) {
       profiles = [];
+    }
+
+    // Resilient fallback: Also check audit_logs for any newly registered Google users awaiting approval
+    try {
+      const auditLogs = await dbService.select('audit_logs', null, true);
+      const pendingAuditLogs = (auditLogs || []).filter(
+        (log) => (log.action === 'GOOGLE_SIGNUP_PENDING_APPROVAL' || log.action === 'GOOGLE_SIGNUP_PENDING') && log.details
+      );
+      const existingProfileIds = new Set(profiles.map((p) => p.id));
+      const existingProfileEmails = new Set(profiles.map((p) => (p.email || '').toLowerCase().trim()));
+
+      for (const log of pendingAuditLogs) {
+        try {
+          const detail = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+          const email = (detail.email || log.entity_ref || log.entityRef || '').toLowerCase().trim();
+          const userId = detail.id || log.user_id || log.userId;
+          if (email && !existingProfileEmails.has(email) && !existingProfileIds.has(userId)) {
+            profiles.push({
+              id: userId,
+              email: email,
+              name: detail.name || log.user_name || log.userName || email.split('@')[0],
+              avatar: detail.avatar || null,
+              role: 'pending',
+              scope: detail.scope || 'own_records',
+              title: detail.title || 'Pending Google Verification',
+              department: detail.department || 'Unassigned',
+              isActive: true,
+              isPending: true
+            });
+            existingProfileIds.add(userId);
+            existingProfileEmails.add(email);
+          }
+        } catch (pe) {}
+      }
+    } catch (auditErr) {
+      console.warn('Could not cross-reference audit logs for pending approvals:', auditErr);
     }
 
     // Categorize
@@ -3058,12 +4096,12 @@ export class AdminModule {
             <div style="font-size:0.75rem; font-weight:700; color:#b45309; text-transform:uppercase; letter-spacing:0.04em;">Pending Approvals</div>
             <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
               <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${pendingList.length}</span>
-              ${pendingList.length > 0 ? '<span class="badge badge-warning" style="font-size:0.72rem;">Requires Action</span>' : '<span style="font-size:0.72rem; color:#16a34a;">All Approved</span>'}
+              ${pendingList.length > 0 ? '<span class="badge badge-warning" style="font-size:0.72rem;">Requires Action</span>' : '<span style="font-size:0.72rem; color:#BF9A33;">All Approved</span>'}
             </div>
             <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Waiting on approval screen</div>
           </div>
-          <div class="card" style="padding:16px; border-left:4px solid #16a34a; background:linear-gradient(to right, rgba(22,163,74,0.06), var(--bg-surface));">
-            <div style="font-size:0.75rem; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:0.04em;">Active &amp; Approved</div>
+          <div class="card" style="padding:16px; border-left:4px solid #BF9A33; background:linear-gradient(to right, rgba(191, 154, 51,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.04em;">Active &amp; Approved</div>
             <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
               <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${approvedList.length}</span>
               <span style="font-size:0.72rem; color:var(--text-muted);">Active Staff &amp; Users</span>
@@ -3247,7 +4285,7 @@ export class AdminModule {
                               <i data-lucide="user-x"></i> Reject
                             </button>
                           ` : isRejected ? `
-                            <button class="btn btn-secondary btn-sm btn-action-approve" style="padding:5px 12px; color:#16a34a; font-weight:700;" title="Re-approve and activate">
+                            <button class="btn btn-secondary btn-sm btn-action-approve" style="padding:5px 12px; color:#BF9A33; font-weight:700;" title="Re-approve and activate">
                               <i data-lucide="rotate-ccw"></i> Re-Approve
                             </button>
                           ` : `
@@ -3303,9 +4341,9 @@ export class AdminModule {
     // 3. Refresh button
     const refreshBtn = tabContent.querySelector('#btn-refresh-approvals');
     if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        UIComponents.showToast('Refreshing accounts list...', 'info');
-        this.renderGoogleApprovalsTab(tabContent);
+      refreshBtn.addEventListener('click', async () => {
+        UIComponents.showToast('Refreshing accounts list from cloud...', 'info');
+        await this.renderGoogleApprovalsTab(tabContent);
       });
     }
 
@@ -3327,14 +4365,17 @@ export class AdminModule {
 
         try {
           const updates = {
+            id: userId,
+            email: userEmail,
             role: selectedRole,
             scope: selectedScope,
             title: title,
             department: dept,
-            isActive: true
+            isActive: true,
+            is_active: true
           };
 
-          await dbService.update('profiles', userId, updates);
+          await dbService.upsert('profiles', updates);
           await auditService.log('USER_APPROVED_BY_ADMIN', 'SECURITY', {
             userId,
             email: userEmail,
@@ -3399,6 +4440,41 @@ export class AdminModule {
   /* Users & Roles                                                      */
   /* ================================================================== */
 
+  /* ========================================================================== */
+  /* User Accounts & Window-Level Permissions (RBAC) System                     */
+  /* Reference: https://tpsh.vercel.app/#users                                 */
+  /* ========================================================================== */
+
+  
+  /**
+   * High-res institutional avatar renderer with fallback to two-letter gradient badge
+   */
+  static _renderUserAvatar(p, size = 34) {
+    const esc = (v) => UIComponents.escapeHtml(v || '');
+    const currentUser = authService.getCurrentUser();
+    const isCurrent = p.email && currentUser?.email && p.email.toLowerCase() === currentUser.email.toLowerCase();
+    const avatarUrl = p.avatar || p.avatar_url || (isCurrent ? (currentUser?.avatar || currentUser?.avatar_url) : '') || '';
+    const nameStr = p.name || p.email || 'User';
+    const initials = nameStr.split(' ').filter(Boolean).map(s => s[0]).slice(0, 2).join('').toUpperCase() || 'U';
+
+    if (avatarUrl) {
+      return `
+        <div style="width:${size}px; height:${size}px; border-radius:50%; position:relative; flex-shrink:0;">
+          <img src="${esc(avatarUrl)}" alt="${esc(nameStr)}" style="width:${size}px; height:${size}px; border-radius:50%; object-fit:cover; border:1.5px solid var(--border-color, #E2E8F0); background:#F1F5F9; display:block;" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+          <div style="display:none; width:${size}px; height:${size}px; border-radius:50%; background: linear-gradient(135deg, #10B981 0%, #047857 100%); color:#FFFFFF; align-items:center; justify-content:center; font-weight:800; font-size:${Math.round(size * 0.42)}px; letter-spacing:0.02em; border:1.5px solid #A7F3D0; box-shadow:0 2px 6px rgba(16, 185, 129, 0.2);">
+            ${esc(initials)}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div style="width:${size}px; height:${size}px; border-radius:50%; background: linear-gradient(135deg, #10B981 0%, #047857 100%); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:${Math.round(size * 0.42)}px; letter-spacing:0.02em; border:1.5px solid #A7F3D0; box-shadow:0 2px 6px rgba(16, 185, 129, 0.2); flex-shrink:0;">
+        ${esc(initials)}
+      </div>
+    `;
+  }
+
   static async renderUsersTab(tabContent) {
     const currentUser = authService.getCurrentUser();
     const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
@@ -3406,9 +4482,20 @@ export class AdminModule {
     let profiles = [];
     try {
       profiles = await dbService.select('profiles');
-    } catch (e) { /* non-admin */ }
+    } catch (e) {
+      profiles = [];
+    }
 
-    // Admin-visible login identifiers issued to staff and parents.
+    // Enrich profiles with active session data (avatar, department)
+    for (const p of profiles) {
+      if (p.email && currentUser?.email && p.email.toLowerCase() === currentUser.email.toLowerCase()) {
+        p.avatar = p.avatar || currentUser?.avatar || currentUser?.avatar_url;
+        p.department = p.department || currentUser?.department;
+        p.title = p.title || currentUser?.title;
+      }
+    }
+
+    // Admin-visible login identifiers issued to staff and parents
     let creds = [];
     try { creds = await dbService.select('staff_credentials'); } catch (e) { creds = []; }
     let parentCreds = [];
@@ -3418,95 +4505,557 @@ export class AdminModule {
     creds.forEach((c) => { if (c.userId) loginByUser[c.userId] = c; });
     this._loginByUser = loginByUser;
 
-    // Only super admin can grant or see super_admin role
-    const roles = Object.values(TMS_CONFIG.roles).filter((r) => isSuperAdmin ? true : r !== 'super_admin');
-    const scopes = Object.values(TMS_CONFIG.scopes);
+    let students = [];
+    try { students = await dbService.select('students'); } catch (e) { students = []; }
+    this._allStudents = students;
+
+    // Filter lists
+    const pendingList = profiles.filter((p) => p.role === 'pending' || p.approvalStatus === 'pending');
+    const approvedList = profiles.filter((p) => p.role !== 'pending' && p.role !== 'rejected' && p.isActive !== false);
+    const suspendedList = profiles.filter((p) => p.role === 'rejected' || p.approvalStatus === 'rejected' || p.isActive === false);
+
+    this._pendingApprovalsCount = pendingList.length;
+    this.refreshPendingBadges();
+
+    if (!this._usersCurrentTab) {
+      this._usersCurrentTab = pendingList.length > 0 ? 'pending' : 'active';
+    }
+    const currentTab = this._usersCurrentTab;
+    if (!this._rbacActiveRole) {
+      this._rbacActiveRole = 'teacher';
+    }
 
     tabContent.innerHTML = `
-      <div class="card">
-        <div class="card-header" style="flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;">
-          <div>
-            <h3 class="card-title">Users &amp; Roles</h3>
-            <p class="card-desc">Every account in the system — including staff and parent logins created elsewhere. Use <strong>Edit Details</strong> to change a user's profile, photo, class assignment or password.</p>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Header -->
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:0;">
+          <div class="page-title-group">
+            <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-main); margin:0;">User Accounts &amp; Permissions</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin:4px 0 0 0;">
+              Institutional identity governance, pending approval queue, role definitions, and customized window-level access control.
+            </p>
           </div>
-          <div>
-            <button class="btn btn-secondary btn-sm" id="btn-config-cred-share"><i data-lucide="message-square"></i> Customize Share Message</button>
-          </div>
-            <p class="card-desc">Every account in the system — including staff and parent logins created elsewhere. Use <strong>Edit Details</strong> to change a user's profile, photo, class assignment or password. To make a staff member an Office Boy (admission data entry), set their role to <strong>Office Boy</strong>.</p>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-secondary btn-sm" id="btn-config-cred-share">
+              <i data-lucide="message-square"></i> Share Credentials
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-users">
+              <i data-lucide="refresh-cw"></i> Refresh
+            </button>
           </div>
         </div>
-        <div class="table-responsive">
-          <table class="tms-table" style="font-size:0.85rem;">
-            <thead><tr><th>User</th><th>Email</th><th>Login ID</th><th>Role</th><th>Scope</th><th>Class</th><th>Active</th><th>Action</th></tr></thead>
-            <tbody>
-              ${profiles.map((p) => {
-                const login = loginByUser[p.id];
-                const isTargetSuper = (p.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase() || p.role === 'super_admin' || p.is_super_admin === true || p.isSuperAdmin === true;
-                const canModifyThisUser = isSuperAdmin || !isTargetSuper;
 
-                return `<tr data-id="${esc(p.id)}">
-                <td style="font-weight:600; display:flex; align-items:center; gap:8px;">
-                  <img src="${esc(p.avatar || '')}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border-color);background:#f1f5f9;">
-                  <span>${esc(p.name || '—')}</span>
-                  ${isTargetSuper ? '<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:800; font-size:0.68rem; padding:2px 6px;">👑 SUPER ADMIN</span>' : ''}
-                </td>
-                <td class="font-mono" style="font-size:0.78rem;">${esc(p.email || '—')}</td>
-                <td style="font-size:0.78rem;">
-                  ${login && login.username
-                    ? `<div style="display:flex; flex-direction:column; gap:4px;">
-                         <div style="display:flex; align-items:center; gap:6px;">
-                           <span class="font-mono" style="font-weight:700;">${esc(login.username)}</span>
-                           <button class="btn btn-secondary btn-sm btn-reveal-pass" data-user="${esc(p.id)}" title="Show password" style="padding:1px 5px;"><i data-lucide="eye" style="width:12px;height:12px;"></i></button>
-                           <span class="user-pass font-mono" data-user="${esc(p.id)}" style="display:none; color:#b45309; font-weight:700;">${esc(login.password || '—')}</span>
-                         </div>
-                         <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
-                           <button class="btn btn-secondary btn-sm btn-copy-user-cred" data-user="${esc(p.id)}" title="Copy login message for this user" style="padding:1px 6px; font-size:0.72rem; color:#0284c7; border-color:#bae6fd;">
-                             <i data-lucide="share-2" style="width:11px;height:11px;"></i> Copy
-                           </button>
-                           ${p.phone ? `<button class="btn btn-secondary btn-sm btn-wa-user-cred" data-user="${esc(p.id)}" title="Share login via WhatsApp" style="padding:1px 6px; font-size:0.72rem; color:#16a34a; border-color:#bbf7d0;">
-                             <i data-lucide="send" style="width:11px;height:11px;"></i> WA
-                           </button>` : ''}
-                         </div>
-                       </div>`
-                    : '<span style="color:var(--text-muted);">—</span>'}
-                </td>
-                <td>
-                  ${isTargetSuper && !isSuperAdmin ? `<span class="badge" style="background:#fef3c7; color:#b45309; font-weight:700;">👑 Super Admin (Protected)</span>`
-                    : `<select class="form-select user-role" style="min-width:150px;">
-                        ${roles.map((r) => `<option value="${esc(r)}" ${(p.role === r || (isTargetSuper && r === 'super_admin')) ? 'selected' : ''}>${esc(ROLE_LABELS[r] || r)}</option>`).join('')}
-                        ${p.role === 'pending' ? '<option value="pending" selected>Pending</option>' : ''}
-                      </select>`}
-                </td>
-                <td>
-                  ${isTargetSuper && !isSuperAdmin ? `<span class="badge badge-success">school_wide</span>`
-                    : `<select class="form-select user-scope" style="min-width:150px;">
-                        ${scopes.map((s) => `<option value="${esc(s)}" ${(p.scope === s || (isTargetSuper && s === 'school_wide')) ? 'selected' : ''}>${esc(s)}</option>`).join('')}
-                      </select>`}
-                </td>
-                <td style="font-size:0.78rem;">${esc([p.assignedClass, p.assignedSection].filter(Boolean).join(' / ') || '—')}</td>
-                <td><input type="checkbox" class="user-active" ${p.isActive === false ? '' : 'checked'} ${!canModifyThisUser ? 'disabled' : ''}></td>
-                <td style="white-space:nowrap;">
-                  ${!canModifyThisUser ? '<span style="font-size:0.72rem; color:var(--text-muted); font-style:italic;">Root Protected</span>'
-                    : `<button class="btn btn-secondary btn-sm btn-edit-user"><i data-lucide="user-cog"></i> Edit Details</button>
-                       <button class="btn btn-primary btn-sm btn-save-user"><i data-lucide="save"></i> Save</button>`}
-                </td>
-              </tr>`; }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:26px;">No user profiles visible.</td></tr>'}
-            </tbody>
-          </table>
+        <!-- Pending Approvals Alert Banner (if any) -->
+        ${pendingList.length > 0 ? `
+          <div class="users-pending-alert-banner" style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:0.9rem 1.15rem; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:0.75rem;">
+              <span style="font-size:1.35rem;">⚠️</span>
+              <div>
+                <strong style="color:#b45309; font-size:0.92rem;">${pendingList.length} Account(s) Awaiting Approval</strong>
+                <p style="font-size:0.8rem; color:#92400E; margin:2px 0 0 0;">These users have authenticated with Google or submitted registration but are blocked until approved.</p>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btn-jump-pending" style="font-size:0.78rem; font-weight:700;">
+              Review Applications
+            </button>
+          </div>
+        ` : ''}
+
+        <!-- Main Card Panel with Sub-Tabs -->
+        <div class="card" style="padding:0; overflow:visible;">
+          <div class="card-header" style="padding:0.75rem 1rem; border-bottom:1px solid var(--border-color); background:var(--bg-surface); border-radius:16px 16px 0 0;">
+            <div class="tms-tab-scroll-wrapper" style="margin-bottom:0;">
+              <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" aria-label="Scroll left" title="Scroll tabs left">
+                <i data-lucide="chevron-left"></i>
+              </button>
+              <div class="user-sub-tabs-bar tms-tab-scroll-rail" style="display:inline-flex; gap:6px; align-items:center; overflow-x:auto;">
+                <button class="btn ${currentTab === 'pending' ? 'btn-primary' : 'btn-secondary'} btn-sm tab-sub-btn" data-subtab="pending">
+                  <span class="tab-label-full">Pending Approvals (${pendingList.length})</span>
+                  <span class="tab-label-short">Pending (${pendingList.length})</span>
+                </button>
+                <button class="btn ${currentTab === 'active' ? 'btn-primary' : 'btn-secondary'} btn-sm tab-sub-btn" data-subtab="active">
+                  <span class="tab-label-full">Active Accounts (${approvedList.length})</span>
+                  <span class="tab-label-short">Active (${approvedList.length})</span>
+                </button>
+                <button class="btn ${currentTab === 'suspended' ? 'btn-primary' : 'btn-secondary'} btn-sm tab-sub-btn" data-subtab="suspended">
+                  <span class="tab-label-full">Suspended Accounts (${suspendedList.length})</span>
+                  <span class="tab-label-short">Suspended (${suspendedList.length})</span>
+                </button>
+                <button class="btn ${currentTab === 'rbac' ? 'btn-primary' : 'btn-secondary'} btn-sm tab-sub-btn" data-subtab="rbac" style="display:inline-flex; align-items:center; gap:5px;">
+                  <i data-lucide="shield-check" style="width:14px;height:14px;"></i>
+                  <span class="tab-label-full">Assign Windows (RBAC)</span>
+                  <span class="tab-label-short">RBAC</span>
+                </button>
+              </div>
+              <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" aria-label="Scroll right" title="Scroll tabs right">
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="card-body" style="padding:1.25rem;" id="users-tab-subcontent">
+            <!-- Subcontent renders here -->
+          </div>
         </div>
       </div>
     `;
 
-    // Credential share settings button
-    document.getElementById('btn-config-cred-share')?.addEventListener('click', () => {
+    // Render Subcontent
+    const subContainer = document.getElementById('users-tab-subcontent');
+    if (currentTab === 'rbac') {
+      this.renderRbacMatrixView(subContainer, profiles, isSuperAdmin);
+    } else if (currentTab === 'pending') {
+      this.renderPendingUsersView(subContainer, pendingList, isSuperAdmin);
+    } else if (currentTab === 'suspended') {
+      this.renderAccountListView(subContainer, suspendedList, isSuperAdmin, 'suspended');
+    } else {
+      this.renderAccountListView(subContainer, approvedList, isSuperAdmin, 'active');
+    }
+
+    // Attach Tab Bar events
+    tabContent.querySelectorAll('.tab-sub-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this._usersCurrentTab = btn.dataset.subtab;
+        this.renderUsersTab(tabContent);
+      });
+    });
+
+    safeOn('btn-jump-pending', 'click', () => {
+      this._usersCurrentTab = 'pending';
+      this.renderUsersTab(tabContent);
+    });
+
+    safeOn('btn-refresh-users', 'click', () => {
+      this.renderUsersTab(tabContent);
+      UIComponents.showToast('User accounts refreshed', 'info');
+    });
+
+    safeOn('btn-config-cred-share', 'click', () => {
       this.openCredentialTemplateModal();
     });
 
-    // Copy user credentials button
-    tabContent.querySelectorAll('.btn-copy-user-cred').forEach((b) => {
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Pending Users Approval Queue
+   */
+  static renderPendingUsersView(container, pendingList, isSuperAdmin) {
+    if (pendingList.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:3.5rem 1rem; text-align:center;">
+          <div style="width:54px; height:54px; border-radius:50%; background:#ecfdf5; color:#059669; font-size:24px; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">✓</div>
+          <h4 style="font-size:1.1rem; font-weight:700; color:var(--text-main); margin:0;">Queue Clear</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">There are no pending user authorization requests at this time.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <!-- Desktop Table -->
+      <div class="desktop-user-table table-responsive">
+        <table class="tms-table" style="font-size:0.85rem;">
+          <thead>
+            <tr>
+              <th>Applicant</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pendingList.map((p) => {
+              const isParent = p.role === 'parent';
+              return `
+                <tr data-id="${esc(p.id)}">
+                  <td style="font-weight:600;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <img src="${esc(p.avatar || '')}" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--border-color);background:#f1f5f9;">
+                      <div>
+                        <span>${esc(p.name || 'Pending Applicant')}</span>
+                        ${isParent ? '<span class="badge" style="background:#eff6ff; color:#1d4ed8; font-size:0.65rem; margin-left:4px; font-weight:700;">PARENT APPLICANT</span>' : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td class="font-mono" style="font-size:0.78rem;">${esc(p.email || '—')}</td>
+                  <td style="font-size:0.78rem;">${esc(p.phone || '—')}</td>
+                  <td><span class="badge badge-warning">Pending Approval</span></td>
+                  <td>
+                    <div style="display:flex; gap:6px;">
+                      <button class="btn btn-sm btn-primary btn-approve-user" data-id="${esc(p.id)}" data-role="${esc(p.role || (isParent ? 'parent' : 'teacher'))}">
+                        ${isParent ? 'Approve & Assign Children' : 'Approve & Assign Role'}
+                      </button>
+                      <button class="btn btn-sm btn-secondary btn-reject-user" data-id="${esc(p.id)}" style="color:#dc2626; border-color:#fecaca;">
+                        Reject
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div class="mobile-user-cards">
+        ${pendingList.map((p) => {
+          const isParent = p.role === 'parent';
+          return `
+            <div class="user-card-item">
+              <div class="user-card-header">
+                ${this._renderUserAvatar(p, 40)}
+                <div>
+                  <div class="user-card-name">${esc(p.name || 'Pending Applicant')}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">${esc(p.email || '—')}</div>
+                </div>
+              </div>
+              <div class="user-card-contact">
+                <div class="user-card-contact-item">📞 ${esc(p.phone || 'No phone recorded')}</div>
+                <div class="user-card-contact-item">Status: <span class="badge badge-warning" style="font-size:0.7rem;">Pending Approval</span></div>
+              </div>
+              <div class="user-card-actions">
+                <button class="btn btn-sm btn-primary btn-approve-user" data-id="${esc(p.id)}" data-role="${esc(p.role || (isParent ? 'parent' : 'teacher'))}">
+                  ${isParent ? 'Approve & Children' : 'Approve & Assign Role'}
+                </button>
+                <button class="btn btn-sm btn-secondary btn-reject-user" data-id="${esc(p.id)}" style="color:#dc2626; border-color:#fecaca;">Reject</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Events
+    container.querySelectorAll('.btn-approve-user').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = pendingList.find((u) => u.id === btn.dataset.id);
+        if (p) this.openChangeRoleModal(p, true);
+      });
+    });
+
+    container.querySelectorAll('.btn-reject-user').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        const p = pendingList.find((u) => u.id === id);
+        if (!confirm(`Reject access for ${p?.name || p?.email}?`)) return;
+        await dbService.update('profiles', id, { role: 'rejected', approvalStatus: 'rejected', isActive: false });
+        await auditService.log('USER_REJECTED', 'GOVERNANCE', { userId: id });
+        UIComponents.showToast('Account application rejected', 'warning');
+        const mainContent = document.getElementById('users-view-content') || document.getElementById('admin-tab-content');
+        if (mainContent) this.renderUsersTab(mainContent);
+      });
+    });
+  }
+
+  /**
+   * Active and Suspended User Accounts Directory
+   */
+  static renderAccountListView(container, list, isSuperAdmin, type) {
+    if (!this._userFilterQuery) this._userFilterQuery = '';
+    if (!this._userFilterRole) this._userFilterRole = 'all';
+
+    const q = (this._userFilterQuery || '').toLowerCase().trim();
+    const rf = this._userFilterRole;
+
+    const filtered = list.filter((p) => {
+      if (rf !== 'all' && p.role !== rf) return false;
+      if (!q) return true;
+      const name = (p.name || '').toLowerCase();
+      const email = (p.email || '').toLowerCase();
+      const phone = (p.phone || '').toLowerCase();
+      return name.includes(q) || email.includes(q) || phone.includes(q);
+    });
+
+    const loginByUser = this._loginByUser || {};
+
+    container.innerHTML = `
+      <!-- Search & Filters Toolbar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:1rem; flex-wrap:wrap;">
+        <div style="display:flex; gap:8px; align-items:center; flex:1; min-width:240px;">
+          <input type="text" class="form-input" id="input-user-search" placeholder="Search by name, email or phone..." value="${esc(this._userFilterQuery)}" style="max-width:320px; font-size:0.85rem;">
+          <div style="min-width:180px; max-width:220px;">
+            <select class="form-select" id="select-user-role-filter" style="width:100%; font-size:0.85rem;">
+              <option value="all">All Roles (${list.length})</option>
+              <option value="super_admin" ${rf === 'super_admin' ? 'selected' : ''}>Super Administrator</option>
+            ${WINDOW_ROLES.map((r) => `<option value="${r.key}" ${rf === r.key ? 'selected' : ''}>${r.label}</option>`).join('')}
+            <option value="principal" ${rf === 'principal' ? 'selected' : ''}>Principal</option>
+            <option value="coordinator" ${rf === 'coordinator' ? 'selected' : ''}>Coordinator</option>
+            <option value="finance" ${rf === 'finance' ? 'selected' : ''}>Finance</option>
+            <option value="hr" ${rf === 'hr' ? 'selected' : ''}>HR</option>
+            <option value="librarian" ${rf === 'librarian' ? 'selected' : ''}>Librarian</option>
+            <option value="operations" ${rf === 'operations' ? 'selected' : ''}>Operations</option>
+            <option value="office_boy" ${rf === 'office_boy' ? 'selected' : ''}>Office Boy</option>
+          </select>
+          </div>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">
+          Showing <strong>${filtered.length}</strong> of ${list.length} accounts
+        </div>
+      </div>
+
+      ${filtered.length === 0 ? `
+        <div class="empty-state" style="padding:2.5rem 1rem; text-align:center;">
+          <p style="color:var(--text-muted); font-size:0.88rem;">No accounts match the current filter criteria.</p>
+        </div>
+      ` : `
+        <!-- Desktop Table View -->
+        <div class="desktop-user-table table-responsive">
+          <table class="tms-table" style="font-size:0.85rem;">
+            <thead>
+              <tr>
+                <th>User Account</th>
+                <th>Role</th>
+                <th>Window Permissions</th>
+                <th>Login ID / Credential</th>
+                <th>Class / Unit</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtered.map((p) => {
+                const login = loginByUser[p.id];
+                const email = (p.email || '').toLowerCase();
+                const superAdminEmail = (TMS_CONFIG.superAdminEmail || '').toLowerCase();
+                const isTargetSuper = email === superAdminEmail || p.role === 'super_admin' || p.is_super_admin === true || p.isSuperAdmin === true;
+                const canModify = isSuperAdmin || !isTargetSuper;
+
+                const customPerms = WindowPermissionsService.getUserCustomPermissions(p.id);
+                const hasCustom = customPerms && Object.keys(customPerms).length > 0;
+                const theme = ROLE_THEMES[p.role] || ROLE_THEMES.teacher;
+
+                return `
+                  <tr data-id="${esc(p.id)}">
+                    <td style="font-weight:600;">
+                      <div style="display:flex; align-items:center; gap:10px;">
+                        ${this._renderUserAvatar(p, 34)}
+                        <div>
+                          <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:0.88rem; font-weight:700; color:#0F172A;">${esc(p.name || '—')}</span>
+                            ${isTargetSuper ? '<span class="badge" style="background:#0F172A; color:#FFFFFF; font-size:0.6rem; padding:2px 6px; font-weight:800; border-radius:9999px;">SUPER ADMIN</span>' : ''}
+                          </div>
+                          <div class="font-mono" style="font-size:0.75rem; color:var(--text-muted); margin-top:1px;">${esc(p.email || '—')}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" style="background:${theme.badgeBg}; color:${theme.badgeColor}; border:1px solid ${theme.border}; font-weight:700; font-size:0.72rem;">
+                        ${esc(ROLE_LABELS[p.role] || p.role || 'Staff').toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      ${hasCustom ? `
+                        <span class="badge" style="background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; font-weight:700; font-size:0.68rem;" title="Individual window permissions active">
+                          CUSTOM PERMS
+                        </span>
+                      ` : `
+                        <span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; font-weight:700; font-size:0.7rem;">
+                          <i data-lucide="shield" style="width:10px; height:10px; color:#059669;"></i> Role Default ${isTargetSuper ? '(Full Access)' : ''}
+                        </span>
+                      `}
+                    </td>
+                    <td style="font-size:0.78rem;">
+                      ${login && login.username ? `
+                        <div style="display:flex; flex-direction:column; gap:3px;">
+                          <div style="display:flex; align-items:center; gap:5px;">
+                            <span class="font-mono" style="font-weight:700;">${esc(login.username)}</span>
+                            <button class="btn btn-secondary btn-sm btn-reveal-pass" data-user="${esc(p.id)}" title="Show password" style="padding:1px 5px;"><i data-lucide="eye" style="width:11px;height:11px;"></i></button>
+                            <span class="user-pass font-mono" data-user="${esc(p.id)}" style="display:none; color:#b45309; font-weight:700;">${esc(login.password || '—')}</span>
+                          </div>
+                          <div style="display:flex; gap:4px; align-items:center; margin-top:2px;">
+                            <button class="btn btn-secondary btn-sm btn-copy-user-cred" data-user="${esc(p.id)}" title="Copy login" style="padding:1px 6px; font-size:0.7rem; color:#0284c7; border-color:#bae6fd;">
+                              <i data-lucide="share-2" style="width:10px;height:10px;"></i> Copy
+                            </button>
+                            ${p.phone ? `
+                              <button class="btn btn-secondary btn-sm btn-wa-user-cred" data-user="${esc(p.id)}" title="WhatsApp" style="padding:1px 6px; font-size:0.7rem; color:#BF9A33; border-color:#F7E8B5;">
+                                <i data-lucide="send" style="width:10px;height:10px;"></i> WA
+                              </button>
+                            ` : ''}
+                          </div>
+                        </div>
+                      ` : isTargetSuper ? `
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                          <span class="badge" style="background:#EFF6FF; color:#1D4ED8; border:1px solid #BFDBFE; font-size:0.72rem; font-weight:700;">
+                            <i data-lucide="shield-check" style="width:11px; height:11px;"></i> Super Admin Root
+                          </span>
+                          <span class="font-mono" style="font-size:0.72rem; color:#64748B;">${esc(p.email)}</span>
+                        </div>
+                      ` : p.email ? `
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                          <span class="badge" style="background:#F8FAFC; color:#475569; border:1px solid #E2E8F0; font-size:0.7rem; font-weight:700;">
+                            <i data-lucide="mail" style="width:10px; height:10px;"></i> Direct Email Auth
+                          </span>
+                          <span class="font-mono" style="font-size:0.72rem; color:#64748B;">${esc(p.email)}</span>
+                        </div>
+                      ` : '<span style="color:var(--text-muted);">—</span>'}
+                    </td>
+                    <td style="font-size:0.78rem;">
+                      <span style="display:inline-flex; align-items:center; gap:5px; font-weight:600; color:#334155;">
+                        <i data-lucide="${p.assignedClass ? 'graduation-cap' : 'building-2'}" style="width:13px; height:13px; color:#BF9A33;"></i>
+                        ${esc([p.assignedClass, p.assignedSection].filter(Boolean).join(' / ') || p.department || p.title || (isTargetSuper ? 'Executive Governance & Leadership' : 'Campus Operations'))}
+                      </span>
+                    </td>
+                    <td>
+                      ${p.isActive !== false ? `
+                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; color:#059669; font-weight:600;">
+                          <span style="width:7px; height:7px; border-radius:50%; background:#10B981;"></span> Active
+                        </span>
+                      ` : `
+                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:0.75rem; color:#dc2626; font-weight:600;">
+                          <span style="width:7px; height:7px; border-radius:50%; background:#dc2626;"></span> Suspended
+                        </span>
+                      `}
+                    </td>
+                    <td style="white-space:nowrap;">
+                      ${!canModify ? `
+                        <span style="font-size:0.72rem; color:var(--text-muted); font-style:italic;">Root Protected</span>
+                      ` : `
+                        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+                          <!-- Permissions button: exact modal from screenshot -->
+                          <button class="btn btn-secondary btn-sm btn-perm" data-id="${esc(p.id)}" title="Customize Window Permissions" style="color:#059669; border-color:#a7f3d0; background:#FDF8E8;">
+                            <i data-lucide="sliders" style="width:12px;height:12px;"></i> Permissions
+                          </button>
+                          <button class="btn btn-secondary btn-sm btn-change-role" data-id="${esc(p.id)}" title="Assign Role & Details">
+                            <i data-lucide="shield" style="width:12px;height:12px;"></i> Role
+                          </button>
+                          <button class="btn btn-secondary btn-sm btn-edit-user" data-id="${esc(p.id)}" title="Edit Profile & Details">
+                            <i data-lucide="user-cog" style="width:12px;height:12px;"></i> Profile
+                          </button>
+                          <button class="btn btn-secondary btn-sm btn-toggle-suspend" data-id="${esc(p.id)}" style="${p.isActive === false ? 'color:#059669; border-color:#a7f3d0;' : 'color:#dc2626; border-color:#fecaca;'}">
+                            ${p.isActive === false ? 'Activate' : 'Suspend'}
+                          </button>
+                        </div>
+                      `}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Responsive Cards View -->
+        <div class="mobile-user-cards">
+          ${filtered.map((p) => {
+            const email = (p.email || '').toLowerCase();
+            const superAdminEmail = (TMS_CONFIG.superAdminEmail || '').toLowerCase();
+            const isTargetSuper = email === superAdminEmail || p.role === 'super_admin' || p.is_super_admin === true || p.isSuperAdmin === true;
+            const canModify = isSuperAdmin || !isTargetSuper;
+            const customPerms = WindowPermissionsService.getUserCustomPermissions(p.id);
+            const hasCustom = customPerms && Object.keys(customPerms).length > 0;
+            const theme = ROLE_THEMES[p.role] || ROLE_THEMES.teacher;
+
+            return `
+              <div class="user-card-item">
+                <div class="user-card-header">
+                  ${this._renderUserAvatar(p, 42)}
+                  <div style="flex:1; min-width:0;">
+                    <div class="user-card-name-row">
+                      <span class="user-card-name">${esc(p.name || 'User')}</span>
+                      ${isTargetSuper ? '<span class="badge" style="background:#0F172A; color:#FFF; font-size:0.6rem; padding:2px 5px; font-weight:700;">SUPER ADMIN</span>' : ''}
+                      ${hasCustom ? '<span class="badge" style="background:#D1FAE5; color:#065F46; font-size:0.6rem; padding:2px 5px; font-weight:700;">CUSTOM PERMS</span>' : ''}
+                    </div>
+                    <div class="user-card-meta-row">
+                      <span class="badge" style="background:${theme.badgeBg}; color:${theme.badgeColor}; font-size:0.68rem; padding:2px 6px; font-weight:700;">
+                        ${esc(ROLE_LABELS[p.role] || p.role || 'Staff').toUpperCase()}
+                      </span>
+                      ${p.isActive !== false ? `
+                        <span style="font-size:0.72rem; color:#059669; font-weight:600;">● Active</span>
+                      ` : `
+                        <span style="font-size:0.72rem; color:#dc2626; font-weight:600;">● Suspended</span>
+                      `}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="user-card-contact">
+                  <div class="user-card-contact-item">✉️ ${esc(p.email || '—')}</div>
+                  ${p.phone ? `<div class="user-card-contact-item">📞 ${esc(p.phone)}</div>` : ''}
+                </div>
+
+                <div class="user-card-actions">
+                  ${canModify ? `
+                    <button class="btn btn-sm btn-secondary btn-perm" data-id="${esc(p.id)}" style="color:#059669; border-color:#a7f3d0; background:#FDF8E8;">
+                      Permissions
+                    </button>
+                    <button class="btn btn-sm btn-secondary btn-change-role" data-id="${esc(p.id)}">Role</button>
+                    <button class="btn btn-sm btn-secondary btn-edit-user" data-id="${esc(p.id)}">Profile</button>
+                    <button class="btn btn-sm btn-secondary btn-toggle-suspend" data-id="${esc(p.id)}" style="${p.isActive === false ? 'color:#059669;' : 'color:#dc2626;'}">
+                      ${p.isActive === false ? 'Activate' : 'Suspend'}
+                    </button>
+                  ` : '<span style="font-size:0.72rem; color:var(--text-muted); font-style:italic;">Protected Account</span>'}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
+    `;
+
+    // Filter Listeners
+    const searchInput = container.querySelector('#input-user-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this._userFilterQuery = e.target.value;
+        this.renderAccountListView(container, list, isSuperAdmin, type);
+      });
+    }
+
+    const roleSelect = container.querySelector('#select-user-role-filter');
+    if (roleSelect) {
+      roleSelect.addEventListener('change', (e) => {
+        this._userFilterRole = e.target.value;
+        this.renderAccountListView(container, list, isSuperAdmin, type);
+      });
+    }
+
+    // Attach actions
+    container.querySelectorAll('.btn-perm').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.id;
+        const profile = list.find((p) => p.id === id);
+        if (profile) this.openCustomizeWindowPermissionsModal(profile);
+      });
+    });
+
+    container.querySelectorAll('.btn-change-role').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.id;
+        const profile = list.find((p) => p.id === id);
+        if (profile) this.openChangeRoleModal(profile);
+      });
+    });
+
+    container.querySelectorAll('.btn-edit-user').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.id;
+        const profile = list.find((p) => p.id === id);
+        if (profile) this.openUserEditModal(profile);
+      });
+    });
+
+    container.querySelectorAll('.btn-toggle-suspend').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const id = b.dataset.id;
+        const profile = list.find((p) => p.id === id);
+        if (!profile) return;
+        const willActivate = profile.isActive === false;
+        await dbService.update('profiles', id, { isActive: willActivate, approvalStatus: willActivate ? 'approved' : 'suspended' });
+        await auditService.log(willActivate ? 'USER_ACTIVATED' : 'USER_SUSPENDED', 'GOVERNANCE', { userId: id });
+        UIComponents.showToast(`Account ${willActivate ? 'activated' : 'suspended'}.`, willActivate ? 'success' : 'warning');
+        const mainContent = document.getElementById('users-view-content') || document.getElementById('admin-tab-content');
+        if (mainContent) this.renderUsersTab(mainContent);
+      });
+    });
+
+    // Credential sharing events
+    container.querySelectorAll('.btn-copy-user-cred').forEach((b) => {
       b.addEventListener('click', () => {
         const userId = b.dataset.user;
-        const profile = profiles.find((p) => p.id === userId);
+        const profile = list.find((p) => p.id === userId);
         const login = loginByUser[userId];
         if (login) {
           this.copyCredentialMessageToClipboard({
@@ -3520,11 +5069,10 @@ export class AdminModule {
       });
     });
 
-    // WhatsApp user credentials button
-    tabContent.querySelectorAll('.btn-wa-user-cred').forEach((b) => {
+    container.querySelectorAll('.btn-wa-user-cred').forEach((b) => {
       b.addEventListener('click', () => {
         const userId = b.dataset.user;
-        const profile = profiles.find((p) => p.id === userId);
+        const profile = list.find((p) => p.id === userId);
         const login = loginByUser[userId];
         if (login) {
           const msg = this.compileCredentialMessage({
@@ -3535,47 +5083,569 @@ export class AdminModule {
             customUrl: `${this.getCredentialShareConfig().domain}/login.html`
           });
           const ph = WhatsAppService.cleanPhone(profile?.phone);
-          if (ph) {
-            window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`, '_blank');
-          } else {
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-          }
+          window.open(ph ? `https://wa.me/${ph}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
       });
     });
 
-    tabContent.querySelectorAll('.btn-reveal-pass').forEach((b) =>
+    container.querySelectorAll('.btn-reveal-pass').forEach((b) => {
       b.addEventListener('click', () => {
         const userId = b.dataset.user || '';
-        const span = Array.from(tabContent.querySelectorAll('.user-pass'))
-          .find((el) => el.dataset.user === userId);
+        const span = Array.from(container.querySelectorAll('.user-pass')).find((el) => el.dataset.user === userId);
         if (span) span.style.display = span.style.display === 'none' ? 'inline' : 'none';
-      }));
+      });
+    });
 
-    tabContent.querySelectorAll('.btn-save-user').forEach((b) =>
-      b.addEventListener('click', async () => {
-        const row = b.closest('tr');
-        const id = row.dataset.id;
-        await dbService.update('profiles', id, {
-          role: row.querySelector('.user-role').value,
-          scope: row.querySelector('.user-scope').value,
-          isActive: row.querySelector('.user-active').checked
-        });
-        await auditService.log('USER_ROLE_UPDATED', 'GOVERNANCE', { userId: id, role: row.querySelector('.user-role').value });
-        UIComponents.showToast('User updated.', 'success');
-      }));
-
-    tabContent.querySelectorAll('.btn-edit-user').forEach((b) =>
-      b.addEventListener('click', () => {
-        const id = b.closest('tr').dataset.id;
-        const profile = profiles.find((p) => p.id === id);
-        if (profile) this.openUserEditModal(profile);
-      }));
     UIComponents.refreshIcons();
   }
 
+  /**
+   * Assign Windows (RBAC) View
+   */
+  static renderRbacMatrixView(container, profiles, isSuperAdmin) {
+    let matrix = WindowPermissionsService.getRoleMatrix();
+    let activeRole = this._rbacActiveRole || 'teacher';
+
+    const countRolePerms = (roleKey) => {
+      const perms = matrix[roleKey] || {};
+      let full = 0;
+      let view = 0;
+      let off = 0;
+      for (const cat of WINDOW_CATEGORIES) {
+        for (const mod of cat.modules) {
+          const state = perms[mod.key] || 'off';
+          if (state === 'full') full++;
+          else if (state === 'view') view++;
+          else off++;
+        }
+      }
+      return { full, view, off };
+    };
+
+    const draw = () => {
+      const activeRoleObj = WINDOW_ROLES.find((r) => r.key === activeRole) || WINDOW_ROLES[1];
+      const stats = countRolePerms(activeRole);
+      const activePerms = matrix[activeRole] || {};
+
+      container.innerHTML = `
+        <div class="rbac-container">
+          <!-- Role Selection Pills -->
+          <div style="margin-bottom: 1.25rem;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem;">
+              Select Role to Configure Windows:
+            </div>
+            <div class="role-pill-nav">
+              ${WINDOW_ROLES.map((r) => {
+                const s = countRolePerms(r.key);
+                return `
+                  <button type="button" class="role-pill-btn ${r.key === activeRole ? 'active' : ''}" data-role-key="${r.key}">
+                    <span class="role-pill-icon">${r.icon}</span>
+                    <span>${r.label}</span>
+                    <span class="role-pill-badge">
+                      ${s.full} Full • ${s.view} View
+                    </span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Active Role Header & Switch Legend -->
+          <div style="background: #F8FAFC; border: 1.5px solid var(--border-color); border-radius: 14px; padding: 1.15rem 1.35rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+              <div class="role-avatar-badge">
+                ${activeRoleObj.icon.replace('width="18" height="18"', 'width="24" height="24"')}
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #0F172A;">${activeRoleObj.label}</h3>
+                  <span class="badge" style="background:#d1fae5; color:#065f46; font-size:0.72rem; padding:0.2rem 0.55rem; font-weight:700;">
+                    ${stats.full} Full Access
+                  </span>
+                  <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-size:0.72rem; padding:0.2rem 0.55rem; font-weight:700;">
+                    ${stats.view} View Only
+                  </span>
+                  <span class="badge" style="background:#f1f5f9; color:#64748b; font-size:0.72rem; padding:0.2rem 0.55rem; font-weight:700;">
+                    ${stats.off} Off
+                  </span>
+                </div>
+                <div style="font-size: 0.78rem; color: #64748B; margin-top: 4px;">
+                  ${activeRoleObj.subtitle}
+                </div>
+              </div>
+            </div>
+
+            <!-- Micro Legend -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #64748B; flex-wrap: wrap;">
+              <span><strong style="color: #0F172A;">Switch:</strong></span>
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #CBD5E1;"></span>
+                <span>Gray (Left) = Off</span>
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #EAB308;"></span>
+                <span style="font-weight: 600; color: #854D0E;">Yellow (Center) = View Only</span>
+              </span>
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+                <span style="font-weight: 600; color: #065F46;">Green (Right) = Full Access</span>
+              </span>
+              <span style="color: #059669; font-weight: 600;">• Tap card to cycle</span>
+            </div>
+          </div>
+
+          <!-- Window Categories & Modules Grid -->
+          <div class="window-categories-list">
+            ${WINDOW_CATEGORIES.map((cat) => `
+              <div class="perm-category-card">
+                <div class="perm-category-header">
+                  <div class="perm-category-title">
+                    <span class="perm-category-icon">${cat.icon}</span>
+                    <span>${cat.title}</span>
+                  </div>
+                  <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${cat.modules.length} Windows</span>
+                </div>
+                <div class="perm-grid">
+                  ${cat.modules.map((mod) => {
+                    const state = activePerms[mod.key] || 'off';
+                    return `
+                      <div class="perm-item state-${state} rbac-perm-card" data-mod-key="${mod.key}" title="${mod.label} • Click to cycle">
+                        <div class="perm-item-left">
+                          <div class="perm-item-icon">${mod.icon}</div>
+                          <div class="perm-item-info">
+                            <span class="perm-item-name">${mod.label}</span>
+                            <span class="perm-item-desc">${mod.desc}</span>
+                          </div>
+                        </div>
+                        <div class="perm-switch pos-${state}" data-mod-key="${mod.key}"></div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Bottom Actions Bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" id="btn-rbac-reset-defaults" style="color: #475569;">
+              <i data-lucide="rotate-ccw"></i> Reset ${activeRoleObj.label} to Defaults
+            </button>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary btn-sm" id="btn-rbac-grant-all">
+                Grant All Windows Full
+              </button>
+              <button class="btn btn-primary btn-sm" id="btn-rbac-save-matrix" style="font-weight: 700; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);">
+                <i data-lucide="save"></i> Save Role Assignments
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Role Pill Click Events
+      container.querySelectorAll('.role-pill-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeRole = btn.dataset.roleKey;
+          this._rbacActiveRole = activeRole;
+          draw();
+        });
+      });
+
+      // Card Cycle Click Events (Off -> View Only -> Full Access -> Off)
+      container.querySelectorAll('.rbac-perm-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const modKey = card.dataset.modKey;
+          if (!modKey) return;
+          if (!matrix[activeRole]) matrix[activeRole] = {};
+          const current = matrix[activeRole][modKey] || 'off';
+          let next = 'view';
+          if (current === 'off') next = 'view';
+          else if (current === 'view') next = 'full';
+          else next = 'off';
+
+          matrix[activeRole][modKey] = next;
+          matrix[activeRole].dashboard = 'full';
+          draw();
+        });
+      });
+
+      // Bottom Bar Action Handlers
+      safeOn('btn-rbac-reset-defaults', 'click', () => {
+        const sysDefaults = WindowPermissionsService.getSystemDefaults();
+        matrix[activeRole] = { ...(sysDefaults[activeRole] || sysDefaults.teacher || {}) };
+        draw();
+        UIComponents.showToast(`Reset ${activeRoleObj.label} back to system defaults`, 'info');
+      });
+
+      safeOn('btn-rbac-grant-all', 'click', () => {
+        if (!matrix[activeRole]) matrix[activeRole] = {};
+        for (const cat of WINDOW_CATEGORIES) {
+          for (const mod of cat.modules) {
+            matrix[activeRole][mod.key] = 'full';
+          }
+        }
+        matrix[activeRole].dashboard = 'full';
+        draw();
+        UIComponents.showToast(`Granted Full Access on all windows for ${activeRoleObj.label}`, 'info');
+      });
+
+      safeOn('btn-rbac-save-matrix', 'click', async () => {
+        WindowPermissionsService.saveRoleMatrix(matrix);
+        await auditService.log('RBAC_ROLE_MATRIX_SAVED', 'GOVERNANCE', { role: activeRole });
+        UIComponents.showToast(`Role window permissions saved successfully!`, 'success');
+        draw();
+      });
+
+      UIComponents.refreshIcons();
+    };
+
+    draw();
+  }
+
+  /**
+   * ==========================================================================
+   * CUSTOMIZE WINDOW PERMISSIONS MODAL (MATCHING SCREENSHOT IDENTICALLY)
+   * Reference: https://tpsh.vercel.app/#users
+   * ==========================================================================
+   */
+  static openCustomizeWindowPermissionsModal(p) {
+    const roleKey = p.role || 'teacher';
+    const roleObj = WINDOW_ROLES.find((r) => r.key === roleKey) || WINDOW_ROLES[1];
+    const roleDefaults = (WindowPermissionsService.getRoleMatrix()[roleKey]) || {};
+
+    // Get current overrides or clone
+    let userOverrides = { ...(WindowPermissionsService.getUserCustomPermissions(p.id) || {}) };
+
+    const getState = (modKey) => {
+      if (userOverrides[modKey] !== undefined) return userOverrides[modKey];
+      return roleDefaults[modKey] || 'off';
+    };
+
+    const title = `Customize Window Permissions: ${p.name || p.email}`;
+
+    const bodyHtml = `
+      <div style="margin-bottom: 1.25rem;">
+        <!-- User Info Banner -->
+        <div style="background: #F8FAFC; border: 1.5px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 38px; height: 38px; border-radius: 50%; overflow: hidden; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #0f172a; border: 1px solid var(--border-color);">
+              ${p.avatar ? `<img src="${esc(p.avatar)}" style="width:100%;height:100%;object-fit:cover;" alt=""/>` : (p.name || 'U')[0].toUpperCase()}
+            </div>
+            <div>
+              <strong style="font-size: 0.95rem; color: #0F172A;">${esc(p.name || 'User')}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">
+                ${esc(p.email || '—')} • Role: <span class="badge" style="background:#D1FAE5; color:#065F46; border:1px solid #A7F3D0; font-weight:700; font-size:0.72rem;">${(p.role || 'STAFF').toUpperCase()}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" id="btn-modal-reset-defaults" style="color: #475569; font-size:0.75rem;" title="Reset this user's windows back to ${roleObj.label} defaults">
+              Reset to Role Defaults
+            </button>
+          </div>
+        </div>
+
+        <!-- Description Hint Banner -->
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.8rem; color: #1E40AF; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.1rem; flex-shrink: 0;">💡</span>
+          <span>Customize specific window access for <strong>${esc(p.name || p.email)}</strong>. Overrides apply ONLY to this user; other ${roleObj.label} accounts remain untouched.</span>
+        </div>
+
+        <!-- Micro Legend -->
+        <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #64748B; margin-bottom: 1rem; flex-wrap: wrap;">
+          <span><strong style="color: #0F172A;">Switch:</strong></span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #CBD5E1;"></span>
+            <span>Gray (Left) = Off</span>
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #EAB308;"></span>
+            <span style="font-weight: 600; color: #854D0E;">Yellow (Center) = View Only</span>
+          </span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+            <span style="font-weight: 600; color: #065F46;">Green (Right) = Full Access</span>
+          </span>
+          <span style="color: #059669; font-weight: 600; margin-left: 0.3rem;">• Tap card to cycle</span>
+        </div>
+
+        <!-- Modal Scrollable Windows List -->
+        <div id="modal-user-perm-list" style="max-height: 52vh; overflow-y: auto; padding-right: 4px;">
+          <!-- Dynamically populated below -->
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 0.75rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary btn-sm" id="btn-modal-cancel">Cancel</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary btn-sm" id="btn-modal-grant-all">Grant All Full</button>
+          <button class="btn btn-primary btn-sm" id="btn-modal-save-perm" style="font-weight: 700; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);">
+            Save Custom Permissions
+          </button>
+        </div>
+      </div>
+    `;
+
+    UIComponents.openModal({ title, bodyHtml, footerHtml, maxWidth: '720px' });
+
+    const renderModalItems = () => {
+      const container = document.getElementById('modal-user-perm-list');
+      if (!container) return;
+
+      container.innerHTML = WINDOW_CATEGORIES.map((cat) => `
+        <div style="margin-bottom: 1rem; background: #FFFFFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 0.85rem 1rem;">
+          <div style="font-size: 0.85rem; font-weight: 800; color: #0F172A; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span style="color: #059669; display: inline-flex;">${cat.icon}</span>
+            <span>${cat.title}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 0.5rem;">
+            ${cat.modules.map((mod) => {
+              const state = getState(mod.key);
+              const defaultVal = roleDefaults[mod.key] || 'off';
+              const isOverridden = userOverrides[mod.key] !== undefined && userOverrides[mod.key] !== defaultVal;
+
+              return `
+                <div class="perm-item state-${state} modal-perm-card" data-mod-key="${mod.key}" style="padding: 0.65rem 0.85rem;" title="${mod.label} • Click to cycle">
+                  <div class="perm-item-left">
+                    <div class="perm-item-icon" style="width: 32px; height: 32px;">${mod.icon}</div>
+                    <div class="perm-item-info">
+                      <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        <span class="perm-item-name" style="font-size: 0.85rem;">${mod.label}</span>
+                        ${isOverridden ? `
+                          <span class="badge" style="background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; font-size: 0.62rem; padding: 0.1rem 0.4rem; font-weight: 700;">
+                            Special Override
+                          </span>
+                        ` : `
+                          <span style="font-size: 0.68rem; color: #94A3B8;">(Role Default: ${defaultVal.toUpperCase()})</span>
+                        `}
+                      </div>
+                      <span class="perm-item-desc" style="font-size: 0.7rem;">${mod.desc}</span>
+                    </div>
+                  </div>
+                  <div class="perm-switch pos-${state}" data-mod-key="${mod.key}"></div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      // Click to cycle (Off -> View Only -> Full Access -> Off)
+      container.querySelectorAll('.modal-perm-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const modKey = card.dataset.modKey;
+          if (!modKey) return;
+          const current = getState(modKey);
+          let next = 'view';
+          if (current === 'off') next = 'view';
+          else if (current === 'view') next = 'full';
+          else next = 'off';
+
+          userOverrides[modKey] = next;
+          renderModalItems();
+        });
+      });
+    };
+
+    renderModalItems();
+
+    safeOn('btn-modal-reset-defaults', 'click', () => {
+      userOverrides = {};
+      renderModalItems();
+      UIComponents.showToast(`Switches reset to ${roleObj.label} defaults`, 'info');
+    });
+
+    safeOn('btn-modal-grant-all', 'click', () => {
+      for (const cat of WINDOW_CATEGORIES) {
+        for (const mod of cat.modules) {
+          userOverrides[mod.key] = 'full';
+        }
+      }
+      renderModalItems();
+      UIComponents.showToast('All windows set to Full Access', 'info');
+    });
+
+    safeOn('btn-modal-cancel', 'click', () => {
+      UIComponents.closeModal();
+    });
+
+    safeOn('btn-modal-save-perm', 'click', async () => {
+      let hasDifference = false;
+      const cleanCustom = {};
+
+      for (const cat of WINDOW_CATEGORIES) {
+        for (const mod of cat.modules) {
+          const val = userOverrides[mod.key];
+          const def = roleDefaults[mod.key] || 'off';
+          if (val !== undefined && val !== def) {
+            cleanCustom[mod.key] = val;
+            hasDifference = true;
+          }
+        }
+      }
+
+      if (hasDifference) {
+        WindowPermissionsService.setUserCustomPermissions(p.id, cleanCustom);
+        try {
+          await dbService.update('profiles', p.id, { custom_modules: cleanCustom });
+        } catch (e) {}
+        await auditService.log('USER_CUSTOM_PERM_SAVE', 'GOVERNANCE', { userId: p.id, permissions: cleanCustom });
+        UIComponents.showToast(`Saved custom window permissions for ${p.name || p.email}.`, 'success');
+      } else {
+        WindowPermissionsService.resetUserCustomPermissions(p.id);
+        try {
+          await dbService.update('profiles', p.id, { custom_modules: null });
+        } catch (e) {}
+        UIComponents.showToast(`Restored default role permissions for ${p.name || p.email}.`, 'info');
+      }
+
+      UIComponents.closeModal();
+      const mainContent = document.getElementById('users-view-content') || document.getElementById('admin-tab-content');
+      if (mainContent) this.renderUsersTab(mainContent);
+    });
+  }
+
+  /**
+   * Institutional Role & Child Assignment Modal
+   */
+  static async openChangeRoleModal(p, isApprovalMode = false) {
+    const isTargetSuper = (p.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase() || p.role === 'super_admin' || p.isSuperAdmin === true || p.is_super_admin === true;
+    if (isTargetSuper) {
+      UIComponents.showToast('Initial Super Admin account is protected.', 'warning');
+      return;
+    }
+
+    const allStudents = this._allStudents || [];
+    let assignedStudentIds = Array.isArray(p.assigned_student_ids) ? [...p.assigned_student_ids] : (Array.isArray(p.child_ids) ? [...p.child_ids] : []);
+
+    // If parent and no children linked yet, attempt auto-match by phone or father name
+    if (assignedStudentIds.length === 0 && (p.role === 'parent' || isApprovalMode)) {
+      const cleanPh = (p.phone || '').replace(/[^0-9]/g, '');
+      if (cleanPh) {
+        allStudents.forEach((st) => {
+          const fPh = (st.father_phone || '').replace(/[^0-9]/g, '');
+          const mPh = (st.mother_phone || '').replace(/[^0-9]/g, '');
+          const wPh = (st.whatsapp_number || '').replace(/[^0-9]/g, '');
+          if (cleanPh === fPh || cleanPh === mPh || cleanPh === wPh) {
+            assignedStudentIds.push(st.id);
+          }
+        });
+      }
+      if (assignedStudentIds.length === 0 && p.name) {
+        const pName = p.name.toLowerCase().trim();
+        allStudents.forEach((st) => {
+          if (st.father_name && st.father_name.toLowerCase().trim() === pName) {
+            assignedStudentIds.push(st.id);
+          }
+        });
+      }
+    }
+
+    const title = isApprovalMode ? 'Approve Account & Assign Role' : `Assign Role & Scope: ${p.name || p.email}`;
+    const rolesList = WINDOW_ROLES;
+    const currentRole = p.role === 'pending' ? (isApprovalMode ? 'teacher' : 'teacher') : (p.role || 'teacher');
+
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <!-- User Info Strip -->
+        <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:10px; padding:0.75rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${this._renderUserAvatar(p, 36)}
+            <div>
+              <strong style="font-size:0.92rem; color:var(--text-main);">${esc(p.name || 'User Account')}</strong>
+              <div style="font-size:0.75rem; color:var(--text-muted);">${esc(p.email || '—')}</div>
+            </div>
+          </div>
+          ${p.phone ? `<div style="font-size:0.76rem; color:var(--text-muted);">📞 ${esc(p.phone)}</div>` : ''}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Institutional Role</label>
+          <select class="form-select" id="role-modal-select">
+            ${rolesList.map((r) => `<option value="${r.key}" ${currentRole === r.key ? 'selected' : ''}>${r.label} (${r.subtitle})</option>`).join('')}
+            <option value="principal" ${currentRole === 'principal' ? 'selected' : ''}>Principal (School Executive)</option>
+            <option value="coordinator" ${currentRole === 'coordinator' ? 'selected' : ''}>Coordinator (Academic Management)</option>
+            <option value="finance" ${currentRole === 'finance' ? 'selected' : ''}>Finance Officer (Fee Collection)</option>
+            <option value="hr" ${currentRole === 'hr' ? 'selected' : ''}>HR Manager (Staff & Attendance)</option>
+            <option value="librarian" ${currentRole === 'librarian' ? 'selected' : ''}>Librarian (Book Circulation)</option>
+            <option value="operations" ${currentRole === 'operations' ? 'selected' : ''}>Operations (Facility & Hostel)</option>
+            <option value="office_boy" ${currentRole === 'office_boy' ? 'selected' : ''}>Office Boy (Admission Data Entry)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Data Scope</label>
+          <select class="form-select" id="role-modal-scope">
+            ${Object.values(TMS_CONFIG.scopes).map((s) => `<option value="${s}" ${p.scope === s ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Student Assignment Section (Conditional for Parents) -->
+        <div id="role-modal-parent-section" style="display:${currentRole === 'parent' ? 'block' : 'none'}; border-top:1px solid var(--border-color); padding-top:12px;">
+          <label class="form-label" style="font-weight:700;">Linked Student(s) / Wards</label>
+          <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">Parents can only view academic performance and leave requests for their linked children.</p>
+          <div style="max-height:160px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; padding:6px 10px;">
+            ${allStudents.length === 0 ? '<span style="font-size:0.8rem; color:var(--text-muted);">No student records found.</span>' : allStudents.map((st) => `
+              <label style="display:flex; align-items:center; gap:8px; padding:4px 0; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" class="cb-assign-child" value="${esc(st.id)}" ${assignedStudentIds.includes(st.id) ? 'checked' : ''}>
+                <span>${esc(st.full_name || st.name || 'Student')} (${esc(st.admission_number || st.admission_no || '—')}, Class ${esc(st.standard || st.class || '—')})</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary btn-sm" id="btn-role-cancel">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="btn-role-submit">
+        ${isApprovalMode ? 'Approve & Save' : 'Save Changes'}
+      </button>
+    `;
+
+    UIComponents.openModal({ title, bodyHtml, footerHtml });
+
+    const roleSelect = document.getElementById('role-modal-select');
+    roleSelect.addEventListener('change', () => {
+      const parentSec = document.getElementById('role-modal-parent-section');
+      if (parentSec) {
+        parentSec.style.display = roleSelect.value === 'parent' ? 'block' : 'none';
+      }
+    });
+
+    safeOn('btn-role-cancel', 'click', () => UIComponents.closeModal());
+
+    safeOn('btn-role-submit', 'click', async () => {
+      const selectedRole = roleSelect.value;
+      const selectedScope = document.getElementById('role-modal-scope')?.value || 'own_records';
+      const selectedChildren = Array.from(document.querySelectorAll('.cb-assign-child:checked')).map((cb) => cb.value);
+
+      const updates = {
+        role: selectedRole,
+        scope: selectedScope,
+        approvalStatus: 'approved',
+        isActive: true
+      };
+
+      if (selectedRole === 'parent') {
+        updates.assigned_student_ids = selectedChildren;
+      }
+
+      await dbService.update('profiles', p.id, updates);
+      await auditService.log('USER_ROLE_ASSIGNED', 'GOVERNANCE', { userId: p.id, role: selectedRole });
+      UIComponents.showToast(`Account ${isApprovalMode ? 'approved and assigned' : 'updated'}.`, 'success');
+      UIComponents.closeModal();
+
+      const mainContent = document.getElementById('users-view-content') || document.getElementById('admin-tab-content');
+      if (mainContent) this.renderUsersTab(mainContent);
+    });
+  }
+
   /** Full user editor: identity, assignment, avatar upload and password reset. */
-  static openUserEditModal(p) {
+  static async openUserEditModal(p) {
     const currentUser = authService.getCurrentUser();
     const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
     const isTargetSuper = (p.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase() || p.role === 'super_admin' || p.isSuperAdmin === true || p.is_super_admin === true;
@@ -3586,6 +5656,7 @@ export class AdminModule {
     }
 
     let pendingAvatar = null;
+    const staffMeta = await OnboardingService.getStaffMeta(p.id);
     const roleList = Object.values(TMS_CONFIG.roles).filter((r) => isSuperAdmin ? true : r !== 'super_admin');
     if (p.role === 'pending' && !roleList.includes('pending')) roleList.unshift('pending');
     const scopeList = Object.values(TMS_CONFIG.scopes);
@@ -3606,6 +5677,8 @@ export class AdminModule {
         <div class="form-group"><label class="form-label">Title / Designation</label><input class="form-input" id="ue-title" value="${esc(p.title || '')}"></div>
         <div class="form-group"><label class="form-label">Department</label><input class="form-input" id="ue-department" value="${esc(p.department || '')}"></div>
         <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ue-phone" value="${esc(p.phone || '')}"></div>
+        <div class="form-group"><label class="form-label">TGI ID (Staff ID)</label><div style="display:flex; align-items:stretch; border:1px solid var(--border-color); border-radius:6px; overflow:hidden;"><div style="background:#f1f5f9; padding:8px 12px; font-weight:700; font-family:monospace; border-right:1px solid var(--border-color); color:#475569;">TGI</div><input class="form-input font-mono" id="ue-tgi-id" value="${esc(staffMeta.tgiId || '')}" placeholder="001" style="border:none; border-radius:0;"></div><span style="font-size:0.7rem; color:var(--text-subtle);">Displays read-only in the staff member's profile</span></div>
+        <div class="form-group"><label class="form-label">Blood Group</label><select class="form-select" id="ue-blood-group"><option value="">Select Blood Group</option>${['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(b => `<option value="${b}" ${staffMeta.bloodGroup === b ? 'selected' : ''}>${b}</option>`).join('')}</select></div>
         <div class="form-group"><label class="form-label">Assigned Class</label>
           <select class="form-select" id="ue-class">${classList.map((c) => `<option value="${esc(c)}" ${p.assignedClass === c ? 'selected' : ''}>${c ? esc(c) : '—'}</option>`).join('')}</select></div>
         <div class="form-group"><label class="form-label">Assigned Section</label>
@@ -3684,6 +5757,12 @@ export class AdminModule {
         isActive: document.getElementById('ue-active').checked
       };
       if (pendingAvatar) updates.avatar = pendingAvatar;
+      const tgiIdVal = (document.getElementById('ue-tgi-id')?.value || '').trim();
+      const bloodGroupVal = document.getElementById('ue-blood-group')?.value || '';
+      await OnboardingService.saveStaffMeta(p.id, {
+        tgiId: tgiIdVal,
+        bloodGroup: bloodGroupVal
+      });
       await dbService.update('profiles', p.id, updates);
       await auditService.log('USER_DETAILS_UPDATED', 'GOVERNANCE', { userId: p.id, role: updates.role });
       UIComponents.showToast('User details saved.', 'success');
@@ -3711,6 +5790,827 @@ export class AdminModule {
         // Table may not exist yet (migration not applied) - ignore.
       }
     }
+  }
+
+
+  /* ================================================================== */
+  /* Staff Onboarding & Profile Governance (Questions & Grace Period)   */
+  /* ================================================================== */
+
+  static async renderStaffOnboardingTab(tabContent) {
+    const currentUser = authService.getCurrentUser() || {};
+    const isSuperAdmin = currentUser?.isSuperAdmin === true || (currentUser?.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase();
+
+    // Load onboarding configuration, staff profiles, and metadata
+    const config = await OnboardingService.getConfig();
+    let profiles = [];
+    try {
+      profiles = await dbService.select('profiles');
+    } catch (e) { profiles = []; }
+
+    // Filter staff profiles (exclude parents and students)
+    const staffProfiles = profiles.filter(p => {
+      const r = (p.role || '').toLowerCase();
+      return r !== TMS_CONFIG.roles.PARENT && r !== TMS_CONFIG.roles.STUDENT && r !== 'parent' && r !== 'student';
+    });
+
+    const staffMetaMap = await OnboardingService.getAllStaffMeta();
+
+    // Calculate metrics
+    let activeWindowCount = 0;
+    let expiredWindowCount = 0;
+    let completedCount = 0;
+
+    const staffData = staffProfiles.map(p => {
+      const meta = staffMetaMap[p.id] || {};
+      const isTargetSuper = (p.email || '').toLowerCase() === (TMS_CONFIG.superAdminEmail || '').toLowerCase() || p.role === 'super_admin' || p.isSuperAdmin === true;
+
+      let status = 'Not Logged In';
+      let statusColor = '#64748b';
+      let statusBadge = '<span class="badge" style="background:#f1f5f9; color:#475569;">Never Logged In</span>';
+      let daysLeft = 0;
+
+      if (isTargetSuper) {
+        status = 'Super Admin Authority';
+        statusBadge = '<span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-weight:700;">👑 Permanent Edit Access</span>';
+      } else if (meta.firstLoginAt) {
+        const firstLoginMs = new Date(meta.firstLoginAt).getTime();
+        const windowMs = (Number(config.editWindowDays) || 7) * 24 * 60 * 60 * 1000;
+        let deadlineMs = firstLoginMs + windowMs;
+        if (meta.editWindowExtensionUntil) {
+          const extMs = new Date(meta.editWindowExtensionUntil).getTime();
+          if (extMs > deadlineMs) deadlineMs = extMs;
+        }
+        const msRemaining = deadlineMs - Date.now();
+        if (msRemaining > 0) {
+          activeWindowCount++;
+          daysLeft = Math.ceil(msRemaining / (24 * 60 * 60 * 1000));
+          status = `Active (${daysLeft}d left)`;
+          statusBadge = `<span class="badge" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-weight:700;"><i data-lucide="clock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Active (${daysLeft}d left)</span>`;
+        } else {
+          expiredWindowCount++;
+          status = 'Expired / Locked';
+          statusBadge = '<span class="badge" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; font-weight:700;"><i data-lucide="lock" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:2px;"></i> Expired / Locked</span>';
+        }
+      }
+
+      if (meta.onboardingCompleted) {
+        completedCount++;
+      }
+
+      return {
+        ...p,
+        meta,
+        isTargetSuper,
+        status,
+        statusBadge,
+        daysLeft,
+        firstLoginDisplay: meta.firstLoginAt ? new Date(meta.firstLoginAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Never'
+      };
+    });
+
+    const questions = config.questions || [];
+
+    tabContent.innerHTML = `
+      <!-- Top Overview Bar -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header" style="flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="user-cog" style="color:#059669;"></i> Staff Onboarding &amp; Profile Governance
+            </h3>
+            <p class="card-desc">
+              Manage the initial login questionnaire required from staff members, configure the self-editing grace period duration, allocate institutional TGI IDs, and grant grace period extensions.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" id="btn-add-onboarding-question" style="background:#059669; border-color:#059669;">
+              <i data-lucide="plus"></i> Add Onboarding Question
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-preview-staff-modal">
+              <i data-lucide="eye"></i> Preview Profile Modal
+            </button>
+          </div>
+        </div>
+
+        <!-- 4-Metric Grid -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin-top:14px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px;">
+            <div style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">Total Staff Accounts</div>
+            <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin-top:4px;">${staffProfiles.length}</div>
+          </div>
+          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 16px;">
+            <div style="font-size:0.75rem; color:#8C6E1E; font-weight:600; text-transform:uppercase;">Active Edit Windows</div>
+            <div style="font-size:1.5rem; font-weight:800; color:#059669; margin-top:4px;">${activeWindowCount}</div>
+          </div>
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px;">
+            <div style="font-size:0.75rem; color:#991b1b; font-weight:600; text-transform:uppercase;">Expired / Locked Profiles</div>
+            <div style="font-size:1.5rem; font-weight:800; color:#dc2626; margin-top:4px;">${expiredWindowCount}</div>
+          </div>
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 16px;">
+            <div style="font-size:0.75rem; color:#1e40af; font-weight:600; text-transform:uppercase;">Completed Profiles</div>
+            <div style="font-size:1.5rem; font-weight:800; color:#2563eb; margin-top:4px;">${completedCount}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 1: Grace Period Configuration -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px; align-items:center;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="clock" style="color:#2563eb;"></i> Profile Edit Grace Period Window
+            </h3>
+            <p class="card-desc">
+              When a staff member logs in for the first time, a countdown begins. During this window, they can edit their profile information. After the period expires, profile fields are locked unless an administrator grants an extension.
+            </p>
+          </div>
+        </div>
+        <div style="display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-top:8px;">
+          <div style="max-width:240px; flex:1;">
+            <label class="form-label" style="font-weight:600; font-size:0.85rem;">Edit Grace Period (in Days) *</label>
+            <div style="display:flex; align-items:center; border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
+              <input type="number" id="inp-grace-period-days" class="form-input" min="1" max="180" value="${Number(config.editWindowDays) || 7}" style="border:none; font-weight:700; font-size:1rem; padding:8px 12px;">
+              <div style="background:#f1f5f9; padding:8px 14px; font-weight:600; color:#475569; font-size:0.85rem; border-left:1px solid var(--border-color);">Days</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-save-grace-period" style="background:#2563eb; border-color:#2563eb; padding:9px 18px; border-radius:8px;">
+            <i data-lucide="save"></i> Save Grace Period Setting
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 2: First-Login Question Builder -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="help-circle" style="color:#059669;"></i> First-Login Staff Onboarding Questions
+            </h3>
+            <p class="card-desc">
+              Questions presented to staff members upon initial login and rendered inside their Institutional User Profile.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-add-question-sub">
+            <i data-lucide="plus"></i> Add Question
+          </button>
+        </div>
+
+        <div class="table-responsive" style="margin-top:10px;">
+          <table class="tms-table" style="font-size:0.85rem;">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Question / Field Label</th>
+                <th>Field Type</th>
+                <th>Requirement</th>
+                <th>Placeholder &amp; Subtext</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${questions.length === 0 ? `
+                <tr><td colspan="6" style="text-align:center; padding:20px; color:#64748b;">No onboarding questions configured yet. Click "Add Question" above.</td></tr>
+              ` : questions.map((q, idx) => {
+                const typeLabels = {
+                  text: 'Single-line Text',
+                  textarea: 'Multi-line Paragraph',
+                  select: 'Dropdown Select',
+                  date: 'Date Picker',
+                  number: 'Numeric'
+                };
+                return `
+                  <tr data-qid="${esc(q.id)}">
+                    <td style="font-weight:700; color:#64748b;">${idx + 1}</td>
+                    <td style="font-weight:600; color:#0f172a;">
+                      ${esc(q.label)}
+                    </td>
+                    <td>
+                      <span class="badge" style="background:#f1f5f9; color:#334155;">${esc(typeLabels[q.type] || q.type)}</span>
+                    </td>
+                    <td>
+                      ${q.required ? '<span class="badge" style="background:#fef2f2; color:#b91c1c; font-weight:700;">Mandatory *</span>' : '<span class="badge" style="background:#f8fafc; color:#64748b;">Optional</span>'}
+                    </td>
+                    <td style="color:#64748b; font-size:0.78rem;">
+                      ${q.placeholder ? `<div><strong>Placeholder:</strong> ${esc(q.placeholder)}</div>` : ''}
+                      ${q.options ? `<div><strong>Options:</strong> ${esc(q.options)}</div>` : ''}
+                      ${q.subtext ? `<div><strong>Helper:</strong> ${esc(q.subtext)}</div>` : ''}
+                    </td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      <button class="btn btn-secondary btn-sm btn-edit-q" data-qid="${esc(q.id)}" title="Edit Question" style="padding:4px 8px;">
+                        <i data-lucide="edit" style="width:13px;height:13px;"></i>
+                      </button>
+                      <button class="btn btn-secondary btn-sm btn-del-q" data-qid="${esc(q.id)}" title="Delete Question" style="padding:4px 8px; color:#dc2626;">
+                        <i data-lucide="trash-2" style="width:13px;height:13px;"></i>
+                      </button>
+                      ${idx > 0 ? `<button class="btn btn-secondary btn-sm btn-up-q" data-qid="${esc(q.id)}" title="Move Up" style="padding:4px 6px;"><i data-lucide="arrow-up" style="width:13px;height:13px;"></i></button>` : ''}
+                      ${idx < questions.length - 1 ? `<button class="btn btn-secondary btn-sm btn-down-q" data-qid="${esc(q.id)}" title="Move Down" style="padding:4px 6px;"><i data-lucide="arrow-down" style="width:13px;height:13px;"></i></button>` : ''}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 3: Staff Profile Status & Grace Period Override Roster -->
+      <div class="card">
+        <div class="card-header" style="flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="users" style="color:#2563eb;"></i> Staff Profile Roster &amp; Grace Period Overrides
+            </h3>
+            <p class="card-desc">
+              Allocate official TGI IDs, inspect each staff member's initial login date, review profile completion status, and grant individual grace period extensions.
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="text" class="form-input" id="staff-roster-search" placeholder="Search staff name, email, TGI ID..." style="max-width:240px; font-size:0.83rem;">
+            <select class="form-select" id="staff-roster-status-filter" style="max-width:180px; font-size:0.83rem;">
+              <option value="">All Statuses</option>
+              <option value="active">Active Edit Window</option>
+              <option value="expired">Expired / Locked</option>
+              <option value="completed">Completed Profile</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive" style="margin-top:10px;">
+          <table class="tms-table" id="table-staff-roster" style="font-size:0.85rem;">
+            <thead>
+              <tr>
+                <th>Staff Member</th>
+                <th>Role</th>
+                <th>TGI ID (Staff ID)</th>
+                <th>Blood Group</th>
+                <th>First Login</th>
+                <th>Edit Grace Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${staffData.map(st => {
+                const tgiRaw = st.meta.tgiId || '';
+                const tgiBadge = tgiRaw ? `<span class="badge font-mono" style="background:#f1f5f9; color:#1e293b; font-weight:700; border:1px solid #cbd5e1;">TGI-${esc(tgiRaw)}</span>` : '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">Not Allocated</span>';
+                const bloodBadge = st.meta.bloodGroup ? `<span class="badge" style="background:#FDF8E8; color:#8C6E1E; font-weight:700;">${esc(st.meta.bloodGroup)}</span>` : '<span style="color:#94a3b8;">—</span>';
+
+                return `
+                  <tr class="staff-row" data-id="${esc(st.id)}" data-name="${esc(st.name || '').toLowerCase()}" data-email="${esc(st.email || '').toLowerCase()}" data-tgi="${esc(tgiRaw).toLowerCase()}" data-status="${st.daysLeft > 0 ? 'active' : (st.meta.firstLoginAt ? 'expired' : '')}">
+                    <td>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="${esc(st.avatar || DEFAULT_AVATAR)}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--border-color);background:#f1f5f9;">
+                        <div>
+                          <div style="font-weight:700; color:#0f172a;">${esc(st.name || 'Staff User')}</div>
+                          <div class="font-mono" style="font-size:0.75rem; color:#64748b;">${esc(st.email || '—')}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge" style="background:#eff6ff; color:#1e40af; font-weight:600;">${esc(ROLE_LABELS[st.role] || st.role || 'Staff')}</span>
+                    </td>
+                    <td>
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        ${tgiBadge}
+                        <button class="btn btn-secondary btn-sm btn-quick-tgi" data-id="${esc(st.id)}" data-name="${esc(st.name || '')}" data-tgi="${esc(tgiRaw)}" title="Assign or Edit TGI ID" style="padding:2px 6px;">
+                          <i data-lucide="edit-2" style="width:12px;height:12px;"></i>
+                        </button>
+                      </div>
+                    </td>
+                    <td>${bloodBadge}</td>
+                    <td style="font-size:0.78rem; color:#64748b;">${esc(st.firstLoginDisplay)}</td>
+                    <td>${st.statusBadge}</td>
+                    <td style="text-align:right; white-space:nowrap;">
+                      ${st.isTargetSuper ? `
+                        <span style="font-size:0.75rem; color:#b45309; font-weight:700;">Protected</span>
+                      ` : `
+                        <button class="btn btn-secondary btn-sm btn-extend-grace" data-id="${esc(st.id)}" data-name="${esc(st.name || '')}" title="Grant +7 Days Extension" style="padding:4px 8px; color:#8C6E1E;">
+                          <i data-lucide="plus-circle" style="width:13px;height:13px;"></i> +7d
+                        </button>
+                        ${st.daysLeft > 0 ? `
+                        <button class="btn btn-secondary btn-sm btn-lock-grace" data-id="${esc(st.id)}" data-name="${esc(st.name || '')}" title="Lock Profile Now" style="padding:4px 8px; color:#dc2626;">
+                          <i data-lucide="lock" style="width:13px;height:13px;"></i> Lock
+                        </button>
+                        ` : ''}
+                        <button class="btn btn-secondary btn-sm btn-edit-staff-profile" data-id="${esc(st.id)}" title="Full Staff Edit" style="padding:4px 8px;">
+                          <i data-lucide="settings" style="width:13px;height:13px;"></i>
+                        </button>
+                      `}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Bind Event Handlers
+    // 1. Save Grace Period Days Setting
+    safeOn('btn-save-grace-period', 'click', async () => {
+      const days = Number(document.getElementById('inp-grace-period-days')?.value) || 7;
+      if (days < 1 || days > 180) {
+        UIComponents.showToast('Please enter a grace period between 1 and 180 days.', 'warning');
+        return;
+      }
+      config.editWindowDays = days;
+      const res = await OnboardingService.saveConfig(config);
+      await auditService.log('STAFF_ONBOARDING_GRACE_PERIOD_UPDATED', 'GOVERNANCE', { editWindowDays: days });
+      UIComponents.showToast(`Grace period updated to ${days} days successfully!`, 'success');
+      this.renderTab('staff-onboarding');
+    });
+
+    // 2. Add Question Buttons
+    const openAdd = () => this.openQuestionEditorModal(null, config);
+    safeOn('btn-add-onboarding-question', 'click', openAdd);
+    safeOn('btn-add-question-sub', 'click', openAdd);
+
+    // 3. Edit Question Buttons
+    tabContent.querySelectorAll('.btn-edit-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qid = btn.dataset.qid;
+        const q = (config.questions || []).find(x => x.id === qid);
+        if (q) this.openQuestionEditorModal(q, config);
+      });
+    });
+
+    // 4. Delete Question Buttons
+    tabContent.querySelectorAll('.btn-del-q').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const qid = btn.dataset.qid;
+        const q = (config.questions || []).find(x => x.id === qid);
+        if (!q) return;
+        if (!confirm(`Are you sure you want to delete the question "${q.label}"?`)) return;
+        config.questions = (config.questions || []).filter(x => x.id !== qid);
+        await OnboardingService.saveConfig(config);
+        await auditService.log('STAFF_ONBOARDING_QUESTION_DELETED', 'GOVERNANCE', { questionId: qid, label: q.label });
+        UIComponents.showToast('Question deleted successfully.', 'success');
+        this.renderTab('staff-onboarding');
+      });
+    });
+
+    // 5. Move Question Up / Down
+    tabContent.querySelectorAll('.btn-up-q').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const qid = btn.dataset.qid;
+        const idx = config.questions.findIndex(x => x.id === qid);
+        if (idx > 0) {
+          const temp = config.questions[idx - 1];
+          config.questions[idx - 1] = config.questions[idx];
+          config.questions[idx] = temp;
+          await OnboardingService.saveConfig(config);
+          this.renderTab('staff-onboarding');
+        }
+      });
+    });
+
+    tabContent.querySelectorAll('.btn-down-q').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const qid = btn.dataset.qid;
+        const idx = config.questions.findIndex(x => x.id === qid);
+        if (idx >= 0 && idx < config.questions.length - 1) {
+          const temp = config.questions[idx + 1];
+          config.questions[idx + 1] = config.questions[idx];
+          config.questions[idx] = temp;
+          await OnboardingService.saveConfig(config);
+          this.renderTab('staff-onboarding');
+        }
+      });
+    });
+
+    // 6. Preview Staff Profile Modal
+    safeOn('btn-preview-staff-modal', 'click', () => {
+      if (window.app && typeof window.app.openMyProfile === 'function') {
+        window.app.openMyProfile();
+      } else {
+        UIComponents.showToast('Profile preview opening...', 'info');
+      }
+    });
+
+    // 7. Quick Assign / Edit TGI ID
+    tabContent.querySelectorAll('.btn-quick-tgi').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.id;
+        const currentTgi = btn.dataset.tgi || '';
+        const staffName = btn.dataset.name || 'Staff';
+        const newTgi = prompt(`Assign / Edit TGI ID for ${staffName} (e.g. 001, 002):\nNote: Prefix "TGI" is automatically attached.`, currentTgi);
+        if (newTgi !== null) {
+          const clean = newTgi.trim().replace(/^TGI-?/i, '');
+          await OnboardingService.saveStaffMeta(userId, { tgiId: clean });
+          await auditService.log('STAFF_TGI_ID_ALLOCATED', 'GOVERNANCE', { userId, tgiId: clean });
+          UIComponents.showToast(`TGI ID updated for ${staffName} to TGI-${clean || 'Not Assigned'}.`, 'success');
+          this.renderTab('staff-onboarding');
+        }
+      });
+    });
+
+    // 8. Grant Extension (+7 Days)
+    tabContent.querySelectorAll('.btn-extend-grace').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.id;
+        const staffName = btn.dataset.name || 'Staff Member';
+        const extensionMs = Date.now() + (7 * 24 * 60 * 60 * 1000);
+        await OnboardingService.saveStaffMeta(userId, {
+          editWindowExtensionUntil: new Date(extensionMs).toISOString()
+        });
+        await auditService.log('STAFF_GRACE_PERIOD_EXTENDED', 'GOVERNANCE', { userId, extensionDays: 7 });
+        UIComponents.showToast(`Granted +7 days self-editing extension to ${staffName}.`, 'success');
+        this.renderTab('staff-onboarding');
+      });
+    });
+
+    // 9. Lock Grace Period Immediately
+    tabContent.querySelectorAll('.btn-lock-grace').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const userId = btn.dataset.id;
+        const staffName = btn.dataset.name || 'Staff Member';
+        if (!confirm(`Lock profile self-editing immediately for ${staffName}?`)) return;
+        await OnboardingService.saveStaffMeta(userId, {
+          editWindowExtensionUntil: new Date(Date.now() - 1000).toISOString()
+        });
+        await auditService.log('STAFF_PROFILE_LOCKED_MANUALLY', 'GOVERNANCE', { userId });
+        UIComponents.showToast(`Profile self-editing locked for ${staffName}.`, 'success');
+        this.renderTab('staff-onboarding');
+      });
+    });
+
+    // 10. Open Full Edit Modal
+    tabContent.querySelectorAll('.btn-edit-staff-profile').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const userId = btn.dataset.id;
+        const profile = profiles.find(p => p.id === userId);
+        if (profile) this.openUserEditModal(profile);
+      });
+    });
+
+    // 11. Search and Status Filtering in Staff Roster
+    const searchInp = document.getElementById('staff-roster-search');
+    const filterSelect = document.getElementById('staff-roster-status-filter');
+    const filterRows = () => {
+      const q = (searchInp?.value || '').toLowerCase().trim();
+      const statusFilter = filterSelect?.value || '';
+      tabContent.querySelectorAll('.staff-row').forEach(row => {
+        const name = row.dataset.name || '';
+        const email = row.dataset.email || '';
+        const tgi = row.dataset.tgi || '';
+        const rowStatus = row.dataset.status || '';
+
+        const matchesQuery = !q || name.includes(q) || email.includes(q) || tgi.includes(q);
+        const matchesStatus = !statusFilter || (statusFilter === rowStatus);
+
+        row.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
+      });
+    };
+    if (searchInp) searchInp.addEventListener('input', filterRows);
+    if (filterSelect) filterSelect.addEventListener('change', filterRows);
+
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Modal dialog to Add or Edit an Onboarding Question.
+   */
+  static openQuestionEditorModal(existingQ = null, config = null) {
+    const isEdit = !!existingQ;
+    const q = existingQ || {
+      id: 'q_' + Date.now().toString(36),
+      label: '',
+      type: 'text',
+      required: true,
+      placeholder: '',
+      options: '',
+      subtext: ''
+    };
+
+    const bodyHtml = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-weight:600; font-size:0.85rem;">Question / Field Label *</label>
+          <input class="form-input" id="qe-label" value="${esc(q.label)}" placeholder="e.g. Highest Educational Qualification" required style="border-radius:8px;">
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-weight:600; font-size:0.85rem;">Field Type</label>
+            <select class="form-select" id="qe-type" style="border-radius:8px;">
+              <option value="text" ${q.type === 'text' ? 'selected' : ''}>Single-line Text</option>
+              <option value="textarea" ${q.type === 'textarea' ? 'selected' : ''}>Multi-line Paragraph</option>
+              <option value="select" ${q.type === 'select' ? 'selected' : ''}>Dropdown Select List</option>
+              <option value="date" ${q.type === 'date' ? 'selected' : ''}>Date Picker</option>
+              <option value="number" ${q.type === 'number' ? 'selected' : ''}>Numeric</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin:0;">
+            <label class="form-label" style="font-weight:600; font-size:0.85rem;">Mandatory Field?</label>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:8px; cursor:pointer;">
+              <input type="checkbox" id="qe-required" ${q.required !== false ? 'checked' : ''} style="width:16px;height:16px;">
+              <span style="font-size:0.85rem; font-weight:600; color:#0f172a;">Required for staff</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group" id="qe-options-group" style="margin:0; display:${q.type === 'select' ? 'block' : 'none'};">
+          <label class="form-label" style="font-weight:600; font-size:0.85rem;">Dropdown Options (Comma-separated) *</label>
+          <input class="form-input" id="qe-options" value="${esc(Array.isArray(q.options) ? q.options.join(', ') : (q.options || ''))}" placeholder="e.g. Bachelor Degree, Master Degree, Doctorate, Diploma">
+          <div style="font-size:0.72rem; color:#64748b; margin-top:4px;">Separate choices with commas</div>
+        </div>
+
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-weight:600; font-size:0.85rem;">Placeholder Text</label>
+          <input class="form-input" id="qe-placeholder" value="${esc(q.placeholder || '')}" placeholder="e.g. e.g. M.Ed, B.Sc Mathematics" style="border-radius:8px;">
+        </div>
+
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-weight:600; font-size:0.85rem;">Help / Explanatory Subtext</label>
+          <input class="form-input" id="qe-subtext" value="${esc(q.subtext || '')}" placeholder="e.g. Degree or professional title" style="border-radius:8px;">
+        </div>
+      </div>
+    `;
+
+    const footerHtml = `
+      <button class="btn btn-secondary" id="qe-cancel" style="border-radius:8px; padding:8px 16px;">Cancel</button>
+      <button class="btn btn-primary" id="qe-save" style="background:#059669; border-color:#059669; border-radius:8px; padding:8px 18px; display:flex; align-items:center; gap:6px;">
+        <i data-lucide="check"></i> <span>${isEdit ? 'Update Question' : 'Add Question'}</span>
+      </button>
+    `;
+
+    UIComponents.openModal({
+      title: isEdit ? 'Edit Onboarding Question' : 'Add New Onboarding Question',
+      bodyHtml,
+      footerHtml,
+      maxWidth: '520px'
+    });
+
+    const typeSelect = document.getElementById('qe-type');
+    const optionsGroup = document.getElementById('qe-options-group');
+    if (typeSelect && optionsGroup) {
+      typeSelect.addEventListener('change', () => {
+        optionsGroup.style.display = typeSelect.value === 'select' ? 'block' : 'none';
+      });
+    }
+
+    safeOn('qe-cancel', 'click', () => UIComponents.closeModal());
+
+    safeOn('qe-save', 'click', async () => {
+      const label = (document.getElementById('qe-label')?.value || '').trim();
+      if (!label) {
+        UIComponents.showToast('Please enter a question label.', 'warning');
+        return;
+      }
+
+      const type = document.getElementById('qe-type')?.value || 'text';
+      const required = document.getElementById('qe-required')?.checked || false;
+      const placeholder = (document.getElementById('qe-placeholder')?.value || '').trim();
+      const subtext = (document.getElementById('qe-subtext')?.value || '').trim();
+      const optionsRaw = (document.getElementById('qe-options')?.value || '').trim();
+
+      const newQ = {
+        id: q.id || ('q_' + Date.now().toString(36)),
+        label,
+        type,
+        required,
+        placeholder,
+        subtext,
+        options: type === 'select' ? optionsRaw : ''
+      };
+
+      const currConfig = config || await OnboardingService.getConfig();
+      if (!currConfig.questions) currConfig.questions = [];
+
+      if (isEdit) {
+        const idx = currConfig.questions.findIndex(x => x.id === q.id);
+        if (idx !== -1) currConfig.questions[idx] = newQ;
+        else currConfig.questions.push(newQ);
+      } else {
+        currConfig.questions.push(newQ);
+      }
+
+      await OnboardingService.saveConfig(currConfig);
+      await auditService.log(isEdit ? 'STAFF_ONBOARDING_QUESTION_UPDATED' : 'STAFF_ONBOARDING_QUESTION_CREATED', 'GOVERNANCE', { questionId: newQ.id, label: newQ.label });
+
+      UIComponents.showToast(`Question "${label}" saved successfully!`, 'success');
+      UIComponents.closeModal();
+      this.renderTab('staff-onboarding');
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  /**
+   * Institution Profile & Campus Status Tab
+   * Editable institutional registration, trust body, campus location, support contacts,
+   * and Head of Institution.
+   */
+  static async renderInstitutionDetailsTab(tabContent) {
+    const details = await institutionService.refresh();
+
+    tabContent.innerHTML = `
+      <div class="card" style="margin-bottom: 20px;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="building-2" style="color: #BF9A33;"></i> Institution Profile &amp; Campus Status
+            </h3>
+            <p class="card-desc">
+              Manage official campus registration, trust authority, physical location, institutional support contacts, and Head of Institution. Values saved here are applied everywhere across all school portals, website CMS, documents, admission forms, and fee receipts.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-secondary btn-sm" id="btn-reset-inst-defaults" style="color: #64748b;">
+              <i data-lucide="rotate-ccw"></i> Reset Defaults
+            </button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: minmax(320px, 460px) 1fr; gap: 24px; align-items: start; margin-top: 14px;">
+          <!-- Left Column: Live Status Card Preview -->
+          <div>
+            <div style="font-weight: 700; font-size: 0.82rem; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="eye" style="width: 15px; height: 15px; color: #2563eb;"></i> Live Campus Status Card
+            </div>
+            <div id="inst-card-preview-container">
+              ${institutionService.renderStatusCardHtml(details)}
+            </div>
+            <div style="font-size: 0.76rem; color: #64748b; margin-top: 12px; line-height: 1.4; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 10px 14px;">
+              ℹ️ <strong>Universal Campus Presence:</strong> This card reflects real-time institutional accreditation. Any edits made on the right update this live preview immediately.
+            </div>
+          </div>
+
+          <!-- Right Column: Institutional Profile Form -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+            <h4 style="margin: 0 0 16px 0; font-size: 1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="edit-3" style="color: #2563eb; width: 18px; height: 18px;"></i> Edit Institutional Campus Details
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 14px;">
+              <!-- 1. Official Registration & Trust -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Official Registration No. *</label>
+                  <input type="text" class="form-input inst-inp" id="inst-reg-no" value="${esc(details.regNo || '')}" placeholder="e.g. Regd. No. IV 01894/2011" style="border-radius: 8px;">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Parent Trust / Society *</label>
+                  <input type="text" class="form-input inst-inp" id="inst-trust" value="${esc(details.trust || '')}" placeholder="e.g. Thaiba Heritage, Kolkata" style="border-radius: 8px;">
+                </div>
+              </div>
+
+              <!-- 2. Campus Location & District -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Campus District / Badge *</label>
+                  <input type="text" class="form-input inst-inp" id="inst-district" value="${esc(details.campusDistrict || '')}" placeholder="e.g. Dakshin Dinajpur" style="border-radius: 8px;">
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Shown in the blue header pill badge</div>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Full Physical Campus Location *</label>
+                  <input type="text" class="form-input inst-inp" id="inst-location" value="${esc(details.campusLocation || '')}" placeholder="e.g. Baghait, Tapan, Dakshin Dinajpur, West Bengal 733127" style="border-radius: 8px;">
+                </div>
+              </div>
+
+              <!-- 3. Campus Support Contacts -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Contact Phones (Primary / Secondary)</label>
+                  <input type="text" class="form-input inst-inp font-mono" id="inst-phones" value="${esc(details.contactPhones || '')}" placeholder="+91 8653382851 / +91 8167782851" style="border-radius: 8px;">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Institutional Support Email</label>
+                  <input type="email" class="form-input inst-inp font-mono" id="inst-email" value="${esc(details.contactEmail || '')}" placeholder="tps@thaibagarden.com" style="border-radius: 8px;">
+                </div>
+              </div>
+
+              <!-- 4. Head of Institution -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #BF9A33; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="crown" style="width: 14px; height: 14px;"></i> Head of Institution (Full Name) *
+                  </label>
+                  <input type="text" class="form-input inst-inp" id="inst-head-name" value="${esc(details.headOfInstitutionName || '')}" placeholder="e.g. C. M. Basith" style="border-radius: 8px; font-weight: 700;">
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Authorized Executive Head</div>
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #BF9A33; display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="mail" style="width: 14px; height: 14px;"></i> Head of Institution Email *
+                  </label>
+                  <input type="email" class="form-input inst-inp font-mono" id="inst-head-email" value="${esc(details.headOfInstitutionEmail || '')}" placeholder="e.g. cmbasith786@gmail.com" style="border-radius: 8px;">
+                  <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Official Correspondence Desk</div>
+                </div>
+              </div>
+
+              <!-- 5. Name, Website & Tagline -->
+              <div class="form-group" style="margin: 0;">
+                <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Legal Institution Name *</label>
+                <input type="text" class="form-input inst-inp" id="inst-name" value="${esc(details.name || '')}" placeholder="THAIBA PUBLIC SCHOOL" style="border-radius: 8px; font-weight: 700;">
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Official Public Website</label>
+                  <input type="text" class="form-input inst-inp" id="inst-website" value="${esc(details.website || '')}" placeholder="https://tps.clubad.space" style="border-radius: 8px;">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Campus Motto / Subtitle</label>
+                  <input type="text" class="form-input inst-inp" id="inst-tagline" value="${esc(details.tagline || '')}" placeholder="Run by : Thaiba Heritage, Kolkata" style="border-radius: 8px;">
+                </div>
+              </div>
+
+              <!-- Save Action -->
+              <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn btn-primary" id="btn-save-inst-details" style="background: #BF9A33; border-color: #BF9A33; padding: 10px 22px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                  <i data-lucide="save"></i> Save Institutional Details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Live Card Preview Handler
+    const updatePreview = () => {
+      const liveData = {
+        name: document.getElementById('inst-name')?.value.trim() || details.name,
+        regNo: document.getElementById('inst-reg-no')?.value.trim() || details.regNo,
+        trust: document.getElementById('inst-trust')?.value.trim() || details.trust,
+        campusDistrict: document.getElementById('inst-district')?.value.trim() || details.campusDistrict,
+        campusLocation: document.getElementById('inst-location')?.value.trim() || details.campusLocation,
+        contactPhones: document.getElementById('inst-phones')?.value.trim() || details.contactPhones,
+        contactEmail: document.getElementById('inst-email')?.value.trim() || details.contactEmail,
+        headOfInstitutionName: document.getElementById('inst-head-name')?.value.trim() || details.headOfInstitutionName,
+        headOfInstitutionEmail: document.getElementById('inst-head-email')?.value.trim() || details.headOfInstitutionEmail,
+        website: document.getElementById('inst-website')?.value.trim() || details.website,
+        tagline: document.getElementById('inst-tagline')?.value.trim() || details.tagline
+      };
+
+      const container = document.getElementById('inst-card-preview-container');
+      if (container) {
+        container.innerHTML = institutionService.renderStatusCardHtml(liveData);
+        UIComponents.refreshIcons();
+      }
+    };
+
+    tabContent.querySelectorAll('.inst-inp').forEach(inp => {
+      inp.addEventListener('input', updatePreview);
+    });
+
+    // Save Button Handler
+    safeOn('btn-save-inst-details', 'click', async () => {
+      const regNo = (document.getElementById('inst-reg-no')?.value || '').trim();
+      const trust = (document.getElementById('inst-trust')?.value || '').trim();
+      const campusDistrict = (document.getElementById('inst-district')?.value || '').trim();
+      const campusLocation = (document.getElementById('inst-location')?.value || '').trim();
+      const contactPhones = (document.getElementById('inst-phones')?.value || '').trim();
+      const contactEmail = (document.getElementById('inst-email')?.value || '').trim();
+      const headOfInstitutionName = (document.getElementById('inst-head-name')?.value || '').trim();
+      const headOfInstitutionEmail = (document.getElementById('inst-head-email')?.value || '').trim();
+      const name = (document.getElementById('inst-name')?.value || '').trim();
+      const website = (document.getElementById('inst-website')?.value || '').trim();
+      const tagline = (document.getElementById('inst-tagline')?.value || '').trim();
+
+      if (!name || !regNo || !trust) {
+        UIComponents.showToast('Please fill in Institution Name, Registration No., and Parent Trust.', 'warning');
+        return;
+      }
+
+      const payload = {
+        name,
+        regNo,
+        trust,
+        campusDistrict: campusDistrict || 'Dakshin Dinajpur',
+        campusLocation: campusLocation || 'Baghait, Tapan, Dakshin Dinajpur, West Bengal 733127',
+        contactPhones: contactPhones || '+91 8653382851 / +91 8167782851',
+        contactEmail: contactEmail || 'tps@thaibagarden.com',
+        headOfInstitutionName: headOfInstitutionName || 'C. M. Basith',
+        headOfInstitutionEmail: headOfInstitutionEmail || 'cmbasith786@gmail.com',
+        website,
+        tagline
+      };
+
+      const saveBtn = document.getElementById('btn-save-inst-details');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Saving...';
+      }
+
+      await institutionService.saveDetails(payload);
+      await auditService.log('INSTITUTION_DETAILS_UPDATED', 'GOVERNANCE', payload);
+
+      UIComponents.showToast('Institutional Details updated successfully & applied campus-wide!', 'success');
+      this.renderTab('institution-details');
+    });
+
+    // Reset Defaults Handler
+    safeOn('btn-reset-inst-defaults', 'click', async () => {
+      if (!confirm('Reset all institutional campus details back to standard defaults?')) return;
+      await institutionService.resetToDefaults();
+      await auditService.log('INSTITUTION_DETAILS_RESET', 'GOVERNANCE', {});
+      UIComponents.showToast('Institutional details reset to standard defaults.', 'info');
+      this.renderTab('institution-details');
+    });
+
+    UIComponents.refreshIcons();
   }
 
   static async renderBrandingTab(tabContent) {
@@ -4110,9 +7010,9 @@ export class AdminModule {
         </div>
 
         <div class="kpi-grid" style="margin:16px 0 20px;">
-          <div class="card" style="padding:14px; text-align:center; border-left:3px solid #16a34a;">
+          <div class="card" style="padding:14px; text-align:center; border-left:3px solid #BF9A33;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Active Online Now</div>
-            <div style="font-size:1.8rem; font-weight:800; color:#16a34a;" id="kpi-online-count">—</div>
+            <div style="font-size:1.8rem; font-weight:800; color:#BF9A33;" id="kpi-online-count">—</div>
           </div>
           <div class="card" style="padding:14px; text-align:center; border-left:3px solid #2563eb;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Total Sessions Logged</div>
@@ -4272,7 +7172,7 @@ export class AdminModule {
             <tr data-session-id="${esc(s.id)}">
               <td>
                 <div style="font-weight:700; font-size:0.86rem; display:flex; align-items:center; gap:6px;">
-                  ${isOnline ? '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; box-shadow:0 0 8px #16a34a;"></span>' : ''}
+                  ${isOnline ? '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#BF9A33; box-shadow:0 0 8px #BF9A33;"></span>' : ''}
                   ${esc(s.userName || 'TMS User')}
                 </div>
                 <div class="font-mono" style="font-size:0.75rem; color:var(--text-muted);">${esc(s.userEmail || '—')}</div>
@@ -4379,7 +7279,7 @@ export class AdminModule {
         <div class="card-header" style="flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
           <div>
             <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-              <span style="color:#16a34a;"><i data-lucide="wrench"></i></span>
+              <span style="color:#BF9A33;"><i data-lucide="wrench"></i></span>
               System Doctor — Automated Error Diagnosis &amp; Self-Repair
             </h3>
             <p class="card-desc">Deep diagnostic scanner that identifies database inconsistencies, orphaned student records, missing IDs, corrupted finance items, and offline queue drift, with 1-click automatic fixes.</p>
@@ -4399,7 +7299,7 @@ export class AdminModule {
             <div id="doctor-status-badge" class="badge badge-info" style="font-size:0.82rem; padding:4px 10px;">Ready for Diagnosis</div>
             <span id="doctor-status-text" style="font-size:0.85rem; color:var(--text-muted);">Click "Run Deep System Scan" to analyze database health.</span>
           </div>
-          <div id="doctor-issue-count" style="font-weight:700; font-size:0.9rem; color:#16a34a;">0 Issues Detected</div>
+          <div id="doctor-issue-count" style="font-weight:700; font-size:0.9rem; color:#BF9A33;">0 Issues Detected</div>
         </div>
 
         <div style="font-weight:700; font-size:0.92rem; margin:16px 0 10px; display:flex; align-items:center; gap:6px;">
@@ -4625,13 +7525,13 @@ export class AdminModule {
         statusText.innerText = 'All database collections, schemas, and accounts verified intact.';
         if (issueCountEl) {
           issueCountEl.innerText = '0 Issues Detected';
-          issueCountEl.style.color = '#16a34a';
+          issueCountEl.style.color = '#BF9A33';
         }
         repairBtn.disabled = true;
 
         container.innerHTML = `
-          <div style="padding:24px; text-align:center; background:rgba(22,163,74,0.06); border:1.5px solid #86efac; border-radius:10px; color:#15803d;">
-            <i data-lucide="check-circle-2" style="width:36px;height:36px;display:block;margin:0 auto 8px;color:#16a34a;"></i>
+          <div style="padding:24px; text-align:center; background:rgba(191, 154, 51,0.06); border:1.5px solid #F2D88C; border-radius:10px; color:#8C6E1E;">
+            <i data-lucide="check-circle-2" style="width:36px;height:36px;display:block;margin:0 auto 8px;color:#BF9A33;"></i>
             <div style="font-weight:700; font-size:1.05rem;">All Core Subsystems Operating Correctly</div>
             <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">No data corruption, schema drift, or broken relationships detected across any campus table.</div>
           </div>
@@ -4763,7 +7663,7 @@ export class AdminModule {
         <div class="kpi-grid" style="margin:16px 0 20px;">
           <div class="card" style="padding:14px; text-align:center;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Supabase Status</div>
-            <div style="font-size:1.1rem; font-weight:800; color:#16a34a; margin-top:4px;" id="dev-kpi-status">Connected</div>
+            <div style="font-size:1.1rem; font-weight:800; color:#BF9A33; margin-top:4px;" id="dev-kpi-status">Connected</div>
           </div>
           <div class="card" style="padding:14px; text-align:center;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Roundtrip Ping</div>
@@ -4842,7 +7742,7 @@ export class AdminModule {
         const elapsed = Math.round(performance.now() - start);
         if (pingEl) {
           pingEl.innerText = `${elapsed} ms`;
-          pingEl.style.color = elapsed < 300 ? '#16a34a' : '#f59e0b';
+          pingEl.style.color = elapsed < 300 ? '#BF9A33' : '#f59e0b';
         }
       } catch (err) {
         if (pingEl) {
@@ -5001,22 +7901,22 @@ const safeOn = (id, event, fn) => {
     ]);
 
     const stats = [
-      { name: 'Enrolled Students', count: students.length, icon: 'graduation-cap', color: 'emerald' },
+      { name: 'Enrolled Students', count: students.length, icon: 'graduation-cap', color: 'Gold' },
       { name: 'Staff & Faculty', count: staff.length, icon: 'users', color: 'blue' },
       { name: 'Financial Invoices', count: invoices.length, icon: 'credit-card', color: 'amber' },
       { name: 'Admission Applications', count: apps.length, icon: 'file-text', color: 'rose' },
       { name: 'Exam Assessments', count: exams.length, icon: 'award', color: 'blue' },
-      { name: 'Daily Attendance Punches', count: att.length, icon: 'check-square', color: 'emerald' },
+      { name: 'Daily Attendance Punches', count: att.length, icon: 'check-square', color: 'Gold' },
       { name: 'Class Timetables', count: timetables.length, icon: 'calendar-days', color: 'amber' },
       { name: 'Issued Certificates (TC & Merit)', count: certs.length, icon: 'file-check', color: 'rose' }
     ];
 
     tabContent.innerHTML = `
-      <div class="card" style="border-left: 4px solid #16a34a; margin-bottom: 24px;">
+      <div class="card" style="border-left: 4px solid #BF9A33; margin-bottom: 24px;">
         <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 4px; display: flex; align-items: center; gap: 8px;">
-              <span style="color: #16a34a;"><i data-lucide="database"></i></span>
+              <span style="color: #BF9A33;"><i data-lucide="database"></i></span>
               Institutional Data Snapshot &amp; Disaster Recovery
             </h2>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
@@ -5031,7 +7931,7 @@ const safeOn = (id, event, fn) => {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0;">
           ${stats.map(s => `
             <div style="background: var(--bg-subtle, #f8fafc); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(22, 163, 74, 0.1); color: #16a34a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(191, 154, 51, 0.1); color: #BF9A33; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <i data-lucide="${s.icon}"></i>
               </div>
               <div>
@@ -5083,7 +7983,7 @@ const safeOn = (id, event, fn) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `TMS_ERP_FULL_BACKUP_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `TPS_ERP_FULL_BACKUP_${new Date().toISOString().slice(0, 10)}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -5368,9 +8268,9 @@ const safeOn = (id, event, fn) => {
     const bodyHtml = `
       <form id="edit-app-form" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Status & Meta Bar -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; background:#f0fdf4; border:1px solid #bbf7d0; padding:12px 16px; border-radius:8px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; background:#FDF8E8; border:1px solid #F7E8B5; padding:12px 16px; border-radius:8px;">
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Application Status</label>
+            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Application Status</label>
             <select class="form-select form-select-sm" id="ea-status">
               <option value="Submitted" ${app.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
               <option value="Under Verification" ${app.status === 'Under Verification' ? 'selected' : ''}>Under Verification</option>
@@ -5380,7 +8280,7 @@ const safeOn = (id, event, fn) => {
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Payment Status</label>
+            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Payment Status</label>
             <select class="form-select form-select-sm" id="ea-pay-status">
               <option value="Not Required" ${app.paymentStatus === 'Not Required' ? 'selected' : ''}>Not Required</option>
               <option value="Pending" ${app.paymentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
@@ -5390,14 +8290,14 @@ const safeOn = (id, event, fn) => {
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#166534; font-weight:700;">Total Fees (₹)</label>
+            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Total Fees (₹)</label>
             <input type="number" class="form-input form-input-sm" id="ea-fee-total" value="${esc(app.feeTotal != null ? app.feeTotal : 0)}">
           </div>
         </div>
 
         <!-- Section 1: Candidate Identity -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="user" style="width:16px;height:16px;"></i> 1. Candidate Details
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -5447,7 +8347,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 2: Guardian Details -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="users" style="width:16px;height:16px;"></i> 2. Guardian &amp; Contact Details
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -5484,7 +8384,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 3: Address & School -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="map-pin" style="width:16px;height:16px;"></i> 3. Address &amp; Academic History
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -5525,7 +8425,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 4: Attached Files -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#15803d; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="paperclip" style="width:16px;height:16px;"></i> 4. Attached Files &amp; Uploads
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
@@ -5790,7 +8690,7 @@ Please keep your login details safe and confidential.`;
         </div>
 
         <div>
-          <label class="form-label" style="font-size:0.78rem; font-weight:700; color:#15803d; display:flex; align-items:center; gap:6px;">
+          <label class="form-label" style="font-size:0.78rem; font-weight:700; color:#8C6E1E; display:flex; align-items:center; gap:6px;">
             <i data-lucide="eye" style="width:14px;height:14px;"></i> Live Preview
           </label>
           <pre id="cst-preview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:0.8rem; white-space:pre-wrap; color:#1e293b; margin:0; max-height:160px; overflow-y:auto;">${esc(previewMsg)}</pre>

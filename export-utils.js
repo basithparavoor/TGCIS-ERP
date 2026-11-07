@@ -92,12 +92,12 @@ export function renderDocumentHeader(opts = {}) {
   const currentDate = opts.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   // Resolve emblem logo
-  let logoSrc = './tms-logo.png';
+  let logoSrc = './tps-logo.png';
   try {
-    const rawLogo = (typeof TMS_LOGO !== 'undefined' && TMS_LOGO.getCustomLogo) ? TMS_LOGO.getCustomLogo() : './tms-logo.png';
+    const rawLogo = (typeof TMS_LOGO !== 'undefined' && TMS_LOGO.getCustomLogo) ? TMS_LOGO.getCustomLogo() : './tps-logo.png';
     logoSrc = new URL(rawLogo, document.baseURI).href;
   } catch (e) {
-    logoSrc = './tms-logo.png';
+    logoSrc = './tps-logo.png';
   }
 
   return `

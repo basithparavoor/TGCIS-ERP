@@ -33,6 +33,7 @@ class SupabaseDataService {
     this.isOnline = navigator.onLine;
     this._memCache = new Map();
     this._memCacheTime = new Map();
+    this._missingTables = new Set();
     this._cacheTTL = 60000; // 60 seconds memory cache
     this.cleanLegacyDemoData();
     this.initClient();
@@ -90,8 +91,13 @@ class SupabaseDataService {
           await this.client.from(item.collection).delete().eq('id', item.payload.id);
         }
       } catch (err) {
-        console.warn(`[Offline Sync] Item ${item.id} retry deferred:`, err.message);
-        remaining.push(item);
+        const isRls = /row-level security|policy|permission denied|42501|403|unauthorized/i.test(err.message || '') || err.code === '42501';
+        if (!isRls) {
+          console.warn(`[Offline Sync] Item ${item.id} retry deferred:`, err.message);
+          remaining.push(item);
+        } else {
+          console.warn(`[Offline Sync] Dropped ${item.collection} item ${item.id} due to cloud policy restriction:`, err.message);
+        }
       }
     }
 
@@ -104,22 +110,43 @@ class SupabaseDataService {
   cleanLegacyDemoData() {
     // Purge old demo mock flags, sample data, and hardcoded templates
     try {
-      const keysToScan = [
+      const demoKeys = [
         'tms_seeded_v3',
-        'tms_assignments',
-        'tms_calendar_events',
-        'tms_syllabus_topics',
-        'tms_students',
-        'tms_staff',
-        'tms_invoices',
-        'tms_facilities',
-        'tms_staff_tasks',
-        'tms_attendance_register'
+        'tms_mock_users'
       ];
-      keysToScan.forEach(k => {
-        const val = localStorage.getItem(k);
-        if (val && (val.includes('hw_1') || val.includes('ev_1') || val.includes('syl-1') || k === 'tms_seeded_v3')) {
-          localStorage.removeItem(k);
+      demoKeys.forEach(k => localStorage.removeItem(k));
+
+      // Clear any stuck RLS-blocked queue entries from offline queue
+      const rawQueue = localStorage.getItem('tms_offline_queue');
+      if (rawQueue) {
+        try {
+          const parsed = JSON.parse(rawQueue);
+          if (Array.isArray(parsed)) {
+            const cleaned = parsed.filter(item => item.collection !== 'app_settings');
+            localStorage.setItem('tms_offline_queue', JSON.stringify(cleaned));
+          }
+        } catch (_) {
+          localStorage.removeItem('tms_offline_queue');
+        }
+      }
+
+      const collections = [
+        'assignments',
+        'calendar_events',
+        'syllabus_topics',
+        'students',
+        'staff',
+        'invoices',
+        'facilities',
+        'staff_tasks',
+        'attendance_register',
+        'attendance_records',
+        'admissions_applications'
+      ];
+      collections.forEach(col => {
+        const raw = localStorage.getItem(`tms_${col}`);
+        if (raw && (raw.includes('hw_1') || raw.includes('ev_1') || raw.includes('syl-1') || raw.includes('demo') || raw.includes('TMS-VCZR7PVGW') || raw.includes('TMS-IAM89T42J') || raw.includes('TMS-V7YXHBQAF'))) {
+          localStorage.removeItem(`tms_${col}`);
         }
       });
     } catch (e) { /* ignore */ }
@@ -187,6 +214,10 @@ class SupabaseDataService {
   }
 
   async select(collection, filterFn = null, forceRefresh = false) {
+    if (this._missingTables && this._missingTables.has(collection)) {
+      const local = this.getLocal(collection);
+      return filterFn ? local.filter(filterFn) : [...local];
+    }
     const now = Date.now();
 
     // 1. In-Memory RAM Cache (Instant 0ms)
@@ -205,13 +236,22 @@ class SupabaseDataService {
       this._memCacheTime.set(collection, now);
 
       // Background silent revalidation (non-blocking)
-      if (this.client && this.isOnline) {
+      if (this.client && this.isOnline && !this._missingTables.has(collection)) {
         this.client.from(collection).select('*').then(({ data, error }) => {
+          if (error) {
+            if (error.code === '42P01' || error.status === 404 || String(error.message || '').includes('does not exist')) {
+              this._missingTables.add(collection);
+            }
+            return;
+          }
           if (!error && Array.isArray(data)) {
             const mapped = data.map(rowFromDb);
-            this._memCache.set(collection, mapped);
-            this._memCacheTime.set(collection, Date.now());
-            this.setLocal(collection, mapped);
+            const currentLocal = this.getLocal(collection);
+            if (mapped.length > 0 || currentLocal.length === 0) {
+              this._memCache.set(collection, mapped);
+              this._memCacheTime.set(collection, Date.now());
+              this.setLocal(collection, mapped);
+            }
           }
         }).catch(() => {});
       }
@@ -225,13 +265,27 @@ class SupabaseDataService {
         const { data, error } = await this.client.from(collection).select('*');
         if (error) throw error;
         if (Array.isArray(data)) {
-          const mapped = data.map(rowFromDb);
-          this._memCache.set(collection, mapped);
-          this._memCacheTime.set(collection, now);
-          this.setLocal(collection, mapped);
-          return filterFn ? mapped.filter(filterFn) : [...mapped];
+          let mapped = data.map(rowFromDb);
+          if (mapped.length > 0 || localData.length === 0) {
+            // Preserve locally saved records that may not yet exist on the remote database
+            if (localData && localData.length > 0) {
+              const mappedIds = new Set(mapped.map(m => m.id));
+              const localUnsynced = localData.filter(loc => loc && loc.id && !mappedIds.has(loc.id));
+              if (localUnsynced.length > 0) {
+                mapped = [...mapped, ...localUnsynced];
+              }
+            }
+            this._memCache.set(collection, mapped);
+            this._memCacheTime.set(collection, now);
+            this.setLocal(collection, mapped);
+            return filterFn ? mapped.filter(filterFn) : [...mapped];
+          }
         }
       } catch (err) {
+        if (err && (err.code === '42P01' || err.status === 404 || String(err.message || '').includes('404') || String(err.message || '').includes('does not exist'))) {
+          if (!this._missingTables) this._missingTables = new Set();
+          this._missingTables.add(collection);
+        }
         console.warn(`Supabase select failed for ${collection}, using local cache:`, err.message);
       }
     }
@@ -288,9 +342,14 @@ class SupabaseDataService {
           .upsert(rowToDb(enriched), { onConflict });
         if (error) throw error;
       } catch (e) {
-        console.error(`Supabase upsert FAILED for ${collection}:`, e.message);
-        this.addToQueue('upsert', collection, enriched);
-        return { ...enriched, _syncError: e.message, _queued: true };
+        const isRlsError = /row-level security|policy|permission denied|42501|403|unauthorized/i.test(e.message || '') || e.code === '42501';
+        if (!isRlsError) {
+          console.error(`Supabase upsert FAILED for ${collection}:`, e.message);
+          this.addToQueue('upsert', collection, enriched);
+        } else {
+          console.warn(`Supabase upsert for ${collection} stored locally (cloud policy restricted):`, e.message);
+        }
+        return { ...enriched, _syncError: e.message, _queued: !isRlsError };
       }
     } else {
       this.addToQueue('upsert', collection, enriched);

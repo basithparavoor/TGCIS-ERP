@@ -41,6 +41,11 @@ class AuthService {
     try {
       const { data: { session } } = await client.auth.getSession();
       if (!session || !session.user) {
+        const cached = this.readCache();
+        if (cached && cached.role) {
+          this.currentUser = cached;
+          return cached;
+        }
         this.currentUser = null;
         this.clearCache();
         return null;
@@ -135,12 +140,35 @@ class AuthService {
         is_active: true
       };
       try {
-        await client.from('profiles').insert(pendingProfile);
-        data = pendingProfile;
+        const { error: insertErr } = await client.from('profiles').upsert(pendingProfile, { onConflict: 'id' });
+        if (insertErr) {
+          console.warn('Auto-upsert pending profile in profiles table note:', insertErr.message);
+        }
       } catch (insertErr) {
         console.warn('Auto-insert pending profile fallback:', insertErr);
-        data = pendingProfile;
       }
+
+      // Resilient fallback: Also log pending signup to audit_logs so Admin is guaranteed to see them
+      try {
+        const auditEntry = {
+          id: 'AUD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 4).toUpperCase(),
+          timestamp: new Date().toISOString(),
+          user_id: authUser.id,
+          user_name: pendingProfile.name,
+          user_role: 'pending',
+          user_scope: 'own_records',
+          action: 'GOOGLE_SIGNUP_PENDING_APPROVAL',
+          category: 'AUTH',
+          entity_ref: email,
+          details: JSON.stringify(pendingProfile),
+          client_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'TMS-Auth-Service'
+        };
+        await client.from('audit_logs').insert(auditEntry);
+      } catch (auditErr) {
+        console.warn('Could not record pending signup in audit_logs:', auditErr);
+      }
+
+      data = pendingProfile;
     }
 
     if (!data) {
@@ -185,6 +213,8 @@ class AuthService {
       assignedClass: profile.assigned_class || null,
       assignedSection: profile.assigned_section || null,
       phone: profile.phone || '',
+      tgiId: (() => { try { return JSON.parse(localStorage.getItem('tms_staff_meta_' + profile.id) || '{}').tgiId || profile.staff_id || ''; } catch(e){ return ''; } })(),
+      bloodGroup: (() => { try { return JSON.parse(localStorage.getItem('tms_staff_meta_' + profile.id) || '{}').bloodGroup || ''; } catch(e){ return ''; } })(),
       rawTitle: profile.title || '',
       rawDepartment: profile.department || '',
       avatar: userAvatar,
@@ -321,7 +351,7 @@ class AuthService {
     }
 
     try {
-      const redirectUrl = window.location.href.split('#')[0].split('?')[0];
+      const redirectUrl = `${window.location.origin}/login`;
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
         options: {

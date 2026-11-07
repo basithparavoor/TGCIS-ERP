@@ -19,7 +19,7 @@
   <div style="min-height: 100vh; display: flex; flex-direction: column;">
     <header class="app-topbar">
       <div class="topbar-left">
-        <span class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TPS</span>
+        <span class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TMS</span>
         <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;">
           Student Learner Portal
         </div>
@@ -49,7 +49,7 @@
 
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div class="kpi-icon kpi-emerald"><i data-lucide="check-circle-2"></i></div>
+            <div class="kpi-icon kpi-Gold"><i data-lucide="check-circle-2"></i></div>
             <div class="kpi-meta"><h3 id="portal-attendance">—</h3><p>Attendance Record</p></div>
           </div>
           <div class="kpi-card">
@@ -84,7 +84,7 @@
               </table>
             </div>
 
-            <div class="card">
+            <div class="card" style="margin-bottom: 24px;">
               <div class="card-header">
                 <h3 class="card-title">Term Assessment Reports</h3>
                 <span class="badge badge-info" id="portal-exam-status">Evaluation</span>
@@ -93,6 +93,27 @@
               <div id="portal-exam-rows" style="text-align: center; color: var(--text-muted); padding: 20px;">
                 <i data-lucide="inbox" style="width:40px;height:40px;display:block;margin:0 auto 10px;"></i>
                 No exam records published for this session yet.
+              </div>
+            </div>
+
+            <!-- Student Leave Governance Card -->
+            <div class="card">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                  <h3 class="card-title">Leave Applications &amp; Gate Passes</h3>
+                  <p style="font-size: 0.82rem; color: var(--text-muted); margin: 2px 0 0 0;">
+                    Official leave requests, warden approvals &amp; issued security outpasses.
+                  </p>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-portal-apply-leave" style="background:#0E623B; border-color:#0E623B; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+                  <i data-lucide="plus"></i> Apply for Leave
+                </button>
+              </div>
+              <div id="portal-leave-rows" style="margin-top: 14px;">
+                <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                  <i data-lucide="inbox" style="width:36px; height:36px; display:block; margin:0 auto 10px; color: var(--text-subtle);"></i>
+                  Loading your leave applications...
+                </div>
               </div>
             </div>
           </div>
@@ -130,6 +151,7 @@
     import { TMS_CONFIG } from './config.js';
     import { brandingService } from './branding-service.js';
     import { QRCodeGenerator } from './qr-generator.js';
+    import { StudentLeaveService } from './student-leave-service.js';
 
     (async () => {
       brandingService.refresh();
@@ -138,7 +160,7 @@
       const allowed = user && [TMS_CONFIG.roles.STUDENT, TMS_CONFIG.roles.ADMIN].includes(user.role);
 
       if (!allowed) {
-        window.location.href = user ? '/#/dashboard' : '/login';
+        window.location.href = user ? '/dashboard' : '/login';
         return;
       }
 
@@ -155,8 +177,12 @@
       };
 
       try {
-        const students = await dbService.select('students');
-        const student = students.find(s => s.userId === user.id || s.id === user.id || s.email === user.email) || students[0] || null;
+        let students = await dbService.select('students');
+        if (!students || !students.length) {
+          const { SAMPLE_STUDENTS } = await import('./student-module.js');
+          students = SAMPLE_STUDENTS;
+        }
+        const student = students.find(s => s.userId === user.id || s.id === user.id || s.email === user.email || s.admissionNo === user.admissionNo) || students[0] || null;
 
         if (!student) {
           setText('portal-student-name', 'No Student Record Linked');
@@ -183,12 +209,106 @@
           });
         }
 
+        // 6. Student Leaves & Gate Passes
+        const renderStudentLeaves = async () => {
+          const leaveRows = document.getElementById('portal-leave-rows');
+          if (!leaveRows) return;
+          try {
+            const leaves = await StudentLeaveService.getLeaves();
+            const myLeaves = leaves.filter(l => l.studentId === student.id || l.admissionNo === student.admissionNo);
+
+            if (!myLeaves.length) {
+              leaveRows.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 24px; background: var(--bg-subtle, #F8FAFC); border-radius: 10px;">
+                  <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #BF9A33;"></i>
+                  <div style="font-weight: 600;">No Leave Applications on Record</div>
+                  <div style="font-size: 0.8rem; margin-top: 2px;">Need time off? Click "Apply for Leave" above.</div>
+                </div>
+              `;
+              UIComponents.refreshIcons();
+              return;
+            }
+
+            leaveRows.innerHTML = `
+              <div class="table-responsive">
+                <table class="tms-table" style="font-size: 0.84rem; width: 100%;">
+                  <thead>
+                    <tr style="background: #F8FAFC;">
+                      <th>LEAVE TYPE &amp; DURATION</th>
+                      <th>DATES</th>
+                      <th>GATE PASS</th>
+                      <th style="text-align:center;">STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${myLeaves.map(l => {
+                      let statusBadge = '';
+                      if (l.status === 'APPROVED_ON_LEAVE' && !l.actualReturn) {
+                        statusBadge = `<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; font-weight:800;"><i data-lucide="plane-takeoff" style="width:12px;height:12px;vertical-align:middle;"></i> ON LEAVE</span>`;
+                      } else if (l.status === 'PENDING') {
+                        statusBadge = `<span class="badge badge-warning">Awaiting Approval</span>`;
+                      } else if (l.status === 'RETURNED' || l.actualReturn) {
+                        statusBadge = `<span class="badge badge-success">✓ Returned (${esc((l.actualReturn || '').slice(0, 10))})</span>`;
+                      } else if (l.status === 'REJECTED') {
+                        statusBadge = `<span class="badge badge-danger">Declined</span>`;
+                      } else {
+                        statusBadge = `<span class="badge badge-info">${esc(l.status)}</span>`;
+                      }
+
+                      return `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                          <td>
+                            <div style="font-weight: 700; color: var(--text-main);">${esc(l.leaveType || 'General')}</div>
+                            <div style="font-size: 0.74rem; color: var(--text-muted);">${esc(l.reason || '—')}</div>
+                          </td>
+                          <td>
+                            <div style="font-weight: 600;">${esc(l.fromDate)} – ${esc(l.toDate)}</div>
+                            <div style="font-size: 0.74rem; color: #BF9A33; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
+                          </td>
+                          <td>
+                            ${l.gatePassNo ? `
+                              <span class="badge badge-info font-mono" style="font-size: 0.76rem;">${esc(l.gatePassNo)}</span>
+                              <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">Issued: ${esc((l.issuedAt || '').slice(0, 10))}</div>
+                            ` : '<span style="color: var(--text-subtle); font-size: 0.76rem;">Pending Pass</span>'}
+                          </td>
+                          <td style="text-align: center;">${statusBadge}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `;
+            UIComponents.refreshIcons();
+          } catch (err) {
+            console.error('Failed rendering leaves:', err);
+          }
+        };
+
+        // Wire apply leave button
+        document.getElementById('btn-portal-apply-leave')?.addEventListener('click', () => {
+          StudentLeaveService.openApplyModal({
+            student,
+            appliedBy: 'student',
+            appliedByName: student.fullName,
+            onComplete: () => {
+              renderStudentLeaves();
+              UIComponents.showToast('Leave application submitted to Class Faculty & Warden.', 'success');
+            }
+          });
+        });
+
+        // Trigger leaves render immediately
+        renderStudentLeaves();
+
         // 1. Fee Balance
-        const invoices = await dbService.select('invoices');
-        const due = invoices
-          .filter(inv => inv.studentId === student.id || inv.studentName === student.fullName)
-          .reduce((sum, inv) => sum + (parseFloat(inv.balance) || 0), 0);
-        setText('portal-fee', due > 0 ? `₹ ${due.toLocaleString()} Due` : 'All Cleared');
+        try {
+          const invoices = await dbService.select('invoices');
+          const due = (invoices || [])
+            .filter(inv => inv.studentId === student.id || inv.studentName === student.fullName)
+            .reduce((sum, inv) => sum + (parseFloat(inv.balance) || 0), 0);
+          setText('portal-fee', due > 0 ? `₹ ${due.toLocaleString()} Due` : 'All Cleared');
+        } catch (e) {}
 
         // 2. Attendance Summary
         const attendance = await dbService.select('attendance_records');
@@ -275,6 +395,7 @@
 
       } catch (e) {
         console.error('Student portal hydration failed:', e);
+        window.__hydrationError = (e && e.stack) || String(e);
       }
 
       UIComponents.refreshIcons();

@@ -3,46 +3,3446 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>THAIBA PUBLIC SCHOOL — Enterprise Management Suite</title>
+  <title>THAIBA PUBLIC SCHOOL — Official Institutional Campus</title>
   <link rel="icon" type="image/png" href="./tps-logo.png">
   <link rel="apple-touch-icon" href="./tps-logo.png">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#BF9A33">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="TPS ERP">
+  <meta name="apple-mobile-web-app-title" content="TPS School">
+
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+
+  <!-- Core App Styles & Icons -->
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       INSTITUTIONAL WEBSITE - ULTRA-PREMIUM LOGO-THEMED CSS
+       ========================================================================== */
+    :root {
+      --brand-theme-primary: #BF9A33;
+      --brand-theme-hover: #8C6E1E;
+      --brand-theme-light: #FCF4D9;
+      --brand-theme-dark: #7A611C;
+      --brand-theme-accent: #f59e0b;
+      --brand-theme-accent-light: #fef3c7;
+      --brand-dark-bg: #0f172a;
+      --brand-light-bg: #f8fafc;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: #334155;
+      background-color: #f8fafc;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Lighting Background */
+    .hero-glow-orb-1 {
+      position: absolute;
+      top: -100px;
+      left: 20%;
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(191, 154, 51, 0.18) 0%, rgba(191, 154, 51, 0) 70%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulseOrb 8s infinite alternate ease-in-out;
+    }
+
+    .hero-glow-orb-2 {
+      position: absolute;
+      top: 150px;
+      right: 5%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0) 70%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+      animation: pulseOrb 10s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes pulseOrb {
+      0% { transform: scale(0.9) translate(0, 0); opacity: 0.7; }
+      100% { transform: scale(1.15) translate(30px, 20px); opacity: 1; }
+    }
+
+    /* Sticky Navigation Header */
+    .inst-nav-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+      transition: all 0.25s ease;
+    }
+
+    .inst-nav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 28px;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .inst-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .inst-brand-logo-wrap {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .inst-brand-logo-img {
+      max-width: 44px;
+      max-height: 44px;
+      object-fit: contain;
+    }
+
+    .inst-brand-titles {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .inst-brand-name {
+      font-family: var(--font-display);
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: 0.02em;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    .inst-brand-tagline {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--brand-theme-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .inst-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .inst-nav-links a {
+      color: #475569;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: color 0.2s, transform 0.2s;
+      position: relative;
+      padding: 6px 0;
+    }
+
+    .inst-nav-links a:hover {
+      color: var(--brand-theme-primary);
+    }
+
+    .inst-nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background: var(--brand-theme-primary);
+      transition: width 0.25s ease;
+      border-radius: 2px;
+    }
+
+    .inst-nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .inst-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Header & Institutional Login Button */
+    .btn-inst-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--brand-theme-primary) 0%, var(--brand-theme-dark) 100%);
+      color: #ffffff !important;
+      padding: 0 24px;
+      height: 42px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(191, 154, 51, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      white-space: nowrap !important;
+      flex-shrink: 0;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-inst-login:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 6px 20px rgba(191, 154, 51, 0.42);
+      filter: brightness(1.05);
+    }
+
+    .btn-inst-login:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(191, 154, 51, 0.3);
+    }
+
+    .btn-inst-admission-footer {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff !important;
+      padding: 0 20px;
+      height: 42px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-inst-admission-footer:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: #E5C158;
+      color: #E5C158 !important;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 14px rgba(74, 222, 128, 0.2);
+    }
+
+    .btn-inst-apply {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      color: #0f172a !important;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.92rem;
+      text-decoration: none;
+      border: 1.5px solid #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-inst-apply:hover {
+      border-color: var(--brand-theme-primary);
+      color: var(--brand-theme-primary) !important;
+      background: #FDF8E8;
+      transform: translateY(-2px);
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      background: none;
+      border: 1px solid #e2e8f0;
+      padding: 8px;
+      border-radius: 8px;
+      color: #0f172a;
+      cursor: pointer;
+    }
+
+    /* Hero Section */
+    .inst-hero {
+      position: relative;
+      padding: 70px 24px 90px;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #FDF8E8 40%, #f8fafc 100%);
+    }
+
+    .inst-hero-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 50px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(191, 154, 51, 0.3);
+      box-shadow: 0 2px 10px rgba(191, 154, 51, 0.1);
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--brand-theme-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 20px;
+    }
+
+    .hero-badge-pill .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand-theme-primary);
+      animation: dotPulse 1.8s infinite;
+    }
+
+    @keyframes dotPulse {
+      0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(191, 154, 51, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 7px rgba(191, 154, 51, 0); }
+      100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(191, 154, 51, 0); }
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: 3.4rem;
+      font-weight: 800;
+      line-height: 1.12;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .hero-title .highlight-text {
+      background: linear-gradient(135deg, var(--brand-theme-primary) 0%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.12rem;
+      color: #475569;
+      line-height: 1.65;
+      margin-bottom: 34px;
+      max-width: 580px;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 38px;
+    }
+
+    .hero-cta-primary,
+    .hero-cta-login {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--brand-theme-primary) 0%, var(--brand-theme-dark) 100%);
+      color: #ffffff !important;
+      padding: 14px 30px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.02rem;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      box-shadow: 0 6px 20px rgba(191, 154, 51, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-cta-primary:hover,
+    .hero-cta-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(191, 154, 51, 0.48);
+      filter: brightness(1.05);
+    }
+
+    .hero-cta-primary:active,
+    .hero-cta-login:active {
+      transform: translateY(0);
+    }
+
+    .hero-cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #ffffff;
+      color: #0f172a !important;
+      padding: 14px 28px;
+      border-radius: 9999px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.02rem;
+      text-decoration: none;
+      border: 1.5px solid #cbd5e1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-cta-secondary:hover {
+      border-color: var(--brand-theme-primary);
+      color: var(--brand-theme-primary) !important;
+      background: #FDF8E8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(191, 154, 51, 0.15);
+    }
+
+    .hero-cta-secondary:active {
+      transform: translateY(0);
+    }
+
+    .hero-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-meta-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #FCF4D9;
+      color: var(--brand-theme-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .hero-meta-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-meta-val {
+      font-weight: 800;
+      font-size: 1rem;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+
+    .hero-meta-lbl {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* Hero Visual Card */
+    .hero-visual-card {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: #0f172a;
+    }
+
+    .hero-visual-img {
+      width: 100%;
+      height: 480px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-visual-card:hover .hero-visual-img {
+      transform: scale(1.03);
+    }
+
+    .hero-overlay-tag {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-floating-stat {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      left: 24px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(14px);
+      padding: 18px 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    /* Section Global Headers */
+    .inst-section {
+      padding: 90px 24px;
+      position: relative;
+    }
+
+    .inst-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .section-header-center {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 54px;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FCF4D9;
+      color: var(--brand-theme-primary);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(191, 154, 51, 0.2);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* Stats Ribbon */
+    .inst-stats-ribbon {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 40px 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .stats-ribbon-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .stat-ribbon-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px;
+    }
+
+    .stat-ribbon-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(191, 154, 51, 0.2);
+      border: 1px solid rgba(191, 154, 51, 0.4);
+      color: #E5C158;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-ribbon-number {
+      font-family: var(--font-display);
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+    }
+
+    .stat-ribbon-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* About Section */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .about-principal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 32px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    .about-principal-header {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .about-principal-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--brand-theme-light);
+    }
+
+    .about-quote-mark {
+      font-size: 2.8rem;
+      color: var(--brand-theme-primary);
+      line-height: 1;
+      opacity: 0.3;
+      margin-bottom: -10px;
+    }
+
+    .about-message-text {
+      font-size: 1.02rem;
+      font-style: italic;
+      color: #334155;
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 30px;
+    }
+
+    .value-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 18px;
+      transition: all 0.25s ease;
+    }
+
+    .value-card:hover {
+      border-color: var(--brand-theme-primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(191, 154, 51, 0.1);
+    }
+
+    .value-card h4 {
+      font-family: var(--font-display);
+      font-size: 1.02rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .value-card p {
+      font-size: 0.85rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* Academic Programs Cards */
+    .programs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+    }
+
+    .program-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 30px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .program-card:hover {
+      border-color: var(--brand-theme-primary);
+      transform: translateY(-6px);
+      box-shadow: 0 16px 36px rgba(191, 154, 51, 0.12);
+    }
+
+    .program-icon-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: #FCF4D9;
+      color: var(--brand-theme-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .program-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .program-subtitle {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--brand-theme-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 14px;
+    }
+
+    .program-desc {
+      font-size: 0.92rem;
+      color: #475569;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .program-highlights {
+      list-style: none;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .program-highlights li {
+      font-size: 0.84rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .program-highlights li i {
+      color: var(--brand-theme-primary);
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    /* Campus Facilities Grid */
+    .facilities-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .facility-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 24px 22px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
+    }
+
+    .facility-card:hover {
+      border-color: var(--brand-theme-primary);
+      box-shadow: 0 12px 30px rgba(191, 154, 51, 0.12);
+      transform: translateY(-4px);
+    }
+
+    .facility-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      background: #FDF8E8;
+      color: #8C6E1E;
+      border: 1px solid #F7E8B5;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .facility-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #FDF8E8 0%, #FCF4D9 100%);
+      color: #8C6E1E;
+      border: 1px solid #F7E8B5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .facility-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 8px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .facility-desc {
+      font-size: 0.92rem;
+      color: #334155;
+      line-height: 1.62;
+      font-weight: 400;
+    }
+
+    /* Hostel Specific Typography & Cards */
+    .hostel-ribbon-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 20px 16px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hostel-ribbon-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      border-color: #cbd5e1;
+    }
+
+    .hostel-ribbon-num {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+
+    .hostel-ribbon-lbl {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.25;
+    }
+
+    .hostel-wing-card {
+      margin: 0;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 26px;
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hostel-wing-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.09);
+      border-color: #cbd5e1;
+    }
+
+    /* Notice Board Section */
+    .notices-wrap {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .notices-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 24px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+
+    .notice-chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .notice-chip.active, .notice-chip:hover {
+      background: var(--brand-theme-primary);
+      color: #ffffff;
+      border-color: var(--brand-theme-primary);
+    }
+
+    .notices-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .notice-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .notice-row:last-child {
+      border-bottom: none;
+    }
+
+    .notice-row:hover {
+      background: #FDF8E8;
+    }
+
+    .notice-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .notice-date-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .notice-date-day {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1;
+    }
+
+    .notice-date-mon {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--brand-theme-primary);
+      text-transform: uppercase;
+    }
+
+    .notice-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .notice-category-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--brand-theme-primary);
+    }
+
+    .notice-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .notice-excerpt {
+      font-size: 0.85rem;
+      color: #64748b;
+      max-width: 650px;
+    }
+
+    /* Gallery Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .gallery-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      height: 270px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      cursor: pointer;
+    }
+
+    .gallery-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .gallery-card:hover .gallery-img {
+      transform: scale(1.08);
+    }
+
+    .gallery-caption-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0) 40%, rgba(15, 23, 42, 0.88) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 20px;
+      color: #ffffff;
+    }
+
+    .gallery-caption-cat {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #E5C158;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .gallery-caption-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Testimonials Grid */
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .testimonial-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .testimonial-stars {
+      display: flex;
+      gap: 3px;
+      color: #f59e0b;
+      margin-bottom: 14px;
+    }
+
+    .testimonial-text {
+      font-size: 0.95rem;
+      color: #334155;
+      font-style: italic;
+      line-height: 1.6;
+      margin-bottom: 22px;
+      flex: 1;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+    }
+
+    .testimonial-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .testimonial-name {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .testimonial-role {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    /* Admission CTA Banner */
+    .admission-cta-banner {
+      background: linear-gradient(135deg, var(--brand-theme-primary) 0%, var(--brand-theme-dark) 100%);
+      border-radius: 24px;
+      padding: 56px 48px;
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(191, 154, 51, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .admission-cta-content {
+      max-width: 650px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .admission-cta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #ffffff;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .admission-cta-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+    }
+
+    .admission-cta-desc {
+      font-size: 1.05rem;
+      opacity: 0.92;
+      line-height: 1.6;
+    }
+
+    .admission-cta-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn-cta-white {
+      background: #ffffff;
+      color: var(--brand-theme-primary) !important;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 1rem;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-cta-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Contact Section */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 50px;
+    }
+
+    .contact-info-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 34px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .contact-item-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .contact-item-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #FDF8E8;
+      color: var(--brand-theme-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .contact-item-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 0.95rem;
+    }
+
+    .contact-item-val {
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    .contact-form-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 34px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+    }
+
+    .contact-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Footer */
+    .inst-footer {
+      background: #0f172a;
+      color: #94a3b8;
+      padding: 70px 24px 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 1fr;
+      gap: 40px;
+      max-width: 1280px;
+      margin: 0 auto 50px;
+    }
+
+    .footer-col h4 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 18px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col ul a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: color 0.2s;
+    }
+
+    .footer-col ul a:hover {
+      color: #E5C158;
+    }
+
+    .footer-bottom {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+
+
+    /* Active User Banner */
+    .active-session-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #FCF4D9;
+      border: 1px solid #F2D88C;
+      padding: 6px 14px;
+      border-radius: 999px;
+      color: #7A611C;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-title { font-size: 2.8rem; }
+      .inst-hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .stats-ribbon-grid { grid-template-columns: repeat(2, 1fr); }
+      .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .about-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.2rem; }
+      .inst-nav-links { display: none; }
+      .mobile-menu-toggle { display: block; }
+      .stats-ribbon-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .portal-cards-grid { grid-template-columns: 1fr; }
+      .hostel-highlights-ribbon { grid-template-columns: repeat(2, 1fr) !important; }
+      .hostel-wings-grid { grid-template-columns: 1fr !important; }
+      #hostel-routine-list { grid-template-columns: 1fr !important; }
+      #hostel-fees-grid { grid-template-columns: 1fr !important; }
+      .admission-cta-banner { flex-direction: column; text-align: center; padding: 36px 24px; }
+      .admission-cta-actions { flex-direction: column; width: 100%; }
+      .btn-cta-white { width: 100%; justify-content: center; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .hero-meta-row { flex-direction: column; align-items: flex-start; }
+    }
+  
+    /* Mobile Drawer */
+    .mobile-nav-drawer {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-bottom: 2px solid rgba(191, 154, 51, 0.25);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.14);
+      padding: 16px 20px 22px;
+      border-radius: 0 0 20px 20px;
+      max-height: calc(100vh - 75px);
+      overflow-y: auto;
+      z-index: 999;
+      animation: drawerSlideDown 0.22s ease-out;
+    }
+
+    @keyframes drawerSlideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-nav-links-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mobile-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 10px;
+      color: #1e293b;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      background: transparent;
+    }
+
+    .mobile-nav-link:hover, .mobile-nav-link:active {
+      background: #FDF8E8;
+      color: var(--brand-theme-primary);
+    }
+
+    .mobile-nav-icon {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--brand-theme-primary);
+      flex-shrink: 0;
+    }
+
+    .mobile-nav-icon i {
+      width: 18px;
+      height: 18px;
+    }
+
+    .mobile-nav-text {
+      flex: 1;
+    }
+
+    .mobile-nav-arr {
+      width: 16px;
+      height: 16px;
+      color: #94a3b8;
+    }
+
+    .mobile-nav-actions-bottom {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mobile-drawer-btn {
+      width: 100% !important;
+      justify-content: center;
+      padding: 12px !important;
+      font-size: 0.95rem !important;
+      border-radius: 12px !important;
+    }
+
+    .mobile-drawer-apply-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      color: #0f172a;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .mobile-drawer-apply-btn:hover {
+      background: #FDF8E8;
+      border-color: var(--brand-theme-primary);
+      color: var(--brand-theme-primary);
+    }
+
+    /* Upgraded Allover Mobile Responsiveness */
+    @media (max-width: 1160px) {
+      .inst-nav-links { gap: 10px; }
+      .inst-nav-links a { font-size: 0.84rem; padding: 6px 6px; }
+    }
+
+    @media (max-width: 1024px) {
+      .inst-nav-links { display: none !important; }
+      .mobile-menu-toggle { display: inline-flex !important; }
+      .inst-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+      .stats-ribbon-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .about-grid { grid-template-columns: 1fr; gap: 32px; }
+      .facilities-grid { grid-template-columns: repeat(2, 1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+      .contact-grid { grid-template-columns: 1fr; gap: 28px; }
+    }
+
+    @media (max-width: 768px) {
+      .inst-nav-inner {
+        height: 64px;
+        padding: 0 16px;
+      }
+      .inst-brand-logo-wrap {
+        width: 38px;
+        height: 38px;
+      }
+      .inst-brand-logo-img {
+        max-width: 38px;
+        max-height: 38px;
+      }
+      .inst-brand-name {
+        font-size: 1.02rem;
+      }
+      .inst-brand-tagline {
+        font-size: 0.62rem;
+      }
+      .btn-inst-login {
+        height: 38px;
+        padding: 0 18px;
+        font-size: 0.84rem;
+        border-radius: 9999px;
+        gap: 6px;
+      }
+      .btn-inst-login i {
+        width: 14px;
+        height: 14px;
+      }
+      .mobile-menu-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+      }
+
+      /* Hero section mobile */
+      .inst-hero {
+        padding: 28px 16px 44px;
+      }
+      .hero-title {
+        font-size: clamp(1.95rem, 7.5vw, 2.45rem);
+        line-height: 1.15;
+        margin-bottom: 14px;
+      }
+      .hero-desc {
+        font-size: 0.94rem;
+        line-height: 1.55;
+        margin-bottom: 22px;
+      }
+      .hero-cta-group {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .hero-cta-primary,
+      .hero-cta-secondary,
+      .hero-cta-login {
+        width: 100%;
+        justify-content: center;
+        padding: 13px 20px;
+        font-size: 0.96rem;
+        min-height: 48px;
+        border-radius: 9999px;
+      }
+      .hero-meta-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding-top: 18px;
+        width: 100%;
+      }
+      .hero-meta-item {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px 6px;
+        text-align: center;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .hero-meta-icon {
+        width: 28px;
+        height: 28px;
+        margin: 0 auto;
+      }
+      .hero-meta-icon i {
+        width: 15px;
+        height: 15px;
+      }
+      .hero-meta-val {
+        font-size: 1rem;
+        line-height: 1.1;
+      }
+      .hero-meta-lbl {
+        font-size: 0.65rem;
+        line-height: 1.15;
+      }
+
+      /* Hero visual card */
+      .hero-visual-card {
+        border-radius: 18px;
+        margin-top: 10px;
+      }
+      .hero-visual-img {
+        height: 250px;
+      }
+      .hero-overlay-tag {
+        top: 12px;
+        left: 12px;
+        padding: 6px 12px;
+        font-size: 0.72rem;
+      }
+      .hero-floating-stat {
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        padding: 10px 14px;
+        border-radius: 14px;
+      }
+      .hero-floating-stat > div:first-child > div:last-child > div:first-child {
+        font-size: 1rem !important;
+      }
+
+      /* Section Spacing */
+      .inst-section {
+        padding: 48px 16px;
+      }
+      .section-header-center {
+        margin-bottom: 30px;
+      }
+      .section-tag {
+        font-size: 0.72rem;
+        padding: 4px 12px;
+        margin-bottom: 8px;
+      }
+      .section-title {
+        font-size: 1.75rem;
+        line-height: 1.22;
+        margin-bottom: 10px;
+      }
+      .section-subtitle {
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      /* Stats Ribbon on mobile */
+      .inst-stats-ribbon {
+        padding: 24px 16px;
+      }
+      .stats-ribbon-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .stat-ribbon-card {
+        padding: 12px 10px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .stat-ribbon-icon-wrap {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+      }
+      .stat-ribbon-icon-wrap i {
+        width: 20px;
+        height: 20px;
+      }
+      .stat-ribbon-number {
+        font-size: 1.5rem;
+      }
+      .stat-ribbon-label {
+        font-size: 0.75rem;
+      }
+
+      /* About Section */
+      .about-principal-card {
+        padding: 20px 18px;
+        border-radius: 16px;
+      }
+      .about-principal-avatar {
+        width: 58px;
+        height: 58px;
+      }
+      .about-principal-header h4 {
+        font-size: 1.05rem !important;
+      }
+      .about-message-text {
+        font-size: 0.92rem;
+        line-height: 1.55;
+        margin-bottom: 16px;
+      }
+      .values-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      /* Programs Grid */
+      .programs-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .program-card {
+        padding: 22px 18px;
+        border-radius: 16px;
+      }
+      .program-title {
+        font-size: 1.22rem;
+      }
+
+      /* Facilities Grid on Mobile */
+      .facilities-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .facility-card {
+        padding: 16px 12px;
+        border-radius: 14px;
+      }
+      .facility-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+      }
+      .facility-icon i {
+        width: 18px;
+        height: 18px;
+      }
+      .facility-title {
+        font-size: 0.92rem;
+        margin-bottom: 4px;
+      }
+      .facility-desc {
+        font-size: 0.76rem;
+        line-height: 1.4;
+      }
+      .facility-badge {
+        font-size: 0.62rem;
+        top: 12px;
+        right: 12px;
+        padding: 2px 6px;
+      }
+
+      /* Notices on Mobile */
+      .notices-filter-bar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+        padding: 12px 16px;
+        gap: 8px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .notice-chip {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        font-size: 0.76rem;
+      }
+      .notice-row {
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .notice-left {
+        gap: 12px;
+      }
+      .notice-date-box {
+        width: 50px;
+        height: 50px;
+      }
+      .notice-date-day {
+        font-size: 1.1rem;
+      }
+      .notice-title {
+        font-size: 0.95rem;
+      }
+      .notice-excerpt {
+        font-size: 0.82rem;
+      }
+      .notice-row > button {
+        width: 100%;
+        justify-content: center;
+        min-height: 40px;
+      }
+
+      /* Gallery & Reviews */
+      .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .gallery-card {
+        height: 220px;
+        border-radius: 16px;
+      }
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .testimonial-card {
+        padding: 20px 18px;
+        border-radius: 16px;
+      }
+
+      /* Admission CTA Banner on Mobile */
+      .admission-cta-banner {
+        flex-direction: column;
+        text-align: center;
+        padding: 32px 20px;
+        border-radius: 18px;
+        gap: 24px;
+      }
+      .admission-cta-title {
+        font-size: 1.55rem;
+        line-height: 1.25;
+      }
+      .admission-cta-desc {
+        font-size: 0.92rem;
+      }
+      .admission-cta-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+      }
+      .btn-cta-white, .admission-cta-actions .btn-inst-login {
+        width: 100%;
+        justify-content: center;
+        min-height: 46px;
+      }
+
+      /* Contact & Inquiry on Mobile */
+      .contact-info-card, .contact-form-card {
+        padding: 22px 18px;
+        border-radius: 16px;
+      }
+      .contact-form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .form-input {
+        font-size: 16px !important; /* Prevents auto-zoom on iOS */
+      }
+
+      /* Footer on Mobile */
+      .inst-footer {
+        padding: 48px 16px 24px;
+      }
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        margin-bottom: 30px;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .facilities-grid {
+        grid-template-columns: 1fr;
+      }
+      .inst-brand-tagline {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div id="app-root">
-    <div style="height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px; background: #f8fafc;">
-      <div class="tms-animated-loader">
-        <div class="tms-loader-emblem-wrap" style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
-          <div class="tms-loader-aura"></div>
-          <img src="tps-logo.png" alt="Thaiba Public School" class="tms-loader-img" style="width: 82px; height: 82px; object-fit: contain; position: relative; z-index: 2;">
+
+  <!-- Backward Compatibility Router for Legacy Hash Links -->
+  <script>
+    if (window.location.hash && (window.location.hash.startsWith('#/') || window.location.hash.includes('dashboard'))) {
+      window.location.href = '/dashboard' + window.location.hash;
+    }
+  </script>
+
+  
+
+  <!-- Navigation Header -->
+  <header class="inst-nav-header" id="website-header">
+    <div class="inst-nav-inner">
+      <a href="#" class="inst-brand" id="brand-anchor">
+        <div class="inst-brand-logo-wrap" id="brand-logo-host">
+          <img src="tps-logo.png" alt="Thaiba Public School" class="inst-brand-logo-img" id="main-brand-logo">
         </div>
-        <div style="font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #BF9A33; letter-spacing: 0.04em; margin-top: 16px;">
-          THAIBA PUBLIC SCHOOL
+        <div class="inst-brand-titles">
+          <span class="inst-brand-name" id="nav-inst-name">THAIBA PUBLIC SCHOOL</span>
+          <span class="inst-brand-tagline" id="nav-inst-tagline">Run by : Thaiba Heritage, Kolkata</span>
         </div>
-        <p class="tms-loader-text" style="color: #64748b; font-size: 0.88rem; margin: 0;">Initializing Campus Enterprise Platform...</p>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="inst-nav-links">
+        <a href="#about" id="nav-about-link">About</a>
+        <a href="#academics" id="nav-academics-link">Academics</a>
+        <a href="#facilities" id="nav-facilities-link">Facilities</a>
+        <a href="#hostel" id="nav-hostel-link" style="display:none; font-weight:700; color:var(--brand-theme-primary);">Hostel</a>
+        <a href="#notices" id="nav-notices-link">Notices</a>
+        <a href="#gallery" id="nav-gallery-link">Gallery</a>
+        <a href="#testimonials" id="nav-testimonials-link">Reviews</a>
+        <a href="#admissions" id="nav-admissions-link">Admission</a>
+        <a href="#contact" id="nav-contact-link">Contact</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="inst-nav-actions">
+        <a href="/login" class="btn-inst-login" id="btn-open-institutional-login" title="Login" style="text-decoration:none;">
+          <i data-lucide="lock" style="width:15px; height:15px;"></i>
+          <span id="nav-login-btn-text">Login</span>
+        </a>
+        <button class="mobile-menu-toggle" id="mobile-menu-btn" title="Toggle Navigation Menu" aria-label="Open Navigation Menu">
+          <i data-lucide="menu" style="width:20px; height:20px;"></i>
+        </button>
       </div>
     </div>
-  </div>
 
-  <script type="module" src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then((reg) => {
-            reg.update().catch(() => {});
-          })
-          .catch((err) => console.log('SW registration skipped:', err));
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-nav-panel" class="mobile-nav-drawer" style="display:none;">
+      <div class="mobile-nav-links-wrap">
+        <a href="#about" class="mobile-nav-link" id="mobile-nav-about-link">
+          <span class="mobile-nav-icon"><i data-lucide="info"></i></span>
+          <span class="mobile-nav-text">About Institution</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#academics" class="mobile-nav-link" id="mobile-nav-academics-link">
+          <span class="mobile-nav-icon"><i data-lucide="graduation-cap"></i></span>
+          <span class="mobile-nav-text">Academics &amp; Wings</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#facilities" class="mobile-nav-link" id="mobile-nav-facilities-link">
+          <span class="mobile-nav-icon"><i data-lucide="building-2"></i></span>
+          <span class="mobile-nav-text">Campus Facilities</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#hostel" class="mobile-nav-link" id="mobile-nav-hostel-link" style="display:none;">
+          <span class="mobile-nav-icon"><i data-lucide="home"></i></span>
+          <span class="mobile-nav-text">Hostel &amp; Dormitories</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#notices" class="mobile-nav-link" id="mobile-nav-notices-link">
+          <span class="mobile-nav-icon"><i data-lucide="bell"></i></span>
+          <span class="mobile-nav-text">Live Notice Board</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#gallery" class="mobile-nav-link" id="mobile-nav-gallery-link">
+          <span class="mobile-nav-icon"><i data-lucide="image"></i></span>
+          <span class="mobile-nav-text">Campus Gallery</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#testimonials" class="mobile-nav-link" id="mobile-nav-testimonials-link">
+          <span class="mobile-nav-icon"><i data-lucide="message-square"></i></span>
+          <span class="mobile-nav-text">Reviews &amp; Testimonials</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#contact" class="mobile-nav-link" id="mobile-nav-contact-link">
+          <span class="mobile-nav-icon"><i data-lucide="phone"></i></span>
+          <span class="mobile-nav-text">Contact &amp; Location</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+      </div>
+
+      <div class="mobile-nav-actions-bottom">
+        <a href="/login" id="btn-mobile-login" class="btn-inst-login mobile-drawer-btn" style="text-decoration:none;">
+          <i data-lucide="lock" style="width:16px; height:16px;"></i>
+          <span>Login</span>
+        </a>
+        <a href="/admission" class="mobile-drawer-apply-btn" id="mobile-drawer-apply-btn">
+          <i data-lucide="pen-tool" style="width:16px; height:16px;"></i>
+          <span>Apply Online (2026–2027)</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="inst-hero" id="home">
+    <div class="hero-glow-orb-1"></div>
+    <div class="hero-glow-orb-2"></div>
+
+    <div class="inst-hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge-pill" id="hero-badge-pill">
+          <span class="pulse-dot"></span>
+          <span id="hero-badge-text">★ ADMISSIONS OPEN FOR 2026–2027</span>
+        </div>
+
+        <h1 class="hero-title" id="hero-title">
+          Nurturing Intellect, <br>
+          <span class="highlight-text">Inspiring Character,</span> <br>
+          Leading Tomorrow.
+        </h1>
+
+        <p class="hero-desc" id="hero-desc">
+          A premier educational sanctuary in Dakshin Dinajpur where academic distinction blends seamlessly with ethical integrity, modern STEM facilities, and individual student mentorship.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="/admission" class="hero-cta-primary" id="hero-apply-btn">
+            <i data-lucide="sparkles" style="width:18px; height:18px;"></i>
+            <span id="hero-apply-text">Apply for Admission</span>
+            <i data-lucide="arrow-right" style="width:16px; height:16px;"></i>
+          </a>
+          <a href="#academics" class="hero-cta-secondary" id="hero-explore-btn">
+            <i data-lucide="compass" style="width:18px; height:18px; color:var(--brand-theme-primary);"></i>
+            <span id="hero-explore-text">Explore Programs</span>
+          </a>
+        </div>
+
+        <div class="hero-meta-row" id="hero-meta-row">
+          <div class="hero-meta-item">
+            <div class="hero-meta-icon"><i data-lucide="award" style="width:20px; height:20px;"></i></div>
+            <div class="hero-meta-text">
+              <span class="hero-meta-val" id="hero-stat1-val">100%</span>
+              <span class="hero-meta-lbl" id="hero-stat1-lbl">Board Pass Rate</span>
+            </div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-icon"><i data-lucide="calendar" style="width:20px; height:20px;"></i></div>
+            <div class="hero-meta-text">
+              <span class="hero-meta-val" id="hero-stat2-val">25+</span>
+              <span class="hero-meta-lbl" id="hero-stat2-lbl">Years of Legacy</span>
+            </div>
+          </div>
+          <div class="hero-meta-item">
+            <div class="hero-meta-icon"><i data-lucide="users" style="width:20px; height:20px;"></i></div>
+            <div class="hero-meta-text">
+              <span class="hero-meta-val" id="hero-stat3-val">15:1</span>
+              <span class="hero-meta-lbl" id="hero-stat3-lbl">Student-Teacher Ratio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual Showcase -->
+      <div class="hero-visual-card" id="hero-visual-card">
+        <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80" alt="Thaiba Public School Campus" class="hero-visual-img" id="hero-img">
+        <div class="hero-overlay-tag">
+          <i data-lucide="map-pin" style="width:14px; height:14px; color:#E5C158;"></i>
+          <span>Baghait Campus • Tapan</span>
+        </div>
+        <div class="hero-floating-stat">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg, #BF9A33, #8C6E1E); color:#fff; display:flex; align-items:center; justify-content:center;">
+              <i data-lucide="graduation-cap" style="width:22px; height:22px;"></i>
+            </div>
+            <div>
+              <div style="font-family:var(--font-display); font-size:1.15rem; font-weight:800; color:#0f172a; line-height:1.1;">2,400+ Students</div>
+              <div style="font-size:0.75rem; color:#64748b; font-weight:600;">Enrolled Across All Wings</div>
+            </div>
+          </div>
+          <a href="/admission" style="font-size:0.78rem; font-weight:700; color:var(--brand-theme-primary); text-decoration:none; display:flex; align-items:center; gap:4px;">
+            Join Us <i data-lucide="arrow-right" style="width:12px; height:12px;"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Statistics Ribbon -->
+  <section class="inst-stats-ribbon" id="quick-stats-ribbon">
+    <div class="stats-ribbon-grid" id="stats-ribbon-grid">
+      <!-- Populated dynamically via JS -->
+    </div>
+  </section>
+
+  <!-- About Institution & Principal Message -->
+  <section class="inst-section" id="about" style="background:#ffffff;">
+    <div class="inst-container">
+      <div class="about-grid">
+        <!-- Principal's Card -->
+        <div class="about-principal-card" id="about-principal-card">
+          <div class="about-principal-header">
+            <img src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80" alt="Principal" class="about-principal-avatar" id="about-principal-photo">
+            <div>
+              <h4 style="font-family:var(--font-display); font-size:1.15rem; font-weight:800; color:#0f172a;" id="about-principal-name">Br. Abdul Basith & Academic Council</h4>
+              <p style="font-size:0.8rem; font-weight:700; color:var(--brand-theme-primary); text-transform:uppercase;" id="about-principal-title">Principal & Secretary, TMS</p>
+            </div>
+          </div>
+
+          <div class="about-quote-mark">“</div>
+          <p class="about-message-text" id="about-principal-msg">
+            Education is not merely the accumulation of facts, but the training of the mind to think critically and the heart to act ethically. At Thaiba Public School, every learner is seen, valued, and propelled toward their highest potential.
+          </p>
+
+          <div style="border-top:1px solid #f1f5f9; padding-top:18px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="award" style="width:18px; height:18px; color:var(--brand-theme-primary);"></i>
+              <span style="font-size:0.82rem; font-weight:700; color:#334155;">ISO &amp; Heritage Quality Assurance</span>
+            </div>
+            <span style="font-family:var(--font-display); font-size:0.82rem; font-weight:700; color:#64748b;">Est. 2011</span>
+          </div>
+        </div>
+
+        <!-- Narrative & Vision -->
+        <div>
+          <span class="section-tag" id="about-section-tag">DISCOVER OUR HERITAGE</span>
+          <h2 class="section-title" id="about-section-title">A Visionary Journey in Holistic Education</h2>
+          <p class="section-subtitle" style="margin-bottom:24px;" id="about-narrative">
+            Thaiba Public School, operated under the aegis of Thaiba Heritage, Kolkata (Regd. No. IV 01894/2011), was established to bridge modern 21st-century academic rigor with profound moral groundedness. Set in a serene, eco-conscious campus in Baghait, Tapan, we cultivate curiosity, critical thinking, creative expression, and strong civic responsibility.
+          </p>
+
+          <div class="values-grid" id="about-values-grid">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Academic Programs Section -->
+  <section class="inst-section" id="academics" style="background:#f8fafc;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">COMPREHENSIVE LEARNING TRACKS</span>
+        <h2 class="section-title">Academic Wings &amp; Curricula</h2>
+        <p class="section-subtitle">From early childhood discovery to rigorous senior secondary board excellence, our curriculum fosters cognitive development and moral clarity at every grade.</p>
+      </div>
+
+      <div class="programs-grid" id="programs-grid">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Campus Facilities Section -->
+  <section class="inst-section" id="facilities" style="background:#ffffff;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">WORLD-CLASS INFRASTRUCTURE</span>
+        <h2 class="section-title">Campus Life &amp; Facilities</h2>
+        <p class="section-subtitle">Designed to empower exploration, scientific curiosity, athletic vitality, and safe community learning.</p>
+      </div>
+
+      <div class="facilities-grid" id="facilities-grid">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Student Hostel & Residential Dormitories Section (#hostel) -->
+  <section class="inst-section" id="hostel" style="background:#ffffff; border-top:1px solid #e2e8f0; display:none;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag" id="hostel-section-tag" style="background:#ecfdf5; color:#8C6E1E; border:1.5px solid #a7f3d0; font-size:0.80rem; font-weight:800; padding:6px 16px; border-radius:999px; letter-spacing:0.06em; margin-bottom:14px; display:inline-flex; align-items:center; gap:6px;">
+          <i data-lucide="home" style="width:14px; height:14px; color:#BF9A33;"></i>
+          <span>RESIDENTIAL CAMPUS &amp; BOARDING</span>
+        </span>
+        <h2 class="section-title" id="hostel-section-title" style="font-family:var(--font-display); font-size:clamp(2rem, 3.8vw, 2.75rem); font-weight:800; color:#0f172a; line-height:1.2; letter-spacing:-0.02em; margin-bottom:14px;">
+          Student Hostel &amp; <span class="highlight-text" style="color:var(--brand-theme-primary, #BF9A33);">Residential Dormitories</span>
+        </h2>
+        <p class="section-subtitle" id="hostel-section-subtitle" style="font-size:1.06rem; color:#475569; line-height:1.68; max-width:720px; margin:0 auto 34px; font-weight:500;">
+          A secure, disciplined and nurturing home away from home with round-the-clock pastoral care, guided evening study, and nutritious dining.
+        </p>
+      </div>
+
+      <!-- Live Capacity & Highlight Ribbon -->
+      <div class="hostel-highlights-ribbon" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:32px;">
+        <div class="hostel-ribbon-card" style="border-top:3.5px solid #BF9A33;">
+          <div class="hostel-ribbon-num" style="color:#8C6E1E;" id="hostel-stat-capacity">150 Beds</div>
+          <div class="hostel-ribbon-lbl">Total Boarding Capacity</div>
+        </div>
+        <div class="hostel-ribbon-card" style="border-top:3.5px solid #2563eb;">
+          <div class="hostel-ribbon-num" style="color:#1d4ed8;">2 Separate Wings</div>
+          <div class="hostel-ribbon-lbl">Boys &amp; Girls Dormitories</div>
+        </div>
+        <div class="hostel-ribbon-card" style="border-top:3.5px solid #d97706;">
+          <div class="hostel-ribbon-num" style="color:#b45309;">3-Hour Study Hall</div>
+          <div class="hostel-ribbon-lbl">Teacher Mentored Routine</div>
+        </div>
+        <div class="hostel-ribbon-card" style="border-top:3.5px solid #059669;">
+          <div class="hostel-ribbon-num" style="color:#047857;">100% Halal Dining</div>
+          <div class="hostel-ribbon-lbl">4 Fresh Meals Daily</div>
+        </div>
+      </div>
+
+      <!-- Dormitory Wings Subhead Banner -->
+      <div class="hostel-subhead-banner" style="display:flex; align-items:center; gap:12px; margin:36px 0 20px; padding-bottom:12px; border-bottom:1.5px solid #f1f5f9;">
+        <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, #FDF8E8 0%, #FCF4D9 100%); color:#8C6E1E; display:flex; align-items:center; justify-content:center; border:1px solid #F7E8B5; flex-shrink:0;">
+          <i data-lucide="building-2" style="width:20px; height:20px;"></i>
+        </div>
+        <div>
+          <h3 style="font-family:var(--font-display); font-size:1.32rem; font-weight:800; color:#0f172a; margin:0; line-height:1.2; letter-spacing:-0.01em;">
+            Residential Wings &amp; Living Spaces
+          </h3>
+          <p style="font-size:0.85rem; color:#64748b; margin:3px 0 0 0; font-weight:500;">
+            Dedicated, fully segregated boarding facilities equipped with private study desks, wardrobes &amp; round-the-clock warden care.
+          </p>
+        </div>
+      </div>
+      <div class="hostel-wings-grid" id="hostel-wings-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:36px;">
+        <!-- Injected dynamically via JS -->
+      </div>
+
+      <!-- 6 Key Amenities & Care Grid Subhead Banner -->
+      <div class="hostel-subhead-banner" style="display:flex; align-items:center; gap:12px; margin:40px 0 20px; padding-bottom:12px; border-bottom:1.5px solid #f1f5f9;">
+        <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%); color:#047857; display:flex; align-items:center; justify-content:center; border:1px solid #6ee7b7; flex-shrink:0;">
+          <i data-lucide="sparkles" style="width:20px; height:20px;"></i>
+        </div>
+        <div>
+          <h3 style="font-family:var(--font-display); font-size:1.32rem; font-weight:800; color:#0f172a; margin:0; line-height:1.2; letter-spacing:-0.01em;">
+            Hostel Facilities, Amenities &amp; Pastoral Care
+          </h3>
+          <p style="font-size:0.85rem; color:#64748b; margin:3px 0 0 0; font-weight:500;">
+            A comprehensive boarding ecosystem focused on student comfort, academic rigor, nutrition, and ethical character.
+          </p>
+        </div>
+      </div>
+      <div class="facilities-grid" id="hostel-features-grid" style="margin-bottom:36px;">
+        <!-- Injected dynamically via JS -->
+      </div>
+
+      <!-- Interactive Tabbed Card: Routine, Mess Menu, Fees & Rules -->
+      <div class="card" style="border:1px solid #e2e8f0; border-radius:16px; padding:24px; box-shadow:0 6px 20px rgba(0,0,0,0.03); margin-bottom:36px;">
+        <div class="hostel-tabs-nav" style="display:flex; gap:10px; flex-wrap:wrap; border-bottom:2px solid #f1f5f9; padding-bottom:14px; margin-bottom:20px;">
+          <button class="tms-tab-pill active hostel-view-tab" data-pane="pane-hostel-routine" style="cursor:pointer;">
+            <i data-lucide="clock"></i> <span>Daily Life Routine</span>
+          </button>
+          <button class="tms-tab-pill hostel-view-tab" data-pane="pane-hostel-mess" style="cursor:pointer;">
+            <i data-lucide="utensils"></i> <span>Weekly Mess &amp; Dining Menu</span>
+          </button>
+          <button class="tms-tab-pill hostel-view-tab" data-pane="pane-hostel-fees" style="cursor:pointer;">
+            <i data-lucide="credit-card"></i> <span>Fee Structure Master</span>
+          </button>
+          <button class="tms-tab-pill hostel-view-tab" data-pane="pane-hostel-rules" style="cursor:pointer;">
+            <i data-lucide="shield-check"></i> <span>Rules &amp; Code of Conduct</span>
+          </button>
+        </div>
+
+        <!-- Routine Pane -->
+        <div id="pane-hostel-routine" class="hostel-view-pane">
+          <div id="hostel-routine-list" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Mess Menu Pane -->
+        <div id="pane-hostel-mess" class="hostel-view-pane" style="display:none;">
+          <div class="table-responsive">
+            <table class="tms-table" style="font-size:0.86rem; margin:0;" id="hostel-mess-table">
+              <thead>
+                <tr style="background:#f8fafc;">
+                  <th style="width:110px;">Day</th>
+                  <th>Breakfast &amp; Milk/Tea</th>
+                  <th>Lunch (Wholesome Main)</th>
+                  <th>Dinner (Evening Feast)</th>
+                </tr>
+              </thead>
+              <tbody id="hostel-mess-tbody-public">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Fees Pane -->
+        <div id="pane-hostel-fees" class="hostel-view-pane" style="display:none;">
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:18px;" id="hostel-fees-grid">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Rules Pane -->
+        <div id="pane-hostel-rules" class="hostel-view-pane" style="display:none;">
+          <ul id="hostel-rules-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;">
+            <!-- Injected dynamically -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Warden Helpline & Admission CTA Card -->
+      <div style="background:linear-gradient(135deg, #064e3b 0%, #0f172a 100%); border-radius:18px; padding:32px 36px; color:#ffffff; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;">
+        <div style="max-width:650px;">
+          <span style="font-size:0.75rem; font-weight:800; background:rgba(255,255,255,0.18); padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.8px; display:inline-block; margin-bottom:10px;">
+            RESIDENT SUPERINTENDENT &amp; HELPLINE
+          </span>
+          <h3 style="font-family:var(--font-display); font-size:1.45rem; font-weight:800; color:#ffffff; margin:0 0 8px;" id="hostel-warden-name-public">
+            Janab Maulana Hafizullah &bull; Senior Superintendent
+          </h3>
+          <p style="font-size:0.88rem; color:#cbd5e1; margin:0 0 16px;" id="hostel-warden-visiting-public">
+            Visiting Hours: Sundays &amp; Second Saturdays: 10:00 AM – 4:00 PM. Parents may schedule campus visits or discuss student welfare directly.
+          </p>
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:0.85rem; font-weight:600;">
+            <a href="tel:+918653382851" id="hostel-call-link" style="color:#ffffff; text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); padding:6px 14px; border-radius:8px;">
+              <i data-lucide="phone" style="width:14px; height:14px; color:#E5C158;"></i>
+              <span id="hostel-phone-public">+91 8653382851</span>
+            </a>
+            <a href="https://wa.me/918653382851" target="_blank" id="hostel-whatsapp-link" style="color:#ffffff; text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); padding:6px 14px; border-radius:8px;">
+              <i data-lucide="message-circle" style="width:14px; height:14px; color:#E5C158;"></i>
+              <span>WhatsApp Inquiry</span>
+            </a>
+            <a href="mailto:hostel@thaibagarden.com" id="hostel-email-link" style="color:#ffffff; text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.12); padding:6px 14px; border-radius:8px;">
+              <i data-lucide="mail" style="width:14px; height:14px; color:#E5C158;"></i>
+              <span id="hostel-email-public">hostel@thaibagarden.com</span>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <a href="/admission" class="btn btn-primary" style="background:#BF9A33; border-color:#8C6E1E; font-size:1rem; font-weight:800; padding:14px 28px; box-shadow:0 8px 24px rgba(191, 154, 51, 0.4); text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+            <i data-lucide="check-circle" style="width:18px; height:18px;"></i>
+            <span>Apply for Hostel Seat</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Live Notice Board & Announcements -->
+  <section class="inst-section" id="notices" style="background:#f8fafc;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">LIVE CAMPUS BULLETINS</span>
+        <h2 class="section-title">Official Announcements &amp; Circulars</h2>
+        <p class="section-subtitle">Real-time updates regarding admissions, examination dates, academic schedules, and campus events.</p>
+      </div>
+
+      <div class="notices-wrap">
+        <div class="notices-filter-bar" id="notices-filter-bar">
+          <button class="notice-chip active" data-filter="all">All Bulletins</button>
+          <button class="notice-chip" data-filter="Admissions">Admissions</button>
+          <button class="notice-chip" data-filter="Examination">Examination</button>
+          <button class="notice-chip" data-filter="Events">Events &amp; Sports</button>
+          <button class="notice-chip" data-filter="Academic">Academic</button>
+        </div>
+
+        <div class="notices-list" id="notices-list-container">
+          <!-- Injected dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Campus Life & Photo Gallery -->
+  <section class="inst-section" id="gallery" style="background:#ffffff;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">MOMENTS OF EXCELLENCE</span>
+        <h2 class="section-title">Campus Photo Gallery</h2>
+        <p class="section-subtitle">A glimpse into daily academic vibrance, laboratory experiments, athletic meets, and celebratory gatherings at Thaiba Public School.</p>
+      </div>
+
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Parent & Community Reviews -->
+  <section class="inst-section" id="testimonials" style="background:#f8fafc;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">VOICES OF TRUST</span>
+        <h2 class="section-title">What Parents &amp; Alumni Say</h2>
+        <p class="section-subtitle">Honest feedback from our cherished families and students whose journeys were shaped at Thaiba Public School.</p>
+      </div>
+
+      <div class="testimonials-grid" id="testimonials-grid">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Admission CTA Banner -->
+  <section class="inst-section" id="admissions" style="padding-top:40px; padding-bottom:60px;">
+    <div class="inst-container">
+      <div class="admission-cta-banner">
+        <div class="admission-cta-content">
+          <span class="admission-cta-badge" id="cta-badge">ENROLLMENT 2026–27</span>
+          <h2 class="admission-cta-title" id="cta-title">Give Your Child the Foundation for a Brilliant Future</h2>
+          <p class="admission-cta-desc" id="cta-desc">
+            Join hundreds of thriving young minds in an inspiring environment designed for academic distinction and character growth. Seats are limited for the upcoming academic session.
+          </p>
+        </div>
+        <div class="admission-cta-actions">
+          <a href="/admission" class="btn-cta-white" id="cta-btn">
+            <i data-lucide="pen-tool" style="width:18px; height:18px;"></i>
+            <span id="cta-btn-text">Apply Online Today</span>
+          </a>
+          <a href="/login" class="btn-inst-login" id="cta-login-btn" style="background:rgba(15, 23, 42, 0.4); border:1px solid rgba(255, 255, 255, 0.4); text-decoration:none;">
+            <i data-lucide="lock" style="width:16px; height:16px;"></i>
+            <span>Login</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact & Location Section -->
+  <section class="inst-section" id="contact" style="background:#ffffff;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag">CONNECT WITH US</span>
+        <h2 class="section-title">Campus Visit &amp; Helpdesk</h2>
+        <p class="section-subtitle">Have questions about admissions, fees, or transportation? Our administrative office is ready to assist you.</p>
+      </div>
+
+      <div class="contact-grid">
+        <!-- Contact Cards -->
+        <div class="contact-info-card" id="contact-info-card">
+          <h3 style="font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:24px;">Administrative Office</h3>
+
+          <div class="contact-item-row">
+            <div class="contact-item-icon"><i data-lucide="map-pin" style="width:20px; height:20px;"></i></div>
+            <div>
+              <div class="contact-item-title">Campus Address</div>
+              <div class="contact-item-val" id="contact-address">Baghait, Tapan, Dakshin Dinajpur, West Bengal, PIN 733127</div>
+            </div>
+          </div>
+
+          <div class="contact-item-row">
+            <div class="contact-item-icon"><i data-lucide="phone" style="width:20px; height:20px;"></i></div>
+            <div>
+              <div class="contact-item-title">Telephone Helplines</div>
+              <div class="contact-item-val" id="contact-phones">+91 8653382851 / +91 8167782851</div>
+            </div>
+          </div>
+
+          <div class="contact-item-row">
+            <div class="contact-item-icon"><i data-lucide="mail" style="width:20px; height:20px;"></i></div>
+            <div>
+              <div class="contact-item-title">Email Communications</div>
+              <div class="contact-item-val" id="contact-email">tps@thaibagarden.com</div>
+            </div>
+          </div>
+
+          <div class="contact-item-row">
+            <div class="contact-item-icon"><i data-lucide="clock" style="width:20px; height:20px;"></i></div>
+            <div>
+              <div class="contact-item-title">Office Visiting Hours</div>
+              <div class="contact-item-val" id="contact-hours">Monday through Saturday: 8:30 AM to 4:00 PM</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid #f1f5f9; padding-top:20px; margin-top:20px; display:flex; gap:12px;">
+            <a href="https://wa.me/918653382851" target="_blank" class="btn btn-secondary btn-sm" id="contact-wa-btn" style="display:inline-flex; align-items:center; gap:6px; font-weight:700; color:#BF9A33;">
+              <i data-lucide="message-circle" style="width:16px; height:16px;"></i> WhatsApp Support
+            </a>
+            <a href="https://maps.google.com/?q=Thaiba+Model+School+Tapan" target="_blank" class="btn btn-secondary btn-sm" id="contact-dir-btn" style="display:inline-flex; align-items:center; gap:6px; font-weight:700;">
+              <i data-lucide="navigation" style="width:16px; height:16px;"></i> Directions
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Inquiry Form -->
+        <div class="contact-form-card" id="contact-form-card">
+          <h3 style="font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:#0f172a; margin-bottom:12px;">Send an Admission Inquiry</h3>
+          <p style="font-size:0.86rem; color:#64748b; margin-bottom:20px;">Fill out this quick form and our admissions desk will call you back within 24 hours.</p>
+
+          <form id="inquiry-form">
+            <div class="contact-form-grid">
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.82rem; font-weight:700;">Guardian Name *</label>
+                <input type="text" id="inq-name" class="form-input" placeholder="e.g. Mohammad Alam" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.82rem; font-weight:700;">Contact Phone *</label>
+                <input type="tel" id="inq-phone" class="form-input" placeholder="+91 XXXXX XXXXX" required>
+              </div>
+            </div>
+
+            <div class="contact-form-grid">
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.82rem; font-weight:700;">Grade Interested In *</label>
+                <select id="inq-grade" class="form-input" required>
+                  <option value="">Select Class...</option>
+                  <option value="Nursery">Nursery / LKG / UKG</option>
+                  <option value="Primary (1-5)">Primary School (Grades 1 – 5)</option>
+                  <option value="Middle (6-8)">Middle School (Grades 6 – 8)</option>
+                  <option value="Secondary (9-10)">Secondary (Grades 9 – 10)</option>
+                  <option value="Higher Secondary (11-12)">Senior Secondary (Grades 11 – 12)</option>
+                  <option value="Hostel & Residential Wing" id="inq-hostel-opt">Hostel &amp; Residential Wing</option>
+                  <option value="Moral Wing">Islamic &amp; Moral Studies Wing</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:0.82rem; font-weight:700;">Email Address (Optional)</label>
+                <input type="email" id="inq-email" class="form-input" placeholder="name@example.com">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:18px;">
+              <label class="form-label" style="font-size:0.82rem; font-weight:700;">Your Message or Questions</label>
+              <textarea id="inq-msg" class="form-input" rows="3" placeholder="Tell us about the student or any specific transport / hostel questions..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:12px; font-weight:700;">
+              <i data-lucide="send" style="width:16px; height:16px;"></i> Submit Inquiry
+            </button>
+            <div id="inquiry-status" style="margin-top:12px; font-size:0.85rem; text-align:center; display:none;"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Institutional Footer -->
+  <footer class="inst-footer" id="website-footer">
+    <div class="footer-grid">
+      <div class="footer-col" id="footer-about-col">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+          <img src="tps-logo.png" alt="Logo" style="width:42px; height:42px; object-fit:contain;" id="footer-logo">
+          <div>
+            <div style="font-family:var(--font-display); font-size:1.15rem; font-weight:800; color:#fff;" id="footer-inst-name">THAIBA PUBLIC SCHOOL</div>
+            <div style="font-size:0.72rem; color:#E5C158; font-weight:700; text-transform:uppercase;">Run by : Thaiba Heritage, Kolkata</div>
+          </div>
+        </div>
+        <p style="font-size:0.85rem; line-height:1.6; color:#94a3b8; margin-bottom:16px;" id="footer-about-text">
+          Thaiba Public School, operated by Thaiba Heritage Kolkata (Regd. IV 01894/2011), is committed to providing world-class holistic education rooted in academic rigor, integrity, and ethical leadership.
+        </p>
+        <div style="font-size:0.8rem; color:#64748b;">
+          Campus: Baghait, Tapan, Dakshin Dinajpur, West Bengal 733127
+        </div>
+      </div>
+
+      <div class="footer-col" id="footer-nav-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="#about">About Our Institution</a></li>
+          <li><a href="#academics">Academic Programs</a></li>
+          <li><a href="#facilities">Campus Life &amp; Facilities</a></li>
+          <li id="footer-hostel-link" style="display:none;"><a href="#hostel">Hostel &amp; Dormitories</a></li>
+          <li><a href="#notices">Notice Board &amp; Dates</a></li>
+          <li><a href="#gallery">Campus Photo Gallery</a></li>
+          <li><a href="#testimonials">Reviews &amp; Testimonials</a></li>
+          <li><a href="#contact">Campus Visit &amp; Location</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col" id="footer-portals-col">
+        <h4>Institutional Portals</h4>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px; max-width:240px;">
+          <a href="/login" class="btn-inst-login" id="footer-login-btn" style="width:100%; justify-content:center; text-decoration:none; padding:11px 18px; font-weight:700;">
+            <i data-lucide="lock" style="width:15px; height:15px;"></i>
+            <span>Login</span>
+          </a>
+          <a href="/admission" class="btn-inst-admission-footer" style="width:100%;">
+            <i data-lucide="pen-tool" style="width:15px; height:15px; color:#E5C158;"></i>
+            <span>Admission Form</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-col" id="footer-trust-col">
+        <h4>Trust &amp; Governance</h4>
+        <p style="font-size:0.84rem; line-height:1.6; color:#94a3b8; margin-bottom:12px;">
+          Society Registration: IV 01894/2011<br>
+          Under: Thaiba Heritage, Kolkata<br>
+          Emergency: <span id="footer-emergency">+91 8653382851</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-bottom" id="footer-bottom-row">
+      <div id="footer-copyright">© 2026 THAIBA PUBLIC SCHOOL. All Rights Reserved. Run by Thaiba Heritage, Kolkata.</div>
+      <div style="display:flex; gap:16px;">
+        <a href="#home" style="color:#94a3b8; text-decoration:none;">Back to Top ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main Website Script Module -->
+  <script type="module">
+    import { websiteService } from './website-service.js';
+    import { brandingService } from './branding-service.js';
+    import { institutionService } from './institution-service.js';
+    import { authService } from './auth-service.js';
+    import { TMS_CONFIG } from './config.js';
+    import { UIComponents } from './ui-components.js';
+
+    // Helper to safely escape HTML
+    const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+
+    async function initWebsite() {
+      institutionService.refresh();
+
+      // 1. Initial render from cache for immediate response
+      const initialConfig = websiteService.getConfig();
+      renderWebsiteData(initialConfig);
+
+      // 2. Refresh branding & website CMS from database in background
+      brandingService.refresh().then(() => {
+        updateLogoImages();
       });
+
+      websiteService.refresh().then((latest) => {
+        renderWebsiteData(latest);
+      });
+
+      // 3. Listen for realtime or cross-tab CMS changes
+      window.addEventListener('tms_website_config_changed', (e) => {
+        renderWebsiteData(e.detail || websiteService.getConfig());
+      });
+      if (typeof BroadcastChannel !== 'undefined') {
+        const bc = new BroadcastChannel('tms_website_cms_channel');
+        bc.onmessage = (msg) => {
+          if (msg.data && msg.data.type === 'config_updated' && msg.data.config) {
+            renderWebsiteData(msg.data.config);
+          }
+        };
+      }
+
+      // 4. Check user authentication status and handle OAuth callbacks
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const isAuthCallback = hash.includes('access_token=') || hash.includes('refresh_token=') || search.includes('code=') || hash.includes('type=');
+
+      await authService.init();
+      if (authService.isAuthenticated()) {
+        const currentUser = authService.getCurrentUser() || {};
+
+        // If user arrived via OAuth redirect from Supabase, route them immediately to their portal
+        if (isAuthCallback) {
+          if (currentUser.role === 'pending' || currentUser.isPending) {
+            window.location.replace('/login');
+            return;
+          }
+          if (currentUser.role === TMS_CONFIG.roles.PARENT) {
+            window.location.replace('/parent');
+            return;
+          }
+          if (currentUser.role === TMS_CONFIG.roles.STUDENT) {
+            window.location.replace('/student');
+            return;
+          }
+          window.location.replace('/dashboard');
+          return;
+        }
+
+        // For users viewing the website who are already logged in, upgrade Login buttons to "ERP Dashboard"
+        const navLoginBtn = document.getElementById('btn-open-institutional-login');
+        if (navLoginBtn) {
+          navLoginBtn.href = '/dashboard';
+          navLoginBtn.innerHTML = '<i data-lucide="layout-dashboard" style="width:16px; height:16px;"></i> <span>ERP Dashboard</span>';
+          navLoginBtn.title = `Signed in as ${currentUser.name || currentUser.email}`;
+        }
+        const mobLoginBtn = document.getElementById('btn-mobile-login');
+        if (mobLoginBtn) {
+          mobLoginBtn.href = '/dashboard';
+          mobLoginBtn.innerHTML = '<i data-lucide="layout-dashboard" style="width:16px; height:16px;"></i> ERP Dashboard';
+        }
+        const ctaLoginBtn = document.getElementById('cta-login-btn');
+        if (ctaLoginBtn) {
+          ctaLoginBtn.href = '/dashboard';
+          ctaLoginBtn.innerText = 'Go to ERP Dashboard';
+        }
+        const footerLoginBtn = document.getElementById('footer-login-btn');
+        if (footerLoginBtn) {
+          footerLoginBtn.href = '/dashboard';
+          footerLoginBtn.innerText = 'Open ERP Dashboard';
+        }
+        UIComponents.refreshIcons();
+      }
+
+      // 5. Bind modal and interactive events
+      bindEvents();
     }
+
+    function updateLogoImages() {
+      const logoUrl = websiteService.getLogo();
+      const mainLogo = document.getElementById('main-brand-logo');
+      const footerLogo = document.getElementById('footer-logo');
+      if (mainLogo && logoUrl) mainLogo.src = logoUrl;
+      if (footerLogo && logoUrl) footerLogo.src = logoUrl;
+    }
+
+    
+
+    function renderWebsiteData(cfg) {
+      if (!cfg) return;
+
+      // Brand & Meta
+      const meta = cfg.meta || {};
+      const hero = cfg.hero || {};
+      const about = cfg.about || {};
+      const cta = cfg.admissionCta || {};
+      const footer = cfg.footer || {};
+
+      // Nav & Titles
+      const nameEl = document.getElementById('nav-inst-name');
+      const taglineEl = document.getElementById('nav-inst-tagline');
+      if (nameEl) nameEl.innerText = meta.name || 'THAIBA PUBLIC SCHOOL';
+      if (taglineEl) taglineEl.innerText = meta.runBy ? 'Run by : ' + meta.runBy : 'Run by : Thaiba Heritage, Kolkata';
+
+      // Header Login Button
+      const navLoginBtnText = document.getElementById('nav-login-btn-text');
+      if (navLoginBtnText) {
+        navLoginBtnText.innerText = (meta.loginButtonText && meta.loginButtonText !== 'Institutional Login') ? meta.loginButtonText : 'Login';
+      }
+
+      // Topbar
+      const regEl = document.getElementById('topbar-reg');
+      const phoneEl = document.getElementById('topbar-phone');
+      const hoursEl = document.getElementById('topbar-hours');
+      const alertBadge = document.getElementById('topbar-alert-badge');
+      const alertText = document.getElementById('topbar-alert-text');
+      if (regEl) regEl.innerHTML = `<i data-lucide="shield-check" style="width:14px; height:14px; color:#D4AF37;"></i> <span>Regd. No. ${esc(meta.regNo || 'IV 01894/2011')} • ${esc(meta.runBy || 'Thaiba Heritage, Kolkata')}</span>`;
+      if (phoneEl) {
+        phoneEl.innerText = meta.phone || '+91 8653382851';
+        phoneEl.href = 'tel:' + (meta.phone || '+918653382851').replace(/[^0-9+]/g, '');
+      }
+      if (hoursEl) hoursEl.innerText = meta.workingHours || 'Mon–Sat: 8:30 AM – 4:00 PM';
+      if (alertText) alertText.innerText = meta.topbarAlert || 'Admissions Open 2026-27';
+      if (alertBadge && meta.topbarAlertLink) alertBadge.href = meta.topbarAlertLink;
+
+      // Hero
+      const heroBadge = document.getElementById('hero-badge-text');
+      const heroTitle = document.getElementById('hero-title');
+      const heroDesc = document.getElementById('hero-desc');
+      const heroImg = document.getElementById('hero-img');
+      const heroStat1Val = document.getElementById('hero-stat1-val');
+      const heroStat1Lbl = document.getElementById('hero-stat1-lbl');
+      const heroStat2Val = document.getElementById('hero-stat2-val');
+      const heroStat2Lbl = document.getElementById('hero-stat2-lbl');
+      const heroStat3Val = document.getElementById('hero-stat3-val');
+      const heroStat3Lbl = document.getElementById('hero-stat3-lbl');
+
+      if (heroBadge) heroBadge.innerText = hero.badge || '★ ADMISSIONS OPEN FOR 2026–2027';
+      if (heroTitle && hero.headline) {
+        heroTitle.innerHTML = esc(hero.headline).replace(/Character|Excellence|Intellect/gi, (m) => `<span class="highlight-text">${m}</span>`);
+      }
+      if (heroDesc) heroDesc.innerText = hero.subheadline || '';
+      if (heroImg && hero.heroImageUrl) heroImg.src = hero.heroImageUrl;
+      if (heroStat1Val) heroStat1Val.innerText = hero.stat1Number || '100%';
+      if (heroStat1Lbl) heroStat1Lbl.innerText = hero.stat1Label || 'Board Pass Rate';
+      if (heroStat2Val) heroStat2Val.innerText = hero.stat2Number || '25+';
+      if (heroStat2Lbl) heroStat2Lbl.innerText = hero.stat2Label || 'Years of Legacy';
+      if (heroStat3Val) heroStat3Val.innerText = hero.stat3Number || '15:1';
+      if (heroStat3Lbl) heroStat3Lbl.innerText = hero.stat3Label || 'Student-Teacher Ratio';
+
+      // Hero CTA Buttons
+      const heroApplyBtn = document.getElementById('hero-apply-btn');
+      const heroApplyText = document.getElementById('hero-apply-text');
+      const heroExploreBtn = document.getElementById('hero-explore-btn');
+      const heroExploreText = document.getElementById('hero-explore-text');
+      if (heroApplyBtn && hero.primaryCtaUrl) heroApplyBtn.href = hero.primaryCtaUrl;
+      if (heroApplyText && hero.primaryCtaText) heroApplyText.innerText = hero.primaryCtaText;
+      if (heroExploreBtn && hero.secondaryCtaUrl) heroExploreBtn.href = hero.secondaryCtaUrl;
+      if (heroExploreText) {
+        heroExploreText.innerText = (hero.secondaryCtaText && hero.secondaryCtaText !== 'Institutional Login') ? hero.secondaryCtaText : 'Explore Programs';
+      }
+
+      // Stats Ribbon
+      const statsGrid = document.getElementById('stats-ribbon-grid');
+      if (statsGrid && Array.isArray(cfg.stats)) {
+        statsGrid.innerHTML = cfg.stats.map(s => `
+          <div class="stat-ribbon-card">
+            <div class="stat-ribbon-icon-wrap">
+              <i data-lucide="${esc(s.icon || 'award')}" style="width:26px; height:26px;"></i>
+            </div>
+            <div>
+              <div class="stat-ribbon-number">${esc(s.number)}</div>
+              <div class="stat-ribbon-label">${esc(s.label)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // About & Principal
+      const principalName = document.getElementById('about-principal-name');
+      const principalTitle = document.getElementById('about-principal-title');
+      const principalMsg = document.getElementById('about-principal-msg');
+      const principalPhoto = document.getElementById('about-principal-photo');
+      const aboutNarrative = document.getElementById('about-narrative');
+      const aboutTag = document.getElementById('about-section-tag');
+      const aboutTitle = document.getElementById('about-section-title');
+
+      if (principalName) principalName.innerText = about.principalName || 'Principal & Academic Council';
+      if (principalTitle) principalTitle.innerText = about.principalTitle || 'Principal & Secretary, TMS';
+      if (principalMsg) principalMsg.innerText = about.principalMessage || '';
+      if (principalPhoto && about.principalPhoto) principalPhoto.src = about.principalPhoto;
+      if (aboutNarrative) aboutNarrative.innerText = about.narrative || '';
+      if (aboutTag) aboutTag.innerText = about.sectionTag || 'DISCOVER OUR HERITAGE';
+      if (aboutTitle) aboutTitle.innerText = about.title || 'A Visionary Journey in Holistic Education';
+
+      // Values Grid
+      const valuesGrid = document.getElementById('about-values-grid');
+      if (valuesGrid && Array.isArray(about.coreValues)) {
+        valuesGrid.innerHTML = about.coreValues.map((v, i) => `
+          <div class="value-card">
+            <h4><i data-lucide="check-circle" style="width:16px; height:16px; color:var(--brand-theme-primary);"></i> ${esc(v.title)}</h4>
+            <p>${esc(v.desc)}</p>
+          </div>
+        `).join('');
+      }
+
+      // Academic Programs
+      const programsGrid = document.getElementById('programs-grid');
+      if (programsGrid && Array.isArray(cfg.programs)) {
+        programsGrid.innerHTML = cfg.programs.map(p => `
+          <div class="program-card">
+            <div class="program-icon-badge">
+              <i data-lucide="${esc(p.icon || 'book-open')}" style="width:26px; height:26px;"></i>
+            </div>
+            <h3 class="program-title">${esc(p.title)}</h3>
+            <div class="program-subtitle">${esc(p.subtitle)}</div>
+            <p class="program-desc">${esc(p.description)}</p>
+            ${Array.isArray(p.highlights) && p.highlights.length ? `
+              <ul class="program-highlights">
+                ${p.highlights.map(h => `<li><i data-lucide="check"></i> <span>${esc(h)}</span></li>`).join('')}
+              </ul>
+            ` : ''}
+            <a href="/admission" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; padding:10px; font-weight:700;">
+              Inquire / Apply for Class
+            </a>
+          </div>
+        `).join('');
+      }
+
+      // Facilities
+      const facGrid = document.getElementById('facilities-grid');
+      if (facGrid && Array.isArray(cfg.facilities)) {
+        facGrid.innerHTML = cfg.facilities.map(f => `
+          <div class="facility-card">
+            ${f.badge ? `<span class="facility-badge">${esc(f.badge)}</span>` : ''}
+            <div class="facility-icon">
+              <i data-lucide="${esc(f.icon || 'sparkles')}" style="width:22px; height:22px;"></i>
+            </div>
+            <h4 class="facility-title">${esc(f.title)}</h4>
+            <p class="facility-desc">${esc(f.desc)}</p>
+          </div>
+        `).join('');
+      }
+
+      // Hostel Section & Button Handling (Toggleable by Admin)
+      const h = cfg.hostel || {};
+      const hostelActive = h.enabled === true && h.showNavButton !== false;
+      const navHostel = document.getElementById('nav-hostel-link');
+      const mobileHostel = document.getElementById('mobile-nav-hostel-link');
+      const footerHostel = document.getElementById('footer-hostel-link');
+      const hostelSection = document.getElementById('hostel');
+      const inqHostelOpt = document.getElementById('inq-hostel-opt');
+
+      if (hostelActive) {
+        if (navHostel) {
+          navHostel.style.display = 'inline-block';
+          navHostel.innerText = h.navButtonText || 'Hostel';
+        }
+        if (mobileHostel) {
+          mobileHostel.style.display = 'block';
+          mobileHostel.innerText = '🏠 ' + (h.navButtonText || 'Hostel') + ' & Dormitories';
+        }
+        if (footerHostel) footerHostel.style.display = 'block';
+        if (hostelSection) hostelSection.style.display = 'block';
+        if (inqHostelOpt) inqHostelOpt.style.display = '';
+
+        // Update Section Headers & Counters
+        const hTag = document.getElementById('hostel-section-tag');
+        const hTitle = document.getElementById('hostel-section-title');
+        const hSub = document.getElementById('hostel-section-subtitle');
+        const hCap = document.getElementById('hostel-stat-capacity');
+        if (hTag) hTag.innerHTML = `<i data-lucide="home" style="width:14px; height:14px; color:#BF9A33;"></i> <span>${esc(h.badge || 'RESIDENTIAL CAMPUS & BOARDING')}</span>`;
+        if (hTitle) {
+          const rawTitle = h.title || 'Student Hostel & Residential Dormitories';
+          hTitle.innerHTML = esc(rawTitle).replace(/Residential Dormitories|Dormitories/gi, (m) => `<span class="highlight-text" style="color:var(--brand-theme-primary, #BF9A33);">${m}</span>`);
+        }
+        if (hSub) hSub.innerText = h.subtitle || 'A secure, disciplined and nurturing home away from home with round-the-clock pastoral care, guided evening study, and nutritious dining.';
+        if (hCap) hCap.innerText = (h.totalCapacity || 150) + ' Beds';
+
+        // Render Wings
+        const wingsGrid = document.getElementById('hostel-wings-grid');
+        if (wingsGrid && Array.isArray(h.wings)) {
+          wingsGrid.innerHTML = h.wings.map(w => {
+            const isGirls = (w.gender || '').toLowerCase().includes('girl');
+            const wingBadgeStyle = isGirls
+              ? 'background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8;'
+              : 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;'
+            const wingIcon = isGirls ? 'heart-handshake' : 'shield';
+
+            return `
+              <div class="card hostel-wing-card" style="margin:0; border:1.5px solid #e2e8f0; border-radius:18px; padding:26px; background:#ffffff; box-shadow:0 4px 20px rgba(15, 23, 42, 0.04); position:relative; overflow:hidden; transition:all 0.25s ease;">
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                  <span style="${wingBadgeStyle} font-size:0.78rem; font-weight:800; padding:4px 11px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; text-transform:uppercase; letter-spacing:0.04em;">
+                    <i data-lucide="${wingIcon}" style="width:13px; height:13px;"></i>
+                    <span>${esc(w.gender || 'Wing')} &bull; ${esc(w.rooms || 'Dormitory')}</span>
+                  </span>
+                  <span style="font-size:0.80rem; font-weight:800; color:#8C6E1E; background:#FCF4D9; border:1px solid #F7E8B5; padding:4px 11px; border-radius:999px; display:inline-flex; align-items:center; gap:5px;">
+                    <span style="width:7px; height:7px; border-radius:50%; background:#BF9A33; display:inline-block;"></span>
+                    <span>${w.occupied || 0} / ${w.capacity || 0} Beds Occupied</span>
+                  </span>
+                </div>
+                <h4 style="font-family:var(--font-display); font-size:1.35rem; font-weight:800; color:#0f172a; margin:0 0 10px; line-height:1.25; letter-spacing:-0.01em;">
+                  ${esc(w.name)}
+                </h4>
+                <p style="font-size:0.95rem; color:#334155; margin:0 0 20px; line-height:1.65; font-weight:450;">
+                  ${esc(w.description || '')}
+                </p>
+                <div style="font-size:0.84rem; color:#1e293b; background:#f8fafc; padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:32px; height:32px; border-radius:8px; background:#FCF4D9; color:#8C6E1E; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      <i data-lucide="user-check" style="width:16px; height:16px;"></i>
+                    </div>
+                    <div>
+                      <span style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; display:block; line-height:1.2;">Wardens &amp; Pastoral Care</span>
+                      <strong style="color:#0f172a; font-size:0.90rem;">${esc(w.supervisor || 'Resident Superintendent')}</strong>
+                    </div>
+                  </div>
+                  <span style="font-size:0.74rem; font-weight:700; color:#BF9A33; background:#FDF8E8; border:1px solid #F7E8B5; padding:4px 10px; border-radius:6px; white-space:nowrap;">
+                    24/7 On Campus
+                  </span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // Render Amenities
+        const featGrid = document.getElementById('hostel-features-grid');
+        if (featGrid && Array.isArray(h.features)) {
+          featGrid.innerHTML = h.features.map(f => `
+            <div class="facility-card">
+              ${f.badge ? `<span class="facility-badge">${esc(f.badge)}</span>` : ''}
+              <div class="facility-icon">
+                <i data-lucide="${esc(f.icon || 'home')}" style="width:24px; height:24px;"></i>
+              </div>
+              <h4 class="facility-title">${esc(f.title)}</h4>
+              <p class="facility-desc">${esc(f.desc)}</p>
+            </div>
+          `).join('');
+        }
+
+        // Render Routine
+        const routineList = document.getElementById('hostel-routine-list');
+        if (routineList && Array.isArray(h.dailyRoutine)) {
+          routineList.innerHTML = h.dailyRoutine.map(r => `
+            <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:14px; box-shadow:0 2px 8px rgba(15, 23, 42, 0.03);">
+              <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color:#3730a3; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <i data-lucide="${esc(r.icon || 'clock')}" style="width:20px; height:20px;"></i>
+              </div>
+              <div>
+                <div style="font-size:0.78rem; font-weight:800; color:#BF9A33; letter-spacing:0.02em;">${esc(r.time)}</div>
+                <div style="font-size:0.92rem; font-weight:700; color:#0f172a; line-height:1.35; margin-top:2px;">${esc(r.activity)}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Render Mess Menu
+        const messTbody = document.getElementById('hostel-mess-tbody-public');
+        if (messTbody && Array.isArray(h.messMenu)) {
+          messTbody.innerHTML = h.messMenu.map(m => `
+            <tr>
+              <td><strong style="color:var(--text-main);">${esc(m.day)}</strong></td>
+              <td>${esc(m.breakfast)}</td>
+              <td>${esc(m.lunch)}</td>
+              <td>${esc(m.dinner)}</td>
+            </tr>
+          `).join('');
+        }
+
+        // Render Fees
+        const feesGrid = document.getElementById('hostel-fees-grid');
+        const f = h.fees || {};
+        if (feesGrid) {
+          feesGrid.innerHTML = `
+            <div class="card" style="margin:0; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center;">
+              <span class="badge badge-info" style="margin-bottom:8px;">Registration</span>
+              <div style="font-size:1.25rem; font-weight:800; color:var(--text-main); margin-bottom:4px;">${esc(f.admissionFee || '₹ 5,000')}</div>
+              <div style="font-size:0.78rem; color:#64748b;">One-time Admission &amp; Bedding Kit</div>
+            </div>
+            <div class="card" style="margin:0; border:2px solid #BF9A33; background:#FDF8E8; border-radius:12px; padding:18px; text-align:center;">
+              <span class="badge badge-success" style="margin-bottom:8px;">All-Inclusive Monthly</span>
+              <div style="font-size:1.25rem; font-weight:800; color:#8C6E1E; margin-bottom:4px;">${esc(f.monthlyBoarding || '₹ 4,500 / month')}</div>
+              <div style="font-size:0.78rem; color:#8C6E1E;">Lodging, 4 Meals Daily &amp; Study Hall</div>
+            </div>
+            <div class="card" style="margin:0; border:1px solid #e2e8f0; border-radius:12px; padding:18px; text-align:center;">
+              <span class="badge badge-warning" style="margin-bottom:8px;">Refundable Deposit</span>
+              <div style="font-size:1.25rem; font-weight:800; color:var(--text-main); margin-bottom:4px;">${esc(f.securityDeposit || '₹ 3,000')}</div>
+              <div style="font-size:0.78rem; color:#64748b;">Caution Security (Refunded upon exit)</div>
+            </div>
+          `;
+        }
+
+        // Render Rules
+        const rulesList = document.getElementById('hostel-rules-list');
+        if (rulesList && Array.isArray(h.rules)) {
+          rulesList.innerHTML = h.rules.map(r => `
+            <li style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; font-size:0.86rem; color:#334155; display:flex; align-items:flex-start; gap:8px;">
+              <i data-lucide="check" style="width:16px; height:16px; color:#BF9A33; flex-shrink:0; margin-top:2px;"></i>
+              <span>${esc(r)}</span>
+            </li>
+          `).join('');
+        }
+
+        // Render Warden & Contact details
+        const w = h.wardens || {};
+        const wName = document.getElementById('hostel-warden-name-public');
+        const wHours = document.getElementById('hostel-warden-visiting-public');
+        const wPhone = document.getElementById('hostel-phone-public');
+        const wCallLink = document.getElementById('hostel-call-link');
+        const wWaLink = document.getElementById('hostel-whatsapp-link');
+        const wEmail = document.getElementById('hostel-email-public');
+        const wEmailLink = document.getElementById('hostel-email-link');
+
+        if (wName) wName.innerText = `${w.chiefWardenName || 'Janab Maulana Hafizullah'} • ${w.chiefWardenTitle || 'Senior Superintendent'}`;
+        if (wHours) wHours.innerText = `Visiting Hours: ${w.visitingHours || 'Sundays & Second Saturdays: 10:00 AM – 4:00 PM'}. Prior permission required.`;
+        if (wPhone) wPhone.innerText = w.phone || '+91 8653382851';
+        if (wCallLink && w.phone) wCallLink.href = 'tel:' + w.phone.replace(/\s+/g, '');
+        if (wWaLink && w.phone) wWaLink.href = 'https://wa.me/' + w.phone.replace(/[^0-9]/g, '');
+        if (wEmail) wEmail.innerText = w.email || 'hostel@thaibagarden.com';
+        if (wEmailLink && w.email) wEmailLink.href = 'mailto:' + w.email;
+
+        // Bind interactive tabs within hostel section
+        document.querySelectorAll('.hostel-view-tab').forEach(b => {
+          b.onclick = (e) => {
+            document.querySelectorAll('.hostel-view-tab').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.hostel-view-pane').forEach(p => p.style.display = 'none');
+            b.classList.add('active');
+            const target = b.dataset.pane;
+            const pane = document.getElementById(target);
+            if (pane) pane.style.display = 'block';
+            if (window.lucide) window.lucide.createIcons();
+          };
+        });
+
+      } else {
+        if (navHostel) navHostel.style.display = 'none';
+        if (mobileHostel) mobileHostel.style.display = 'none';
+        if (footerHostel) footerHostel.style.display = 'none';
+        if (hostelSection) hostelSection.style.display = 'none';
+        if (inqHostelOpt) inqHostelOpt.style.display = 'none';
+      }
+
+      // Smooth scroll if URL hash is #hostel
+      if (window.location.hash === '#hostel') {
+        if (hostelActive) {
+          setTimeout(() => {
+            const el = document.getElementById('hostel');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
+        } else {
+          // If hostel is turned off, do not scroll to hidden section
+          window.location.hash = '#academics';
+        }
+      }
+
+      // Notices
+      renderNotices(cfg.notices || [], 'all');
+
+      // Gallery
+      const galleryGrid = document.getElementById('gallery-grid');
+      if (galleryGrid && Array.isArray(cfg.gallery)) {
+        galleryGrid.innerHTML = cfg.gallery.map(g => `
+          <div class="gallery-card">
+            <img src="${esc(g.url)}" alt="${esc(g.title)}" class="gallery-img" loading="lazy">
+            <div class="gallery-caption-overlay">
+              <span class="gallery-caption-cat">${esc(g.category || 'Campus')}</span>
+              <h4 class="gallery-caption-title">${esc(g.title)}</h4>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Testimonials
+      const testGrid = document.getElementById('testimonials-grid');
+      if (testGrid && Array.isArray(cfg.testimonials)) {
+        testGrid.innerHTML = cfg.testimonials.map(t => `
+          <div class="testimonial-card">
+            <div class="testimonial-stars">
+              ${'★'.repeat(t.rating || 5)}${'☆'.repeat(5 - (t.rating || 5))}
+            </div>
+            <p class="testimonial-text">"${esc(t.content)}"</p>
+            <div class="testimonial-author">
+              <img src="${esc(t.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150')}" alt="${esc(t.name)}" class="testimonial-avatar">
+              <div>
+                <div class="testimonial-name">${esc(t.name)}</div>
+                <div class="testimonial-role">${esc(t.role)}</div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // CTA Banner
+      const ctaBadge = document.getElementById('cta-badge');
+      const ctaTitle = document.getElementById('cta-title');
+      const ctaDesc = document.getElementById('cta-desc');
+      const ctaBtnText = document.getElementById('cta-btn-text');
+      const ctaBtn = document.getElementById('cta-btn');
+      if (ctaBadge) ctaBadge.innerText = cta.badge || 'ENROLLMENT 2026–27';
+      if (ctaTitle) ctaTitle.innerText = cta.headline || 'Give Your Child the Foundation for a Brilliant Future';
+      if (ctaDesc) ctaDesc.innerText = cta.subtext || '';
+      if (ctaBtnText) ctaBtnText.innerText = cta.buttonText || 'Apply Online Today';
+      if (ctaBtn && cta.buttonUrl) ctaBtn.href = cta.buttonUrl;
+
+      // Contact & Footer
+      const cAddress = document.getElementById('contact-address');
+      const cPhones = document.getElementById('contact-phones');
+      const cEmail = document.getElementById('contact-email');
+      const cHours = document.getElementById('contact-hours');
+      const fInst = document.getElementById('footer-inst-name');
+      const fAbout = document.getElementById('footer-about-text');
+      const fCopy = document.getElementById('footer-copyright');
+      const fEmer = document.getElementById('footer-emergency');
+
+      if (cAddress) cAddress.innerText = meta.campusAddress || 'Baghait, Tapan, Dakshin Dinajpur';
+      if (cPhones) cPhones.innerText = `${meta.phone || '+91 8653382851'} / ${meta.altPhone || '+91 8167782851'}`;
+      if (cEmail) cEmail.innerText = meta.email || 'tps@thaibagarden.com';
+      if (cHours) cHours.innerText = meta.workingHours || 'Monday through Saturday: 8:30 AM to 4:00 PM';
+      if (fInst) fInst.innerText = meta.name || 'THAIBA PUBLIC SCHOOL';
+      if (fAbout) fAbout.innerText = footer.about || '';
+      if (fCopy) fCopy.innerText = footer.copyright || '© 2026 THAIBA PUBLIC SCHOOL.';
+      if (fEmer) fEmer.innerText = footer.emergencyHelpline || meta.phone || '+91 8653382851';
+
+      // Master Section & Tab Visibility
+      applySectionVisibilities(cfg.sections);
+
+      updateLogoImages();
+      UIComponents.refreshIcons();
+    }
+
+    function applySectionVisibilities(sections) {
+      const s = sections || {};
+      const isVis = (k, def = true) => (s[k] !== undefined ? s[k] === true : def);
+
+      const setDisplay = (id, visible, displayStyle = '') => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = visible ? displayStyle : 'none';
+      };
+
+      // Header Login Button
+      setDisplay('btn-open-institutional-login', isVis('headerLoginBtn'), 'inline-flex');
+      setDisplay('btn-mobile-login', isVis('headerLoginBtn'), 'inline-flex');
+
+      // Desktop & Mobile Navigation Links (also hides navigation link if target section is turned off)
+      const aboutVis = isVis('navAbout') && isVis('about');
+      setDisplay('nav-about-link', aboutVis, 'inline-block');
+      setDisplay('mobile-nav-about-link', aboutVis, 'flex');
+
+      const academicsVis = isVis('navAcademics') && isVis('academics');
+      setDisplay('nav-academics-link', academicsVis, 'inline-block');
+      setDisplay('mobile-nav-academics-link', academicsVis, 'flex');
+
+      const facVis = isVis('navFacilities') && isVis('facilities');
+      setDisplay('nav-facilities-link', facVis, 'inline-block');
+      setDisplay('mobile-nav-facilities-link', facVis, 'flex');
+
+      const hostelVis = isVis('hostel', false) && isVis('navHostel', false);
+      setDisplay('nav-hostel-link', hostelVis, 'inline-block');
+      setDisplay('mobile-nav-hostel-link', hostelVis, 'flex');
+      setDisplay('footer-hostel-link', hostelVis, 'list-item');
+
+      const noticesVis = isVis('navNotices') && isVis('notices');
+      setDisplay('nav-notices-link', noticesVis, 'inline-block');
+      setDisplay('mobile-nav-notices-link', noticesVis, 'flex');
+
+      const galleryVis = isVis('navGallery') && isVis('gallery');
+      setDisplay('nav-gallery-link', galleryVis, 'inline-block');
+      setDisplay('mobile-nav-gallery-link', galleryVis, 'flex');
+
+      const testVis = isVis('navTestimonials') && isVis('testimonials');
+      setDisplay('nav-testimonials-link', testVis, 'inline-block');
+      setDisplay('mobile-nav-testimonials-link', testVis, 'flex');
+
+      const admVis = isVis('navAdmissions') && isVis('admissionCta');
+      setDisplay('nav-admissions-link', admVis, 'inline-block');
+      setDisplay('mobile-drawer-apply-btn', admVis, 'inline-flex');
+
+      const contactVis = isVis('navContact') && isVis('contact');
+      setDisplay('nav-contact-link', contactVis, 'inline-block');
+      setDisplay('mobile-nav-contact-link', contactVis, 'flex');
+
+      // Major Landing Page Sections
+      setDisplay('home', isVis('hero'), 'block');
+      setDisplay('hero-badge-pill', isVis('heroBadge'), 'inline-flex');
+      setDisplay('hero-apply-btn', isVis('heroApplyBtn'), 'inline-flex');
+      setDisplay('hero-explore-btn', isVis('heroExploreBtn'), 'inline-flex');
+      setDisplay('hero-meta-row', isVis('heroStats'), 'flex');
+      setDisplay('hero-visual-card', isVis('heroVisualCard'), 'block');
+
+      setDisplay('quick-stats-ribbon', isVis('quickStats'), 'block');
+
+      setDisplay('about', isVis('about'), 'block');
+      setDisplay('about-principal-card', isVis('aboutPrincipal'), 'block');
+      setDisplay('about-values-grid', isVis('aboutValues'), 'grid');
+
+      setDisplay('academics', isVis('academics'), 'block');
+      setDisplay('facilities', isVis('facilities'), 'block');
+      setDisplay('hostel', isVis('hostel', false), 'block');
+      setDisplay('notices', isVis('notices'), 'block');
+      setDisplay('gallery', isVis('gallery'), 'block');
+      setDisplay('testimonials', isVis('testimonials'), 'block');
+
+      setDisplay('admissions', isVis('admissionCta'), 'block');
+      setDisplay('cta-btn', isVis('ctaApplyBtn'), 'inline-flex');
+      setDisplay('cta-login-btn', isVis('ctaLoginBtn'), 'inline-flex');
+
+      setDisplay('contact', isVis('contact'), 'block');
+      setDisplay('contact-info-card', isVis('contactOfficeCard'), 'block');
+      setDisplay('contact-form-card', isVis('contactInquiryForm'), 'block');
+      setDisplay('contact-wa-btn', isVis('contactWaBtn'), 'inline-flex');
+      setDisplay('contact-dir-btn', isVis('contactDirBtn'), 'inline-flex');
+
+      // Footer & Columns
+      setDisplay('website-footer', isVis('footer'), 'block');
+      setDisplay('footer-about-col', isVis('footerAboutCol'), 'block');
+      setDisplay('footer-nav-col', isVis('footerNavCol'), 'block');
+      setDisplay('footer-portals-col', isVis('footerPortalsCol'), 'block');
+      setDisplay('footer-trust-col', isVis('footerTrustCol'), 'block');
+      setDisplay('footer-bottom-row', isVis('footerBottom'), 'flex');
+    }
+
+    function renderNotices(notices, filter) {
+      const container = document.getElementById('notices-list-container');
+      if (!container) return;
+
+      const filtered = (filter === 'all')
+        ? notices
+        : notices.filter(n => (n.category || '').toLowerCase() === filter.toLowerCase());
+
+      if (!filtered.length) {
+        container.innerHTML = `<div style="padding:40px; text-align:center; color:#64748b;">No bulletins found for this category.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(n => {
+        const d = new Date(n.date || Date.now());
+        const day = d.getDate();
+        const mon = d.toLocaleString('default', { month: 'short' });
+        return `
+          <div class="notice-row" data-notice-id="${esc(n.id)}">
+            <div class="notice-left">
+              <div class="notice-date-box">
+                <span class="notice-date-day">${day}</span>
+                <span class="notice-date-mon">${mon}</span>
+              </div>
+              <div class="notice-body">
+                <span class="notice-category-badge">${esc(n.category || 'Bulletin')} ${n.isPinned ? '• 📌 Pinned' : ''}</span>
+                <h4 class="notice-title">${esc(n.title)}</h4>
+                <p class="notice-excerpt">${esc(n.content)}</p>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="flex-shrink:0;">
+              View Notice <i data-lucide="chevron-right" style="width:14px; height:14px;"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      // Add click handler for notices
+      container.querySelectorAll('.notice-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const id = row.dataset.noticeId;
+          const notice = notices.find(n => n.id === id);
+          if (notice) {
+            UIComponents.showModal({
+              title: notice.title,
+              content: `
+                <div style="font-size:0.85rem; color:#BF9A33; font-weight:700; margin-bottom:12px;">Category: ${esc(notice.category)} • Date: ${esc(notice.date)}</div>
+                <div style="font-size:0.95rem; line-height:1.7; color:#334155; white-space:pre-wrap;">${esc(notice.content)}</div>
+              `,
+              confirmText: 'Close',
+              showCancel: false
+            });
+          }
+        });
+      });
+      UIComponents.refreshIcons();
+    }
+
+    function bindEvents() {
+      const mobilePanel = document.getElementById('mobile-nav-panel');
+
+      // Mobile Menu Toggle
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      if (mobileBtn && mobilePanel) {
+        mobileBtn.addEventListener('click', () => {
+          const isHidden = mobilePanel.style.display === 'none';
+          mobilePanel.style.display = isHidden ? 'block' : 'none';
+        });
+        mobilePanel.querySelectorAll('.mobile-nav-link').forEach(link => {
+          link.addEventListener('click', () => {
+            mobilePanel.style.display = 'none';
+          });
+        });
+      }
+
+      // Notices Filter Bar
+      const filterBar = document.getElementById('notices-filter-bar');
+      if (filterBar) {
+        filterBar.querySelectorAll('.notice-chip').forEach(chip => {
+          chip.addEventListener('click', (e) => {
+            filterBar.querySelectorAll('.notice-chip').forEach(c => c.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            const cfg = websiteService.getConfig();
+            renderNotices(cfg.notices || [], e.currentTarget.dataset.filter);
+          });
+        });
+      }
+
+      // Quick Inquiry Form Submission
+      const inqForm = document.getElementById('inquiry-form');
+      if (inqForm) {
+        inqForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const nameEl = document.getElementById('inq-name');
+          const phoneEl = document.getElementById('inq-phone');
+          const gradeEl = document.getElementById('inq-grade');
+          const emailEl = document.getElementById('inq-email');
+          const msgEl = document.getElementById('inq-msg');
+          const status = document.getElementById('inquiry-status');
+          const submitBtn = inqForm.querySelector('button[type="submit"]');
+
+          const name = nameEl ? nameEl.value.trim() : '';
+          const phone = phoneEl ? phoneEl.value.trim() : '';
+          const grade = gradeEl ? gradeEl.value : 'General Admission';
+          const email = emailEl ? emailEl.value.trim() : '';
+          const msg = msgEl ? msgEl.value.trim() : '';
+
+          if (!name || !phone) {
+            if (status) {
+              status.style.display = 'block';
+              status.style.color = '#dc2626';
+              status.innerText = 'Please provide both Guardian Name and Contact Phone.';
+            }
+            return;
+          }
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i data-lucide="loader" class="spin"></i> Submitting...';
+            if (window.lucide) window.lucide.createIcons();
+          }
+
+          const inquiry = {
+            id: 'INQ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
+            guardianName: name,
+            phone: phone,
+            grade: grade,
+            email: email,
+            message: msg,
+            status: 'new',
+            source: 'Website Contact Form',
+            notes: '',
+            createdAt: new Date().toISOString()
+          };
+
+          try {
+            await websiteService.saveInquiry(inquiry);
+            if (status) {
+              status.style.display = 'block';
+              status.style.background = '#ecfdf5';
+              status.style.border = '1.5px solid #a7f3d0';
+              status.style.borderRadius = '10px';
+              status.style.padding = '14px 16px';
+              status.style.color = '#8C6E1E';
+              status.style.textAlign = 'left';
+              status.innerHTML = `
+                <div style="font-weight:800; font-size:1rem; margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                  <i data-lucide="check-circle" style="width:18px; height:18px; color:#BF9A33;"></i>
+                  <span>Inquiry Received Successfully!</span>
+                </div>
+                <div style="font-size:0.86rem; color:#8C6E1E; line-height:1.5;">
+                  Thank you, <strong>${esc(name)}</strong>. Your admission inquiry for <strong>${esc(grade)}</strong> has been registered. Our admissions desk will call you at <strong>${esc(phone)}</strong> shortly.
+                </div>
+              `;
+              if (window.lucide) window.lucide.createIcons();
+            }
+            inqForm.reset();
+          } catch (err) {
+            console.error('Failed to save inquiry:', err);
+            if (status) {
+              status.style.display = 'block';
+              status.style.background = '#fef2f2';
+              status.style.border = '1px solid #fecaca';
+              status.style.borderRadius = '10px';
+              status.style.padding = '12px 14px';
+              status.style.color = '#b91c1c';
+              status.innerHTML = 'Unable to send inquiry online. Please contact our campus office directly at <strong>+91 8653382851</strong>.';
+            }
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i data-lucide="send" style="width:16px; height:16px;"></i> Submit Inquiry';
+              if (window.lucide) window.lucide.createIcons();
+            }
+          }
+        });
+      }
+    }
+
+    // Launch!
+    window.addEventListener('DOMContentLoaded', initWebsite);
   </script>
 </body>
 </html>

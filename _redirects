@@ -15,9 +15,11 @@
 /teachers                       /teacher    301
 /faculty                        /teacher    301
 /teacher.html                   /teacher    301
+/dashboard.html                 /dashboard  301
 /login.html                     /login      301
 /admin.html                     /admin      301
 /index.html                     /           301
+/dashboard                      /dashboard.html 200
 /admission                      /admission.html 200
 /student                        /student.html   200
 /parent                         /parent.html    200

@@ -3,10 +3,12 @@
  * Robust Network-First Offline Caching
  */
 
-const CACHE_NAME = 'tms-erp-cache-v3';
+const CACHE_NAME = 'tps-erp-cache-v23';
 const PRECACHE_URLS = [
   './',
   './index.html',
+  './dashboard',
+  './dashboard.html',
   './login',
   './admission',
   './student',
@@ -18,7 +20,7 @@ const PRECACHE_URLS = [
   './app.css',
   './manifest.json',
   './icons/icon.svg',
-  './icons/tms-logo.png'
+  './tps-logo.png'
 ];
 
 self.addEventListener('install', (event) => {

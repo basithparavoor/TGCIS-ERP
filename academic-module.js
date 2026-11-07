@@ -1,4 +1,29 @@
 /**
+ * Synchronize the active campus academic session from database and local storage.
+ */
+export async function syncActiveAcademicSession() {
+  const local = localStorage.getItem('tms_active_session');
+  if (local) {
+    TMS_CONFIG.academic.currentYear = local;
+  }
+  try {
+    const sessions = await dbService.select('academic_sessions');
+    if (Array.isArray(sessions) && sessions.length > 0) {
+      const active = sessions.find(s => s.isCurrent === true || s.status === 'Active') || sessions[0];
+      if (active && active.sessionName) {
+        TMS_CONFIG.academic.currentYear = active.sessionName;
+        localStorage.setItem('tms_active_session', active.sessionName);
+        return active.sessionName;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not sync active academic session:', e);
+  }
+  return TMS_CONFIG.academic.currentYear;
+}
+
+import { ClassroomModal } from './classroom-modal.js';
+/**
  * THAIBA PUBLIC SCHOOL — Academic & Curriculum Management Module
  * Comprehensive CRUD Suite: Classes, Sections, Period & Bell Timetable,
  * Teacher Allocation, Academic Sessions, Subject Master & Syllabus Tracker.
@@ -57,16 +82,33 @@ export class AcademicModule {
 
     this._staff = staff || [];
     this._subjects = (dbSubjects && dbSubjects.length) ? dbSubjects : DEFAULT_SUBJECTS;
-    this._classes = (dbClasses && dbClasses.length) ? dbClasses : TMS_CONFIG.academic.classes.map((cls, idx) => ({
-      id: `cls-${idx + 1}`,
-      grade: cls,
-      section: 'A',
-      roomNo: `Room ${101 + idx}`,
-      capacity: 35,
-      teacher: (this._staff[idx % (this._staff.length || 1)]?.fullName) || 'Assigned Faculty',
-      periods: 35,
-      status: 'Active'
-    }));
+    const isClassesInitialized = localStorage.getItem('tms_classes_initialized') === 'true';
+    if (!dbClasses || dbClasses.length === 0) {
+      if (!isClassesInitialized) {
+        // First-time load: build and persist standard classes so they are real DB records
+        const defaultClasses = TMS_CONFIG.academic.classes.map((cls, idx) => ({
+          id: `cls-${idx + 1}`,
+          grade: cls,
+          name: cls,
+          section: 'A',
+          roomNo: `Room ${101 + idx}`,
+          capacity: 35,
+          teacher: (this._staff[idx % (this._staff.length || 1)]?.fullName) || 'Assigned Faculty',
+          periods: 35,
+          status: 'Active'
+        }));
+        this._classes = defaultClasses;
+        localStorage.setItem('tms_classes_initialized', 'true');
+        for (const c of defaultClasses) {
+          dbService.upsert('academic_classes', c).catch(() => {});
+        }
+      } else {
+        // User intentionally deleted classes
+        this._classes = [];
+      }
+    } else {
+      this._classes = dbClasses;
+    }
     this._periods = (dbPeriods && dbPeriods.length) ? dbPeriods.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)) : DEFAULT_PERIODS;
     this._sessions = (dbSessions && dbSessions.length) ? dbSessions : DEFAULT_SESSIONS;
     this._syllabus = (dbSyllabus && dbSyllabus.length) ? dbSyllabus : DEFAULT_SYLLABUS;
@@ -77,6 +119,8 @@ export class AcademicModule {
     this._selectedSubj = this._selectedSubj || 'Mathematics';
 
     const currentSessionObj = this._sessions.find(s => s.isCurrent) || this._sessions[0] || { sessionName: TMS_CONFIG.academic.currentYear };
+    TMS_CONFIG.academic.currentYear = currentSessionObj.sessionName;
+    localStorage.setItem('tms_active_session', currentSessionObj.sessionName);
 
     container.innerHTML = `
       <div class="tms-content-wrapper">
@@ -95,14 +139,17 @@ export class AcademicModule {
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Active Academic Session', value: currentSessionObj.sessionName, icon: 'calendar', color: 'blue', subtitle: currentSessionObj.status || 'Active' })}
-        ${UIComponents.renderKpiCard({ title: 'Configured Classes', value: `${this._classes.length}`, icon: 'layers', color: 'emerald', subtitle: 'Divisions Configured' })}
+        ${UIComponents.renderKpiCard({ title: 'Configured Classes', value: `${this._classes.length}`, icon: 'layers', color: 'Gold', subtitle: 'Divisions Configured' })}
         ${UIComponents.renderKpiCard({ title: 'Daily Periods & Bell', value: `${this._periods.length} Slots`, icon: 'clock', color: 'purple', subtitle: 'Assembly & Recess' })}
         ${UIComponents.renderKpiCard({ title: 'Curriculum Subjects', value: `${this._subjects.length}`, icon: 'book', color: 'amber', subtitle: 'State & CBSE Catalog' })}
       </div>
 
       <!-- Academic Segmented Navigation Tabs -->
-      <div class="tms-tab-rail-wrapper">
-        <div class="tms-segmented-tabs">
+      <div class="tms-tab-scroll-wrapper">
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" aria-label="Scroll left" title="Scroll tabs left">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="tms-segmented-tabs tms-tab-scroll-rail">
           <button class="tms-tab-pill ${this._currentTab === 'classes' ? 'active' : ''} acad-tab" data-tab="classes">
             <i data-lucide="layers"></i>
             <span>Classes &amp; Sections</span>
@@ -124,6 +171,9 @@ export class AcademicModule {
             <span>Syllabus Tracker</span>
           </button>
         </div>
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" aria-label="Scroll right" title="Scroll tabs right">
+          <i data-lucide="chevron-right"></i>
+        </button>
       </div>
 
       <div id="acad-tab-content"></div>
@@ -192,13 +242,21 @@ export class AcademicModule {
                 <i data-lucide="table"></i> Table
               </button>
             </div>
+            <button class="btn btn-secondary btn-sm" id="btn-restore-classes-default" title="Restore standard classes"><i data-lucide="rotate-ccw"></i> Restore Classes</button>
             <button class="btn btn-primary btn-sm" id="btn-add-class-inner"><i data-lucide="plus"></i> New Class</button>
           </div>
         </div>
 
         <!-- Cards View (Zero Side-Scroll) -->
         <div id="class-cards-container" class="tms-cards-grid" style="${viewMode === 'cards' ? '' : 'display: none;'}">
-          ${this._classes.map(c => `
+          ${this._classes.length === 0 ? `
+            <div style="grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--text-muted);">
+              <i data-lucide="layers" style="width: 44px; height: 44px; margin: 0 auto 12px; color: var(--text-subtle); display: block;"></i>
+              <h4 style="color: var(--text-primary); margin-bottom: 4px;">No Classes Configured</h4>
+              <p style="font-size: 0.86rem; margin-bottom: 14px;">All classes have been removed or deleted. You can create a new class division or restore the standard curriculum classes.</p>
+              <button class="btn btn-secondary btn-sm" id="btn-empty-restore-classes"><i data-lucide="rotate-ccw"></i> Restore Standard Classes</button>
+            </div>
+          ` : this._classes.map(c => `
             <div class="tms-data-card" data-class-id="${esc(c.id)}">
               <div class="tms-data-card-header">
                 <div>
@@ -211,7 +269,7 @@ export class AcademicModule {
                 <div class="tms-data-card-row full-width">
                   <span class="tms-data-card-label">Assigned Class Teacher</span>
                   <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
-                    <div style="width: 26px; height: 26px; border-radius: 50%; background: #16a34a; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">
+                    <div style="width: 26px; height: 26px; border-radius: 50%; background: #BF9A33; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">
                       ${esc((c.teacher || 'T').slice(0, 1))}
                     </div>
                     <span class="tms-data-card-value">${esc(c.teacher || 'Unassigned')}</span>
@@ -257,7 +315,9 @@ export class AcademicModule {
               </tr>
             </thead>
             <tbody>
-              ${this._classes.map(c => `
+              ${this._classes.length === 0 ? `
+                <tr><td colspan="8" style="text-align:center; padding: 36px 20px; color: var(--text-muted);">No classes configured. Click "New Class" or "Restore Classes".</td></tr>
+              ` : this._classes.map(c => `
                 <tr>
                   <td><strong>${esc(c.grade)}</strong></td>
                   <td><span class="badge badge-secondary">${esc(c.section || 'A')}</span></td>
@@ -306,6 +366,38 @@ export class AcademicModule {
     const addBtn = content.querySelector('#btn-add-class-inner');
     if (addBtn) addBtn.addEventListener('click', () => this.openAddClassModal());
 
+    const restoreHandler = async () => {
+      const ok = await UIComponents.confirm({
+        title: 'Restore Standard Classes',
+        message: 'This will restore the standard curriculum classes (Nursery to Grade 12). Continue?',
+        confirmText: 'Restore Classes',
+        type: 'primary',
+        icon: 'rotate-ccw'
+      });
+      if (!ok) return;
+      localStorage.removeItem('tms_classes_initialized');
+      const defaultClasses = TMS_CONFIG.academic.classes.map((cls, idx) => ({
+        id: `cls-${idx + 1}`,
+        grade: cls,
+        name: cls,
+        section: 'A',
+        roomNo: `Room ${101 + idx}`,
+        capacity: 35,
+        teacher: (this._staff[idx % (this._staff.length || 1)]?.fullName) || 'Assigned Faculty',
+        periods: 35,
+        status: 'Active'
+      }));
+      for (const c of defaultClasses) {
+        await dbService.upsert('academic_classes', c);
+      }
+      localStorage.setItem('tms_classes_initialized', 'true');
+      UIComponents.showToast('Standard classes restored!', 'success');
+      await this.render(this._container);
+    };
+
+    content.querySelector('#btn-restore-classes-default')?.addEventListener('click', restoreHandler);
+    content.querySelector('#btn-empty-restore-classes')?.addEventListener('click', restoreHandler);
+
     content.querySelectorAll('.btn-edit-class').forEach(btn => {
       btn.addEventListener('click', () => this.openEditClassModal(btn.dataset.id));
     });
@@ -336,13 +428,13 @@ export class AcademicModule {
         <div class="tms-cards-grid">
           ${this._periods.map(p => {
             const isBreak = p.isBreak;
-            const borderCol = isBreak ? '#f59e0b' : '#16a34a';
+            const borderCol = isBreak ? '#f59e0b' : '#BF9A33';
             const iconName = isBreak ? 'coffee' : 'clock';
             return `
               <div class="tms-data-card" style="border-left: 4px solid ${borderCol};">
                 <div class="tms-data-card-header">
                   <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: ${isBreak ? 'rgba(245,158,11,0.1)' : 'rgba(22,163,74,0.1)'}; color: ${borderCol}; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: ${isBreak ? 'rgba(245,158,11,0.1)' : 'rgba(191, 154, 51,0.1)'}; color: ${borderCol}; display: flex; align-items: center; justify-content: center;">
                       <i data-lucide="${iconName}" style="width: 18px; height: 18px;"></i>
                     </div>
                     <div>
@@ -405,7 +497,7 @@ export class AcademicModule {
 
         <div class="tms-cards-grid">
           ${this._sessions.map(s => `
-            <div class="tms-data-card" style="${s.isCurrent ? 'border-color: #16a34a; box-shadow: 0 4px 14px rgba(22,163,74,0.12);' : ''}">
+            <div class="tms-data-card" style="${s.isCurrent ? 'border-color: #BF9A33; box-shadow: 0 4px 14px rgba(191, 154, 51,0.12);' : ''}">
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title" style="display: flex; align-items: center; gap: 8px;">
@@ -481,7 +573,7 @@ export class AcademicModule {
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title">${esc(s.name)}</div>
-                  <div class="tms-data-card-subtitle font-mono font-bold" style="color: #166534;">${esc(s.code)}</div>
+                  <div class="tms-data-card-subtitle font-mono font-bold" style="color: #8C6E1E;">${esc(s.code)}</div>
                 </div>
                 <span class="badge badge-secondary">${esc(s.classification)}</span>
               </div>
@@ -560,16 +652,16 @@ export class AcademicModule {
             </select>
           </div>
           <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:0.88rem; font-weight:700; color:#16a34a;">${completed}/${total} Units Completed (${pct}%)</span>
+            <span style="font-size:0.88rem; font-weight:700; color:#BF9A33;">${completed}/${total} Units Completed (${pct}%)</span>
             <div style="width:120px; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
-              <div style="width:${pct}%; height:100%; background:#16a34a; transition:width 0.3s ease;"></div>
+              <div style="width:${pct}%; height:100%; background:#BF9A33; transition:width 0.3s ease;"></div>
             </div>
           </div>
         </div>
 
         <div class="tms-cards-grid">
           ${filtered.length ? filtered.map(t => `
-            <div class="tms-data-card" style="border-left: 4px solid ${t.completed ? '#16a34a' : '#f59e0b'};">
+            <div class="tms-data-card" style="border-left: 4px solid ${t.completed ? '#BF9A33' : '#f59e0b'};">
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title">${esc(t.title)}</div>
@@ -627,7 +719,7 @@ export class AcademicModule {
           topic.completed = !topic.completed;
           dbService.setLocal('syllabus_topics', this._syllabus);
           try {
-            await dbService.upsert('app_settings', { key: 'academic_syllabus_topics', value: this._syllabus });
+            await dbService.upsert('app_settings', { id: 'academic_syllabus_topics', value: this._syllabus });
           } catch(e) {}
           UIComponents.showToast(`Unit marked as ${topic.completed ? 'Completed' : 'Pending'}!`, 'success');
           this.renderSyllabusTab(content);
@@ -641,122 +733,32 @@ export class AcademicModule {
      MODALS: CLASS CRUD & TEACHER ASSIGNMENT
      ========================================================================= */
   static openAddClassModal(initialData = null) {
-    const isEdit = !!initialData;
-    const staffOptions = this._staff.map(s => `
-      <option value="${esc(s.fullName)}" ${initialData && initialData.teacher === s.fullName ? 'selected' : ''}>
-        ${esc(s.fullName)} (${esc(s.role || 'Faculty')})
-      </option>
-    `).join('');
-
-    const bodyHtml = `
-      <form id="form-manage-class" style="display:flex; flex-direction:column; gap:12px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Grade / Class Name *</label>
-            <input class="form-input" id="cls-grade" list="grade-suggestions" required value="${esc(initialData?.grade || 'Class 1')}">
-            <datalist id="grade-suggestions">
-              ${TMS_CONFIG.academic.classes.map(c => `<option value="${c}"></option>`).join('')}
-            </datalist>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Section *</label>
-            <input class="form-input font-mono" id="cls-section" required value="${esc(initialData?.section || 'A')}" placeholder="e.g. A, B, C">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Room Number</label>
-            <input class="form-input" id="cls-room" value="${esc(initialData?.roomNo || 'Room 101')}" placeholder="e.g. Room 101, Science Lab">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Student Capacity</label>
-            <input type="number" class="form-input font-mono" id="cls-capacity" value="${esc(initialData?.capacity || 35)}">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Class Teacher Allocation</label>
-          <select class="form-select" id="cls-teacher">
-            <option value="Unassigned">-- Select Faculty Member --</option>
-            ${staffOptions}
-          </select>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Weekly Periods</label>
-            <input type="number" class="form-input font-mono" id="cls-periods" value="${esc(initialData?.periods || 35)}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Status</label>
-            <select class="form-select" id="cls-status">
-              <option value="Active" ${initialData?.status === 'Active' ? 'selected' : ''}>Active</option>
-              <option value="Inactive" ${initialData?.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
-            </select>
-          </div>
-        </div>
-      </form>
-    `;
-
-    UIComponents.openModal({
-      title: isEdit ? `Edit Class: ${initialData.grade} (${initialData.section})` : 'Add New Class Division',
-      bodyHtml,
-      footerHtml: `
-        <button class="btn btn-secondary" id="btn-cls-cancel">Cancel</button>
-        <button class="btn btn-primary" id="btn-cls-save"><i data-lucide="save"></i> ${isEdit ? 'Save Changes' : 'Create Class'}</button>
-      `
-    });
-
-    const cancelBtn = document.getElementById('btn-cls-cancel');
-    if (cancelBtn) cancelBtn.addEventListener('click', () => UIComponents.closeModal());
-
-    const saveBtn = document.getElementById('btn-cls-save');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        const grade = document.getElementById('cls-grade')?.value?.trim();
-        const section = document.getElementById('cls-section')?.value?.trim().toUpperCase();
-        const roomNo = document.getElementById('cls-room')?.value?.trim() || 'Room 101';
-        const capacity = parseInt(document.getElementById('cls-capacity')?.value, 10) || 35;
-        const teacher = document.getElementById('cls-teacher')?.value || 'Assigned Faculty';
-        const periods = parseInt(document.getElementById('cls-periods')?.value, 10) || 35;
-        const status = document.getElementById('cls-status')?.value || 'Active';
-
-        if (!grade || !section) {
-          UIComponents.showToast('Grade and Section are required.', 'warning');
-          return;
-        }
-
+    ClassroomModal.open({
+      classroom: initialData,
+      onSave: async (recordData) => {
         const classRecord = {
-          id: initialData?.id || `cls-${Date.now()}`,
-          grade,
-          section,
-          roomNo,
-          capacity,
-          teacher,
-          periods,
-          status
+          id: initialData?.id || recordData.id,
+          grade: recordData.name,
+          name: recordData.name,
+          section: recordData.section,
+          roomNo: recordData.room,
+          capacity: recordData.capacity,
+          teacher: recordData.teacher,
+          days: recordData.days,
+          startTime: recordData.startTime,
+          endTime: recordData.endTime,
+          gender: recordData.gender,
+          status: recordData.status
         };
-
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = 'Saving...';
-
         try {
           await dbService.upsert('academic_classes', classRecord);
-          await auditService.log(isEdit ? 'CLASS_UPDATED' : 'CLASS_CREATED', 'ACADEMIC', { grade, section, teacher });
-          UIComponents.showToast(`Class ${grade} (${section}) ${isEdit ? 'updated' : 'created'} successfully!`, 'success');
-          UIComponents.closeModal();
-          await this.render(this._container);
+          await auditService.log(initialData ? 'CLASS_UPDATED' : 'CLASS_CREATED', 'ACADEMIC', classRecord);
         } catch (err) {
-          console.error('Failed to save class:', err);
-          UIComponents.showToast('Error saving class: ' + err.message, 'error');
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i data-lucide="save"></i> Save Class';
+          console.warn('Academic class save fallback:', err);
         }
-      });
-    }
-
-    UIComponents.refreshIcons();
+        if (this._container) await this.render(this._container);
+      }
+    });
   }
 
   static openEditClassModal(classId) {
@@ -777,7 +779,7 @@ export class AcademicModule {
 
     const bodyHtml = `
       <div style="display:flex; flex-direction:column; gap:14px;">
-        <div style="padding:12px; background:rgba(22,163,74,0.06); border-radius:8px; border:1px solid rgba(22,163,74,0.2);">
+        <div style="padding:12px; background:rgba(191, 154, 51,0.06); border-radius:8px; border:1px solid rgba(191, 154, 51,0.2);">
           <strong>Class:</strong> ${esc(cls.grade)} - Section ${esc(cls.section || 'A')}<br>
           <span style="font-size:0.85rem; color:var(--text-muted);">Current Teacher: ${esc(cls.teacher || 'None')}</span>
         </div>
@@ -824,7 +826,7 @@ export class AcademicModule {
     if (!cls) return;
     const ok = await UIComponents.confirm({
       title: 'Delete Class Division',
-      message: `Are you sure you want to permanently delete ${cls.grade} - Section ${cls.section}? This will remove all division allocations.`,
+      message: `Are you sure you want to permanently delete ${cls.grade} - Section ${cls.section || 'A'}? This will remove all division allocations.`,
       confirmText: 'Delete Class',
       cancelText: 'Cancel',
       type: 'danger',
@@ -833,9 +835,20 @@ export class AcademicModule {
     if (!ok) return;
 
     try {
+      localStorage.setItem('tms_classes_initialized', 'true');
+      const remaining = this._classes.filter(c => c.id !== classId);
+      this._classes = remaining;
+
+      // Ensure all remaining classes are persisted in DB so default classes do not resurrect
+      for (const rem of remaining) {
+        await dbService.upsert('academic_classes', rem);
+      }
+
+      // Delete from DB and local cache
       await dbService.delete('academic_classes', classId);
-      await auditService.log('CLASS_DELETED', 'ACADEMIC', { grade: cls.grade, section: cls.section });
-      UIComponents.showToast(`Class ${cls.grade} (${cls.section}) deleted.`, 'success');
+
+      await auditService.log('CLASS_DELETED', 'ACADEMIC', { grade: cls.grade, section: cls.section || 'A' });
+      UIComponents.showToast(`Class ${cls.grade} (${cls.section || 'A'}) deleted successfully.`, 'success');
       await this.render(this._container);
     } catch (err) {
       UIComponents.showToast('Failed to delete: ' + err.message, 'error');
@@ -846,109 +859,35 @@ export class AcademicModule {
      MODALS: PERIODS CRUD
      ========================================================================= */
   static openAddPeriodModal(initialData = null) {
-    const isEdit = !!initialData;
-    const bodyHtml = `
-      <form id="form-manage-period" style="display:flex; flex-direction:column; gap:12px;">
-        <div class="form-group">
-          <label class="form-label">Period Name *</label>
-          <input class="form-input" id="prd-name" required value="${esc(initialData?.name || '')}" placeholder="e.g. Period 1, Recess, Morning Assembly">
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Period Number</label>
-            <input type="number" class="form-input font-mono" id="prd-num" value="${esc(initialData?.periodNo ?? 1)}" placeholder="0 for break">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Display Order Index</label>
-            <input type="number" class="form-input font-mono" id="prd-order" value="${esc(initialData?.orderIndex ?? 1)}">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Start Time *</label>
-            <input type="time" class="form-input font-mono" id="prd-start" required value="${esc(initialData?.startTime || '08:50')}">
-          </div>
-          <div class="form-group">
-            <label class="form-label">End Time *</label>
-            <input type="time" class="form-input font-mono" id="prd-end" required value="${esc(initialData?.endTime || '09:35')}">
-          </div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-          <div class="form-group">
-            <label class="form-label">Duration (Minutes)</label>
-            <input type="number" class="form-input font-mono" id="prd-duration" value="${esc(initialData?.durationMins || 45)}">
-          </div>
-          <div class="form-group" style="display:flex; flex-direction:column; justify-content:center; padding-top:14px;">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-              <input type="checkbox" id="prd-isbreak" ${initialData?.isBreak ? 'checked' : ''}>
-              <span style="font-size:0.9rem; font-weight:600;">Is Break / Assembly</span>
-            </label>
-          </div>
-        </div>
-      </form>
-    `;
-
-    UIComponents.openModal({
-      title: isEdit ? `Edit Period: ${initialData.name}` : 'Add New Period / Bell Schedule Slot',
-      bodyHtml,
-      footerHtml: `
-        <button class="btn btn-secondary" id="btn-prd-cancel">Cancel</button>
-        <button class="btn btn-primary" id="btn-prd-save"><i data-lucide="save"></i> ${isEdit ? 'Save Changes' : 'Create Period'}</button>
-      `
-    });
-
-    const cancelBtn = document.getElementById('btn-prd-cancel');
-    if (cancelBtn) cancelBtn.addEventListener('click', () => UIComponents.closeModal());
-
-    const saveBtn = document.getElementById('btn-prd-save');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        const name = document.getElementById('prd-name')?.value?.trim();
-        const periodNo = parseInt(document.getElementById('prd-num')?.value, 10) || 0;
-        const orderIndex = parseInt(document.getElementById('prd-order')?.value, 10) || 1;
-        const startTime = document.getElementById('prd-start')?.value?.trim();
-        const endTime = document.getElementById('prd-end')?.value?.trim();
-        const durationMins = parseInt(document.getElementById('prd-duration')?.value, 10) || 45;
-        const isBreak = document.getElementById('prd-isbreak')?.checked || false;
-
-        if (!name || !startTime || !endTime) {
-          UIComponents.showToast('Period name, start time, and end time are required.', 'warning');
-          return;
-        }
-
+    ClassroomModal.open({
+      classroom: initialData ? {
+        ...initialData,
+        name: initialData.name,
+        startTime: initialData.startTime,
+        endTime: initialData.endTime
+      } : null,
+      onSave: async (recordData) => {
         const periodRecord = {
-          id: initialData?.id || `prd-${Date.now()}`,
-          name,
-          periodNo,
-          orderIndex,
-          startTime,
-          endTime,
-          durationMins,
-          isBreak,
+          id: initialData?.id || recordData.id,
+          name: recordData.name,
+          section: recordData.section,
+          startTime: recordData.startTime,
+          endTime: recordData.endTime,
+          teacher: recordData.teacher,
+          days: recordData.days,
+          roomNo: recordData.room,
+          capacity: recordData.capacity,
           status: 'Active'
         };
-
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = 'Saving...';
-
         try {
-          await dbService.upsert('academic_periods', periodRecord);
-          await auditService.log(isEdit ? 'PERIOD_UPDATED' : 'PERIOD_CREATED', 'ACADEMIC', { name, startTime, endTime });
-          UIComponents.showToast(`Period "${name}" saved!`, 'success');
-          UIComponents.closeModal();
-          await this.render(this._container);
+          await dbService.upsert('bell_schedule', periodRecord);
+          await auditService.log(initialData ? 'PERIOD_UPDATED' : 'PERIOD_CREATED', 'ACADEMIC', periodRecord);
         } catch (err) {
-          UIComponents.showToast('Failed to save period: ' + err.message, 'error');
-          saveBtn.disabled = false;
-          saveBtn.innerHTML = '<i data-lucide="save"></i> Save Period';
+          console.warn('Period save fallback:', err);
         }
-      });
-    }
-
-    UIComponents.refreshIcons();
+        if (this._container) await this.render(this._container);
+      }
+    });
   }
 
   static openEditPeriodModal(periodId) {
@@ -1108,6 +1047,12 @@ export class AcademicModule {
         await dbService.upsert('academic_sessions', item);
       }
       TMS_CONFIG.academic.currentYear = s.sessionName;
+      localStorage.setItem('tms_active_session', s.sessionName);
+      window.dispatchEvent(new CustomEvent('tms_session_changed', { detail: { session: s.sessionName } }));
+      const topbarText = document.getElementById('topbar-active-session-text');
+      if (topbarText) {
+        topbarText.innerText = `Session ${s.sessionName} Active`;
+      }
       await auditService.log('SESSION_ACTIVATED', 'ACADEMIC', { sessionName: s.sessionName });
       UIComponents.showToast(`Session ${s.sessionName} is now the active campus session!`, 'success');
       await this.render(this._container);
@@ -1365,7 +1310,7 @@ export class AcademicModule {
         this._syllabus.push(topicRecord);
         dbService.setLocal('syllabus_topics', this._syllabus);
         try {
-          await dbService.upsert('app_settings', { key: 'academic_syllabus_topics', value: this._syllabus });
+          await dbService.upsert('app_settings', { id: 'academic_syllabus_topics', value: this._syllabus });
         } catch(e) {}
         UIComponents.showToast(`Unit "${title}" added to syllabus!`, 'success');
         UIComponents.closeModal();

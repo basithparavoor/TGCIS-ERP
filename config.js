@@ -89,7 +89,7 @@ export const TMS_CONFIG = {
   },
 
   academic: {
-    currentYear: "2025-2026",
+    currentYear: "2026-2027",
     classes: [
       "Nursery", "LKG", "UKG",
       "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5",

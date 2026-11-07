@@ -83,7 +83,11 @@ CREATE OR REPLACE FUNCTION public.has_role(roles TEXT[])
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND is_active AND role = ANY(roles)
+    WHERE id = auth.uid() AND is_active AND (
+      role = ANY(roles) OR
+      role = 'super_admin' OR
+      is_super_admin = true
+    )
   );
 $$;
 
@@ -698,7 +702,7 @@ BEGIN
     v_role  := 'admin';
     v_scope := 'school_wide';
     v_title := 'Executive Director & Super Administrator';
-  ELSIF lower(NEW.email) LIKE '%@parents.thaibamodel.school' THEN
+  ELSIF lower(NEW.email) LIKE '%@parents.thaibapublic.school' THEN
     v_role  := 'parent';
     v_scope := 'linked_wards';
     v_title := 'Parent / Guardian';
@@ -982,8 +986,8 @@ CREATE POLICY "app_settings_read" ON app_settings
 DROP POLICY IF EXISTS "app_settings_manage" ON app_settings;
 CREATE POLICY "app_settings_manage" ON app_settings
   FOR ALL TO authenticated
-  USING (public.has_role(ARRAY['admin','principal']))
-  WITH CHECK (public.has_role(ARRAY['admin','principal']));
+  USING (public.has_role(ARRAY['admin','principal','super_admin']))
+  WITH CHECK (public.has_role(ARRAY['admin','principal','super_admin']));
 
 -- ============================================================================
 -- 30. Let HR (alongside admin/principal) maintain user profiles, so appointing
@@ -1137,7 +1141,7 @@ BEGIN
   -- Parent logins are signed in with a short username, so publish a
   -- username -> e-mail alias. Administration can then rename a parent username
   -- without breaking the sign-in (the auth e-mail itself never changes).
-  IF v_email LIKE '%@parents.thaibamodel.school' THEN
+  IF v_email LIKE '%@parents.thaibapublic.school' THEN
     INSERT INTO public.login_aliases (id, username, email, role)
     VALUES (
       'alias-' || split_part(v_email, '@', 1),
@@ -1179,3 +1183,62 @@ DROP POLICY IF EXISTS "syllabus_topics_read" ON syllabus_topics;
 CREATE POLICY "syllabus_topics_read" ON syllabus_topics FOR SELECT TO anon, authenticated USING (true);
 DROP POLICY IF EXISTS "syllabus_topics_manage" ON syllabus_topics;
 CREATE POLICY "syllabus_topics_manage" ON syllabus_topics FOR ALL TO authenticated USING (true);
+
+-- Campus Multi-Modal Attendance Records
+CREATE TABLE IF NOT EXISTS attendance_records (
+    id TEXT PRIMARY KEY,
+    student_id TEXT,
+    admission_no TEXT,
+    student_name TEXT,
+    class_id TEXT,
+    class_name TEXT,
+    grade TEXT,
+    date DATE NOT NULL,
+    status TEXT NOT NULL DEFAULT 'present',
+    time TEXT,
+    method TEXT,
+    confidence TEXT,
+    rfid_uid TEXT,
+    remarks TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE attendance_records ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "attendance_records_read" ON attendance_records;
+CREATE POLICY "attendance_records_read" ON attendance_records FOR SELECT TO anon, authenticated USING (true);
+DROP POLICY IF EXISTS "attendance_records_manage" ON attendance_records;
+CREATE POLICY "attendance_records_manage" ON attendance_records FOR ALL TO anon, authenticated USING (true);
+
+-- Student Leave & Gate Pass Records
+CREATE TABLE IF NOT EXISTS student_leaves (
+    id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL,
+    student_name TEXT NOT NULL,
+    admission_no TEXT,
+    grade TEXT,
+    section TEXT,
+    leave_type TEXT NOT NULL,
+    from_date DATE NOT NULL,
+    to_date DATE NOT NULL,
+    total_days INT DEFAULT 1,
+    reason TEXT NOT NULL,
+    emergency_phone TEXT,
+    applied_by TEXT DEFAULT 'student',
+    applied_by_name TEXT,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    issued_by TEXT,
+    issued_at TEXT,
+    gate_pass_no TEXT,
+    expected_return TEXT,
+    actual_return TEXT,
+    returned_marked_by TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE student_leaves ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "student_leaves_read" ON student_leaves;
+CREATE POLICY "student_leaves_read" ON student_leaves FOR SELECT TO anon, authenticated USING (true);
+DROP POLICY IF EXISTS "student_leaves_manage" ON student_leaves;
+CREATE POLICY "student_leaves_manage" ON student_leaves FOR ALL TO anon, authenticated USING (true);
+
+

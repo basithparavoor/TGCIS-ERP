@@ -8,6 +8,7 @@
 import { TMS_CONFIG } from './config.js';
 import { dbService } from './supabase-client.js';
 import { createUserViaRpc, describeAccountError } from './account-utils.js';
+import { websiteService } from './website-service.js';
 
 const STATUS = TMS_CONFIG.admissionStatuses;
 
@@ -60,7 +61,7 @@ export const DEFAULT_FEES = [
   { name: 'Transport Fee (optional)', amount: 0, mandatory: false, description: 'Choose based on your route.' }
 ];
 
-const FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox', 'file'];
+const FIELD_TYPES = ['text', 'textarea', 'number', 'date', 'tel', 'email', 'select', 'checkbox', 'file', 'photo', 'image'];
 
 /* ------------------------------------------------------------------ */
 
@@ -222,12 +223,54 @@ class AdmissionService {
 
   /* ---------------- Form fields ---------------- */
 
+  /** Ensure default fields are persisted so adding a custom question never wipes out defaults */
+  async ensureCoreDefaultsSeeded() {
+    const rows = await dbService.select('admission_form_fields');
+    const existingKeys = new Set((rows || []).map(f => (f.fieldKey || f.key || '').trim().toLowerCase()));
+    const hasCore = existingKeys.has('candidatename') && existingKeys.has('dob');
+    if (!hasCore) {
+      let maxOrder = (rows || []).reduce((max, f) => Math.max(max, f.displayOrder || 0), 0);
+      for (const f of DEFAULT_FIELDS) {
+        const k = (f.key || '').trim().toLowerCase();
+        if (!existingKeys.has(k)) {
+          maxOrder += 1;
+          const record = {
+            id: `fld-${f.key}`,
+            fieldKey: f.key,
+            label: f.label,
+            fieldType: f.type,
+            section: f.section || 'General Information',
+            placeholder: f.placeholder || '',
+            helpText: f.helpText || '',
+            options: Array.isArray(f.options) ? f.options : [],
+            required: !!f.required,
+            isActive: true,
+            displayOrder: f.order || maxOrder
+          };
+          // eslint-disable-next-line no-await-in-loop
+          await dbService.upsert('admission_form_fields', record);
+          existingKeys.add(k);
+        }
+      }
+    }
+  }
+
   async listFields() {
     const rows = await dbService.select('admission_form_fields');
-    const active = rows
-      .filter((f) => f.isActive !== false)
-      .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
-    if (active.length) return active;
+    if (rows && rows.length) {
+      const hasCore = rows.some(f => (f.fieldKey || f.key) === 'candidateName');
+      if (!hasCore) {
+        await this.ensureCoreDefaultsSeeded();
+        const refreshed = await dbService.select('admission_form_fields');
+        return refreshed
+          .filter((f) => f.isActive !== false)
+          .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      }
+      const active = rows
+        .filter((f) => f.isActive !== false)
+        .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      if (active.length) return active;
+    }
     return DEFAULT_FIELDS.map((f, i) => ({
       id: `fld-${f.key}`,
       fieldKey: f.key,
@@ -245,10 +288,22 @@ class AdmissionService {
 
   async listAllFields() {
     const rows = await dbService.select('admission_form_fields');
-    return rows.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    if (rows && rows.length) {
+      const hasCore = rows.some(f => (f.fieldKey || f.key) === 'candidateName');
+      if (!hasCore) {
+        await this.ensureCoreDefaultsSeeded();
+        const refreshed = await dbService.select('admission_form_fields');
+        return refreshed.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      }
+      return rows.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    }
+    return [];
   }
 
-  async saveField(field) {
+  async saveField(field, skipEnsure = false) {
+    if (!skipEnsure) {
+      await this.ensureCoreDefaultsSeeded();
+    }
     const key = (field.fieldKey || field.key || '').trim().replace(/[^A-Za-z0-9_]/g, '');
     if (!key) throw new Error('A field key is required.');
     const type = FIELD_TYPES.includes(field.fieldType || field.type) ? (field.fieldType || field.type) : 'text';
@@ -257,7 +312,7 @@ class AdmissionService {
       fieldKey: key,
       label: field.label || key,
       fieldType: type,
-      section: field.section || 'General',
+      section: field.section || 'General Information',
       placeholder: field.placeholder || '',
       helpText: field.helpText || '',
       options: Array.isArray(field.options) ? field.options : [],
@@ -272,23 +327,49 @@ class AdmissionService {
     return dbService.delete('admission_form_fields', id);
   }
 
-  async seedDefaultFields() {
-    const existing = await this.listAllFields();
-    if (existing.length) return existing.length;
-    let order = 1;
+  async seedDefaultFields(force = false) {
+    const existing = await dbService.select('admission_form_fields');
+    const existingKeys = new Set((existing || []).map(f => (f.fieldKey || f.key || '').trim().toLowerCase()));
+    let maxOrder = (existing || []).reduce((max, f) => Math.max(max, f.displayOrder || 0), 0);
+    let seeded = 0;
     for (const f of DEFAULT_FIELDS) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.saveField({ ...f, fieldKey: f.key, fieldType: f.type, displayOrder: order });
-      order += 1;
+      const k = (f.key || '').trim().toLowerCase();
+      if (force || !existingKeys.has(k)) {
+        maxOrder += 1;
+        const record = {
+          id: `fld-${f.key}`,
+          fieldKey: f.key,
+          label: f.label,
+          fieldType: f.type,
+          section: f.section || 'General Information',
+          placeholder: f.placeholder || '',
+          helpText: f.helpText || '',
+          options: Array.isArray(f.options) ? f.options : [],
+          required: !!f.required,
+          isActive: true,
+          displayOrder: f.order || maxOrder
+        };
+        // eslint-disable-next-line no-await-in-loop
+        await dbService.upsert('admission_form_fields', record);
+        existingKeys.add(k);
+        seeded += 1;
+      }
     }
-    return DEFAULT_FIELDS.length;
+    return seeded;
   }
 
   /* ---------------- Fees ---------------- */
 
+  async ensureCoreFeesSeeded() {
+    const existing = await dbService.select('admission_fees');
+    if (!existing || existing.length === 0) {
+      await this.seedDefaultFees();
+    }
+  }
+
   async listFees() {
     const rows = await dbService.select('admission_fees');
-    const active = rows
+    const active = (rows || [])
       .filter((f) => f.isActive !== false)
       .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
     if (active.length) return active;
@@ -305,10 +386,13 @@ class AdmissionService {
 
   async listAllFees() {
     const rows = await dbService.select('admission_fees');
-    return rows.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+    return (rows || []).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
   }
 
-  async saveFee(fee) {
+  async saveFee(fee, skipEnsure = false) {
+    if (!skipEnsure) {
+      await this.ensureCoreFeesSeeded();
+    }
     const record = {
       id: fee.id || `fee-${randomToken(6)}`,
       name: fee.name || 'Fee Item',
@@ -332,7 +416,7 @@ class AdmissionService {
     let order = 1;
     for (const f of DEFAULT_FEES) {
       // eslint-disable-next-line no-await-in-loop
-      await this.saveFee({ ...f, displayOrder: order });
+      await this.saveFee({ ...f, displayOrder: order }, true);
       order += 1;
     }
     return DEFAULT_FEES.length;
@@ -367,31 +451,36 @@ class AdmissionService {
     if (typeof path === 'string' && (path.startsWith('data:') || path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://'))) {
       return path;
     }
+    const cleanPath = String(path).replace(/^\/+/, '');
+    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://rzcihdpzqrnzcaupjfla.supabase.co';
+
+    // Public buckets always resolve directly to public URL (instant 0ms, zero signing network errors)
+    if (bucket === 'admission-docs' || bucket === 'admissions' || bucket === 'avatars') {
+      return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
+    }
+
     const client = dbService.getClient();
-    if (!client) return null;
+    if (!client) return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
+
     try {
-      const { data, error } = await client.storage.from(bucket).createSignedUrl(path, expiresIn);
-      if (error) {
-        try {
-          const pub = client.storage.from(bucket).getPublicUrl(path);
-          if (pub && pub.data && pub.data.publicUrl) return pub.data.publicUrl;
-        } catch (_) {}
-        return null;
+      const { data, error } = await client.storage.from(bucket).createSignedUrl(cleanPath, expiresIn);
+      if (error || !data || !data.signedUrl) {
+        return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
       }
-      return data ? data.signedUrl : null;
-    } catch (e) {
-      return null;
+      return data.signedUrl;
+    } catch (_) {
+      return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
     }
   }
 
   getPublicUrl(bucket, path) {
-    const client = dbService.getClient();
-    if (!client || !path) return null;
-    try {
-      return client.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-    } catch (e) {
-      return null;
+    if (!path) return null;
+    if (typeof path === 'string' && (path.startsWith('data:') || path.startsWith('blob:') || path.startsWith('http://') || path.startsWith('https://'))) {
+      return path;
     }
+    const cleanPath = String(path).replace(/^\/+/, '');
+    const supabaseUrl = (TMS_CONFIG.supabase && TMS_CONFIG.supabase.url) || 'https://rzcihdpzqrnzcaupjfla.supabase.co';
+    return `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
   }
 
   /* ---------------- Credentials ---------------- */
@@ -447,8 +536,28 @@ class AdmissionService {
   /* ---------------- Applications ---------------- */
 
   async listApplications() {
-    const rows = await dbService.select('admissions_applications');
-    return rows.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    const rows = await dbService.select('admissions_applications', null, true);
+    return (rows || []).map((a) => {
+      const pld = a.payload || {};
+      const createdAt = a.createdAt || a.created_at || pld.applicationDate || new Date().toISOString();
+      return {
+        ...a,
+        id: a.id || a.appId || a.app_id,
+        appId: a.appId || a.app_id || pld.formNo || pld.appId || a.id,
+        studentName: a.studentName || a.student_name || pld.candidateName || pld.studentName || '—',
+        grade: a.grade || a.applyingClass || pld.applyingClass || pld.grade || '—',
+        guardianName: a.guardianName || a.guardian_name || pld.fatherName || pld.guardianName || pld.motherName || '—',
+        phone: a.phone || pld.phone || pld.mobile || '—',
+        gender: a.gender || pld.gender || '',
+        dob: a.dob || pld.dob || '',
+        address: a.address || [pld.village, pld.po, pld.ps, pld.district, pld.pin].filter(Boolean).join(', ') || '',
+        feeTotal: a.feeTotal != null ? Number(a.feeTotal) : (a.fee_total != null ? Number(a.fee_total) : 0),
+        paymentStatus: a.paymentStatus || a.payment_status || 'Not Required',
+        submittedByName: a.submittedByName || a.submitted_by_name || 'Self / Public',
+        status: a.status || 'Submitted',
+        createdAt
+      };
+    }).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   }
 
   async listApplicationsForParent(userId, email) {
@@ -491,26 +600,41 @@ class AdmissionService {
       feeTotal = feeItems.reduce((s, f) => s + f.amount, 0);
     }
 
-    const appNo = formNo || this.generateFormNo();
+    const appNo = (formNo || this.generateFormNo()).toString().trim();
     const credentials = this.buildCredentials(appNo);
-    const guardianName =
-      values.fatherName || values.guardianName || values.motherName || 'Parent / Guardian';
+    const guardianName = (values.fatherName || values.guardianName || values.motherName || 'Parent / Guardian').toString().trim();
 
-    // Create the parent login (best effort — the application is still saved if this fails).
-    const account = await this.createParentAccount(credentials.email, credentials.password, guardianName);
+    // Create parent login (best effort — application is still safely registered if this fails)
+    let account = { userId: null };
+    try {
+      account = await this.createParentAccount(credentials.email, credentials.password, guardianName);
+    } catch (e) {
+      console.warn('Parent account creation notice:', e.message);
+    }
 
     let paymentStatus = 'Not Required';
     if (feeTotal > 0) paymentStatus = paymentRef ? 'Paid' : 'Pending';
 
+    // Strict schema sanitization: ensures Postgres NOT NULL & DATE constraints are respected
+    const cleanStudentName = (values.candidateName || values.studentName || 'Applicant').toString().trim();
+    const cleanGrade = (values.applyingClass || values.grade || values.class || 'LKG').toString().trim();
+    const cleanPhone = (values.phone || values.mobile || 'Not Provided').toString().trim();
+    const cleanEmail = (values.email && values.email.trim()) ? values.email.trim() : (credentials.email || `parent_${appNo.toLowerCase()}@thaiba.edu`);
+    const cleanDob = (values.dob && values.dob.trim()) ? values.dob.trim() : null;
+    const cleanGender = (values.gender && values.gender.trim()) ? values.gender.trim() : null;
+
+    const uniqueRowId = 'app_' + appNo.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString(36);
+
     const application = {
+      id: uniqueRowId,
       appId: appNo,
-      studentName: values.candidateName || values.studentName || 'Applicant',
-      dob: values.dob || null,
-      gender: values.gender || null,
-      grade: values.applyingClass || values.grade || null,
-      guardianName,
-      phone: values.phone || values.mobile || null,
-      email: values.email || null,
+      studentName: cleanStudentName,
+      dob: cleanDob,
+      gender: cleanGender,
+      grade: cleanGrade,
+      guardianName: guardianName,
+      phone: cleanPhone,
+      email: cleanEmail,
       address: [values.village, values.po, values.ps, values.district, values.pin]
         .filter(Boolean)
         .join(', '),
@@ -522,8 +646,8 @@ class AdmissionService {
       paymentMode: feeTotal > 0 ? paymentMode || 'UPI' : '',
       paymentRef: paymentRef || '',
       payments: [],
-      submittedBy: submittedBy ? submittedBy.id : null,
-      submittedByName: submittedBy ? submittedBy.name : 'Self / Public',
+      submittedBy: submittedBy ? (submittedBy.id || null) : null,
+      submittedByName: submittedBy ? (submittedBy.name || 'Staff') : 'Self / Public',
       parentUserId: account.userId || null,
       parentUsername: credentials.username,
       parentEmail: credentials.email,
@@ -532,16 +656,21 @@ class AdmissionService {
 
     const saved = await dbService.insert('admissions_applications', application);
 
-    const credentialRow = await dbService.insert('parent_credentials', {
-      id: `cred-${credentials.username}`,
-      applicationId: saved.id,
-      username: credentials.username,
-      email: credentials.email,
-      password: credentials.password,
-      userId: account.userId || null,
-      studentId: null,
-      status: 'Active'
-    });
+    let credentialRow = null;
+    try {
+      credentialRow = await dbService.insert('parent_credentials', {
+        id: `cred-${credentials.username}`,
+        applicationId: saved.id || uniqueRowId,
+        username: credentials.username,
+        email: credentials.email,
+        password: credentials.password,
+        userId: account.userId || null,
+        studentId: null,
+        status: 'Active'
+      });
+    } catch (e) {
+      console.warn('Parent credential row insert notice:', e.message);
+    }
 
     try {
       await dbService.upsert('login_aliases', {
@@ -907,6 +1036,24 @@ class AdmissionService {
       return scoreB - scoreA;
     });
     return filtered;
+  }
+
+  /* ---------------- Website Admission Inquiries ---------------- */
+
+  async listInquiries() {
+    return websiteService.listInquiries();
+  }
+
+  async saveInquiry(inquiry) {
+    return websiteService.saveInquiry(inquiry);
+  }
+
+  async updateInquiry(id, updates) {
+    return websiteService.updateInquiry(id, updates);
+  }
+
+  async deleteInquiry(id) {
+    return websiteService.deleteInquiry(id);
   }
 }
 

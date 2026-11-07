@@ -20,7 +20,7 @@ export class MyWorkModule {
       <div class="tms-content-wrapper">
         ${UIComponents.renderPageHeader({
           title: 'Staff Workspace',
-          subtitle: `Welcome back, ${esc(user.name || 'Faculty Member')} (${esc(user.department || 'Academics')})`,
+          subtitle: `Welcome back, ${esc(user.name || 'Faculty Member')} (${esc((user.department && user.department !== '—') ? user.department : (user.title && user.title !== '—') ? user.title : ((user.isSuperAdmin || user.role === 'super_admin') ? 'Executive Governance' : 'Academics'))})`,
           icon: 'briefcase',
           breadcrumbs: [
             { label: 'Campus Core' },
@@ -38,14 +38,17 @@ export class MyWorkModule {
         <!-- Quick KPI Row -->
         <div class="kpi-grid">
           ${UIComponents.renderKpiCard({ title: 'My Shift Today', value: '—', icon: 'clock', color: 'blue', subtitle: 'No Shift Records' })}
-          ${UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: '—', icon: 'check-circle-2', color: 'emerald', subtitle: 'Not Punched In Yet' })}
+          ${UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: '—', icon: 'check-circle-2', color: 'Gold', subtitle: 'Not Punched In Yet' })}
           ${UIComponents.renderKpiCard({ title: 'Teaching Workload', value: '—', icon: 'book-open', color: 'amber', subtitle: 'No Timetable Assigned' })}
           ${UIComponents.renderKpiCard({ title: 'Pending Tasks', value: `${tasks.filter(t => t.status !== 'Completed').length} Pending`, icon: 'check-square', color: 'rose', subtitle: 'Kanban Action Items' })}
         </div>
 
         <!-- Segmented Pill Tabs Rail -->
-        <div class="tms-tab-rail-wrapper">
-          <div class="tms-segmented-tabs" id="mywork-tab-pills">
+        <div class="tms-tab-scroll-wrapper">
+          <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" id="mywork-tabs-scroll-prev" aria-label="Scroll left" title="Scroll tabs left">
+            <i data-lucide="chevron-left"></i>
+          </button>
+          <div class="tms-segmented-tabs tms-tab-scroll-rail" id="mywork-tab-pills">
             <button class="tms-tab-pill active staff-tab" data-tab="overview">
               <i data-lucide="layout-dashboard"></i>
               <span>Overview Hub</span>
@@ -75,6 +78,9 @@ export class MyWorkModule {
               <span>Salary &amp; CTC</span>
             </button>
           </div>
+          <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" id="mywork-tabs-scroll-next" aria-label="Scroll right" title="Scroll tabs right">
+            <i data-lucide="chevron-right"></i>
+          </button>
         </div>
 
         <div id="my-work-tab-content"></div>
@@ -447,7 +453,7 @@ export class MyWorkModule {
 
           <div class="kpi-grid" style="margin-bottom: 20px;">
             ${UIComponents.renderKpiCard({ title: 'Casual Leave (CL)', value: '—', icon: 'coffee', color: 'blue' })}
-            ${UIComponents.renderKpiCard({ title: 'Medical Leave (ML)', value: '—', icon: 'heart-pulse', color: 'emerald' })}
+            ${UIComponents.renderKpiCard({ title: 'Medical Leave (ML)', value: '—', icon: 'heart-pulse', color: 'Gold' })}
             ${UIComponents.renderKpiCard({ title: 'Earned Leave (EL)', value: '—', icon: 'award', color: 'amber' })}
           </div>
 

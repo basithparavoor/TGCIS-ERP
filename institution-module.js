@@ -6,6 +6,7 @@
 import { TMS_CONFIG } from './config.js';
 import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
+import { institutionService } from './institution-service.js';
 import { auditService } from './audit-service.js';
 import { downloadCsv } from './export-utils.js';
 
@@ -31,7 +32,7 @@ export class InstitutionModule {
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Academic Blocks', value: `${academicBlocks}`, icon: 'building', color: 'blue' })}
-        ${UIComponents.renderKpiCard({ title: 'Configured Classrooms', value: `${facilities.length}`, icon: 'door-open', color: 'emerald' })}
+        ${UIComponents.renderKpiCard({ title: 'Configured Classrooms', value: `${facilities.length}`, icon: 'door-open', color: 'Gold' })}
         ${UIComponents.renderKpiCard({ title: 'Specialized Labs', value: `${labCount}`, icon: 'flask-conical', color: 'amber' })}
         ${UIComponents.renderKpiCard({ title: 'Total Seating Capacity', value: `${totalSeating.toLocaleString()}`, icon: 'users', color: 'rose' })}
       </div>

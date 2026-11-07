@@ -1,6 +1,15 @@
+# Dependencies & Environment
 node_modules/
-.DS_Store
-Thumbs.db
-*.log
 .env
 .env.local
+
+# Browser testing profiles & temporary runtimes
+scratch/
+.playwright/
+test-results/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

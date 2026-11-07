@@ -58,6 +58,7 @@ const REDIRECTS = {
   '/teachers': '/teacher',
   '/teachers.html': '/teacher',
   '/teacher.html': '/teacher',
+  '/dashboard.html': '/dashboard',
   '/faculty': '/teacher',
   '/faculty.html': '/teacher',
   '/login.html': '/login',
@@ -67,7 +68,7 @@ const REDIRECTS = {
 
 const ROUTE_ALIASES = {
   '/': '/index.html',
-  '/dashboard': '/index.html',
+  '/dashboard': '/dashboard.html',
   '/login': '/login.html',
   '/admin': '/admin.html',
   '/admission': '/admission.html',
@@ -151,6 +152,9 @@ const server = http.createServer((req, res) => {
       }
       res.writeHead(200, {
         'Content-Type': contentType,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...SECURITY_HEADERS
       });
       res.end(req.method === 'HEAD' ? undefined : data);

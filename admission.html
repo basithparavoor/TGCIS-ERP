@@ -104,7 +104,7 @@
         <!-- Dedicated Video Walkthrough Card (Shown when video is configured) -->
         <div class="admission-side-card" id="side-video-card" style="display: none; padding: 14px;">
           <div class="admission-side-card-header" style="margin-bottom: 10px;">
-            <i data-lucide="play-circle" class="side-card-icon emerald"></i>
+            <i data-lucide="play-circle" class="side-card-icon Gold"></i>
             <h4 id="side-video-title">Video Walkthrough</h4>
           </div>
           <div id="side-video-container"></div>
@@ -116,7 +116,7 @@
         <!-- Quick Guidance Card -->
         <div class="admission-side-card">
           <div class="admission-side-card-header">
-            <i data-lucide="help-circle" class="side-card-icon emerald"></i>
+            <i data-lucide="help-circle" class="side-card-icon Gold"></i>
             <h4>Application Guidance</h4>
           </div>
           <p class="admission-side-card-text" id="side-guidance-text">
@@ -170,7 +170,7 @@
     <!-- SUBMISSION SUCCESS SCREEN -->
     <div class="admission-section-card no-print" id="admission-success-card" style="display: none;">
       <div style="text-align: center; padding: 24px 12px;">
-        <div style="width: 72px; height: 72px; border-radius: 50%; background: #DCFCE7; color: #BF9A33; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 0 8px rgba(191, 154, 51, 0.12);">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #FCF4D9; color: #BF9A33; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 0 0 8px rgba(191, 154, 51, 0.12);">
           <i data-lucide="check" style="width: 40px; height: 40px; stroke-width: 3;"></i>
         </div>
         <div class="admission-hero-badge" style="margin: 0 auto 10px auto;">
@@ -353,11 +353,11 @@
               <td style="border: 1px solid #000; padding: 5px 8px;"><strong>Applying for class :</strong></td>
               <td style="border: 1px solid #000; padding: 5px 8px; font-weight: 800;" id="admit-class">—</td>
             </tr>
-            <tr style="background: #FDFBF7;">
-              <td style="border: 1.5px solid #BF9A33; padding: 5px 8px; font-weight: 800; color: #166534;"><strong>Portal Login :</strong></td>
+            <tr style="background: #FDF8E8;">
+              <td style="border: 1.5px solid #BF9A33; padding: 5px 8px; font-weight: 800; color: #8C6E1E;"><strong>Portal Login :</strong></td>
               <td style="border: 1.5px solid #BF9A33; padding: 5px 8px; font-weight: 700;">
-                User: <strong class="font-mono" id="admit-username" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #86efac; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
-                Pass: <strong class="font-mono" id="admit-password" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #86efac; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
+                User: <strong class="font-mono" id="admit-username" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #F2D88C; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
+                Pass: <strong class="font-mono" id="admit-password" style="color: #0f172a; background: #fff; padding: 1px 6px; border: 1px solid #F2D88C; border-radius: 3px;">—</strong> &nbsp;|&nbsp;
                 <span class="font-mono" style="color: #8C6E1E; font-size: 9px;">tps.clubad.space</span>
               </td>
             </tr>
@@ -429,7 +429,7 @@
       const ph = esc(f.placeholder || '');
       const type = f.fieldType || 'text';
       let control = '';
-      const isFullWidth = type === 'textarea' || type === 'file' || (f.fieldKey === 'village');
+      const isFullWidth = type === 'textarea' || type === 'file' || type === 'photo' || type === 'image' || (f.fieldKey === 'village');
 
       if (type === 'textarea') {
         control = `<textarea class="form-input" id="${id}" rows="2" placeholder="${ph}" ${req}></textarea>`;
@@ -438,14 +438,22 @@
         control = `<select class="form-select" id="${id}" ${req}><option value="">— Select ${esc(f.label)} —</option>${opts}</select>`;
       } else if (type === 'checkbox') {
         control = `<label style="display:flex;gap:8px;align-items:center;font-size:0.88rem;cursor:pointer;"><input type="checkbox" id="${id}" class="admission-checkbox"> ${esc(f.helpText || f.label)}</label>`;
-      } else if (type === 'file') {
+      } else if (type === 'file' || type === 'photo' || type === 'image') {
+        const isPhoto = type === 'photo' || type === 'image';
+        const accept = isPhoto ? 'image/*' : 'image/*,.pdf';
+        const icon = isPhoto ? 'camera' : 'upload-cloud';
+        const browseTitle = isPhoto ? 'Click to select / upload photo' : 'Click to browse document';
+        const helpHint = isPhoto ? 'JPG or PNG up to 2 MB' : 'PDF, JPG, or PNG up to 2 MB';
         control = `
           <div class="file-upload-dropzone" style="border: 1.5px dashed var(--border-color); border-radius: var(--radius-md); padding: 12px 16px; background: var(--bg-subtle); display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="document.getElementById('${id}').click()">
-            <i data-lucide="upload-cloud" style="width:24px;height:24px;color:#BF9A33;flex-shrink:0;"></i>
+            <i data-lucide="${icon}" style="width:24px;height:24px;color:#BF9A33;flex-shrink:0;"></i>
             <div style="flex:1;min-width:0;">
-              <input type="file" id="${id}" accept="image/*,.pdf" ${req} style="display:none;">
-              <div style="font-size:0.84rem;font-weight:600;color:var(--text-main);">Click to browse document</div>
-              <span class="file-name" data-for="${id}" style="font-size:0.75rem;color:var(--text-subtle);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">PDF, JPG, or PNG up to 2 MB</span>
+              <input type="file" id="${id}" data-key="${esc(f.fieldKey)}" class="${isPhoto ? 'admission-photo-input' : ''}" accept="${accept}" ${req} style="display:none;">
+              <div style="font-size:0.84rem;font-weight:600;color:var(--text-main);">${browseTitle}</div>
+              <span class="file-name" data-for="${id}" style="font-size:0.75rem;color:var(--text-subtle);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(f.placeholder || f.helpText || helpHint)}</span>
+            </div>
+            <div id="preview-box-${id}" style="display:none;width:40px;height:40px;border-radius:6px;overflow:hidden;border:1px solid #cbd5e1;flex-shrink:0;">
+              <img id="img-preview-${id}" alt="Preview" style="width:100%;height:100%;object-fit:cover;">
             </div>
           </div>
           <span class="file-preview" data-for="${id}"></span>
@@ -643,7 +651,7 @@
         } else {
           // Regular Admin Configured Section
           const secFields = meta.fields || [];
-          const photoField = secFields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+          const photoField = secFields.find(f => ((f.fieldType === 'file' || f.fieldType === 'photo' || f.fieldType === 'image') && (f.fieldKey === 'photo' || /photo|photograph|passport/i.test(f.label))));
           const otherFields = secFields.filter(f => f !== photoField);
 
           let photoHtml = '';
@@ -723,6 +731,38 @@
         renderPhotoPanel(photoFieldRef);
       }
 
+      // Photo upload and live preview listeners
+      container.querySelectorAll('.admission-photo-input').forEach((inp) => {
+        inp.addEventListener('change', () => {
+          const file = inp.files && inp.files[0];
+          if (!file) return;
+          const id = inp.id;
+          const reader = new FileReader();
+          reader.onload = (re) => {
+            const dataUrl = re.target.result;
+            const previewBox = document.getElementById(`preview-box-${id}`);
+            const img = document.getElementById(`img-preview-${id}`);
+            const placeholder = document.getElementById(`placeholder-${id}`);
+            const fileInfo = document.getElementById(`file-info-${id}`);
+
+            if (img && previewBox) {
+              img.src = dataUrl;
+              previewBox.style.display = 'block';
+            }
+            if (placeholder) placeholder.style.display = 'none';
+            if (fileInfo) {
+              fileInfo.style.display = 'block';
+              fileInfo.innerText = `✓ Selected: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+            }
+
+            if (inp.dataset.key === 'photo' || /passport|student.*photo|profile.*photo/i.test(inp.dataset.key)) {
+              wizard.photoDataUrl = dataUrl;
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
       // File preview listeners for document fields
       container.querySelectorAll('input[type="file"]').forEach((inp) => {
         if (photoFieldRef && inp.id === `fld-${photoFieldRef.fieldKey}`) return;
@@ -771,6 +811,8 @@
       // Initial Stepper Render
       updateSteppers();
       UIComponents.refreshIcons();
+      UIComponents.enhanceAllSelects(container);
+      UIComponents.enhanceAllDatePickers(container);
     }
 
     /** Prominent passport-photo capture block */
@@ -987,7 +1029,9 @@
         if (input.type === 'checkbox') {
           empty = !input.checked;
         } else if (input.type === 'file') {
-          empty = input.files && input.files.length === 0 && !wizard.photoDataUrl;
+          const isPhoto = input.classList.contains('admission-photo-input');
+          const hasImg = isPhoto && (wizard.photoDataUrl || document.getElementById(`img-preview-${input.id}`)?.getAttribute('src'));
+          empty = (!input.files || input.files.length === 0) && !hasImg;
         } else {
           empty = !input.value || !input.value.trim();
         }
@@ -1062,7 +1106,7 @@
 
         secIndex += 1;
         const secFields = meta.fields || [];
-        const photoField = secFields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+        const photoField = secFields.find(f => ((f.fieldType === 'file' || f.fieldType === 'photo' || f.fieldType === 'image') && (f.fieldKey === 'photo' || /photo|photograph|passport/i.test(f.label))));
         const otherFields = secFields.filter(f => f !== photoField);
 
         html += `
@@ -1092,7 +1136,7 @@
             ` : `
               <div class="wizard-review-grid">
                 ${secFields.map(f => {
-                  const isFile = (f.fieldType || 'text') === 'file';
+                  const isFile = (f.fieldType || 'text') === 'file' || f.fieldType === 'photo' || f.fieldType === 'image';
                   let displayVal = '—';
                   if (isFile) {
                     const inp = document.getElementById(`fld-${f.fieldKey}`);
@@ -1175,7 +1219,7 @@
 
       activeFields.forEach((f) => {
         const type = f.fieldType || 'text';
-        if (type === 'file') return;
+        if (type === 'file' || type === 'photo' || type === 'image') return;
         const el = document.getElementById(`fld-${f.fieldKey}`);
         if (!el) return;
         if (type === 'checkbox') values[f.fieldKey] = el.checked ? 'Yes' : 'No';
@@ -1193,7 +1237,7 @@
 
     async function uploadAttachments(values, formNo) {
       const folder = `admissions/${String(formNo).replace(/[^A-Za-z0-9]/g, '-')}`;
-      const activeFiles = fields.filter(f => f.isActive !== false && (f.fieldType || 'text') === 'file');
+      const activeFiles = fields.filter(f => f.isActive !== false && ((f.fieldType || 'text') === 'file' || f.fieldType === 'photo' || f.fieldType === 'image'));
 
       for (const f of activeFiles) {
         const input = document.getElementById(`fld-${f.fieldKey}`);
@@ -1201,7 +1245,7 @@
         if (!file) { values[f.fieldKey] = ''; continue; }
         const path = `${folder}/${f.fieldKey}-${Date.now()}-${admissionService.sanitizeFileName(file.name)}`;
         try {
-          const res = await admissionService.uploadFile('admissions', path, file);
+          const res = await admissionService.uploadFile('admission-docs', path, file);
           values[f.fieldKey] = res.publicUrl || res.path || path;
         } catch (e) {
           console.warn(`Upload failed for ${f.fieldKey}: ${e.message}`);
@@ -1224,9 +1268,9 @@
         html += `<div style="font-size:12px;font-weight:800;text-decoration:underline;margin:8px 0 4px;">${esc(secName)} :</div>
           <table style="width:100%;border-collapse:collapse;font-size:10.5px;margin-bottom:6px;">`;
         list.forEach((f) => {
-          if (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))) return;
+          if ((f.fieldType === 'file' || f.fieldType === 'photo' || f.fieldType === 'image') && (f.fieldKey === 'photo' || /photo|photograph|passport/i.test(f.label))) return;
           const val = values[f.fieldKey];
-          const isFile = (f.fieldType || 'text') === 'file';
+          const isFile = (f.fieldType || 'text') === 'file' || f.fieldType === 'photo' || f.fieldType === 'image';
           const shown = isFile
             ? (val ? String(val).split('/').pop() : 'Not attached')
             : (val ? esc(val) : '—');
@@ -1298,7 +1342,7 @@
     }
 
     async function applyA4Photo(values) {
-      const photoField = fields.find(f => (f.fieldType === 'file' && (f.fieldKey === 'photo' || /photo|photograph/i.test(f.label))));
+      const photoField = fields.find(f => ((f.fieldType === 'file' || f.fieldType === 'photo' || f.fieldType === 'image') && (f.fieldKey === 'photo' || /photo|photograph|passport/i.test(f.label))));
       const photoKey = photoField ? photoField.fieldKey : 'photo';
       const photoUrl = values[photoKey];
       const a4Photo = document.getElementById('a4-photo');

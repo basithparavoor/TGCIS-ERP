@@ -1,4 +1,4 @@
-﻿/**
+/**
  * THAIBA PUBLIC SCHOOL — Database migration self-check
  *
  * The ERP relies on add-on objects created by `schema.sql` (sections 15-31) /
@@ -23,7 +23,9 @@ const REQUIRED_TABLES = [
   'parent_credentials',
   'staff_credentials',
   'login_aliases',
-  'app_settings'
+  'app_settings',
+  'user_sessions',
+  'attendance_records'
 ];
 
 /** Columns added by the add-on migration to pre-existing tables. */
@@ -65,7 +67,7 @@ function banner(missingTables, missingColumns) {
         Open your Supabase project &rarr; <strong>SQL Editor</strong>, paste the full contents of
         <code style="background:rgba(255,255,255,.15);padding:1px 5px;border-radius:4px;">schema.sql</code>
         and click <strong>Run</strong>, then reload this page.
-        <span style="opacity:.85;">(Running <code>schema-update-2.sql</code> afterwards as well is safe and does the same thing.)</span><br>
+        <span style="opacity:.85;">(Or run <code>schema-update-3.sql</code> in the SQL Editor to apply the latest missing tables and staff RLS fix.)</span><br>
         <span style="opacity:.85;">${details.join(' &nbsp;|&nbsp; ')}</span>
       </div>
       <button type="button" aria-label="Dismiss"

@@ -12,13 +12,14 @@ import { dbService } from './supabase-client.js';
 import { TMS_LOGO } from './logo.js';
 
 // Import Functional Modules
+import { UsersModule } from './users-module.js';
 import { AdminModule } from './admin-module.js';
 import { InstitutionModule } from './institution-module.js';
 import { MyWorkModule } from './my-work-module.js';
 import { AttendanceModule } from './attendance-module.js';
 import { StudentModule } from './student-module.js';
 import { StaffModule } from './staff-module.js';
-import { AcademicModule } from './academic-module.js';
+import { AcademicModule, syncActiveAcademicSession } from './academic-module.js';
 import { ExaminationModule } from './examination-module.js';
 import { FinanceModule } from './finance-module.js';
 import { CommunicationModule } from './communication-module.js';
@@ -32,15 +33,18 @@ import { IdCardsModule } from './id-cards-module.js';
 import { CalendarModule } from './calendar-module.js';
 import { HomeworkModule } from './homework-module.js';
 import { WhatsAppService } from './whatsapp-service.js';
+import { websiteService } from './website-service.js';
 import { admissionService } from './admission-service.js';
+import { OnboardingService } from './onboarding-service.js';
 import { brandingService } from './branding-service.js';
+import { institutionService } from './institution-service.js';
 import { checkMigration } from './migration-check.js';
 
 /** Escape untrusted values before putting them into an HTML template. */
 const esc = (v) => UIComponents.escapeHtml(v);
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
 
-class AppController {
+export class AppController {
   constructor() {
     this.currentRoute = '';
     this.init();
@@ -72,6 +76,9 @@ class AppController {
       return;
     }
 
+    // Synchronize the currently active campus academic session
+    await syncActiveAcademicSession();
+
     // Load the institute logo (cached value already applied at import time).
     brandingService.refresh().then(() => {
       const logoHost = document.getElementById('shell-logo');
@@ -89,6 +96,21 @@ class AppController {
     if (user.role === TMS_CONFIG.roles.OFFICE_BOY &&
         (!window.location.hash || window.location.hash === '#/dashboard' || window.location.hash === '#/')) {
       window.location.hash = '#/admissions-entry';
+    }
+
+    const isStaff = user && ![TMS_CONFIG.roles.PARENT, TMS_CONFIG.roles.STUDENT, 'parent', 'student'].includes((user.role || '').toLowerCase());
+    if (user && user.id && isStaff) {
+      OnboardingService.recordFirstLogin(user).then(() => {
+        OnboardingService.getStaffMeta(user.id).then((meta) => {
+          if (!meta.onboardingCompleted) {
+            setTimeout(() => {
+              if (!window.location.hash || window.location.hash.includes('dashboard')) {
+                this.openMyProfile({ isFirstLogin: true });
+              }
+            }, 800);
+          }
+        });
+      }).catch(e => console.warn('First login onboarding check error:', e));
     }
 
     this.initRouter();
@@ -161,7 +183,7 @@ class AppController {
             <div class="topbar-right">
               <div class="ticker-badge" title="Campus Active">
                 <span style="width: 7px; height: 7px; border-radius: 50%; background: #BF9A33; display: inline-block; animation: badgePulse 2s infinite;"></span>
-                <span>Session ${TMS_CONFIG.academic.currentYear} Active</span>
+                <span id="topbar-active-session-text">Session ${TMS_CONFIG.academic.currentYear} Active</span>
               </div>
 
               <button class="icon-btn notification-bell-btn" id="notification-bell" title="Notifications & Announcements" style="position: relative;">
@@ -208,6 +230,10 @@ class AppController {
     `;
 
     this.populateSidebarNav();
+
+    window.addEventListener('tms_hostel_toggled', () => {
+      this.populateSidebarNav();
+    });
 
     // Bind avatar click in topbar to profile
     document.getElementById('topbar-user-avatar')?.addEventListener('click', () => this.openMyProfile());
@@ -276,7 +302,8 @@ class AppController {
           { id: 'homework', label: 'Homework Diary', icon: 'book-check', module: 'homework' },
           { id: 'calendar', label: 'Academic Calendar', icon: 'calendar', module: 'calendar' },
           { id: 'examinations', label: 'Exams & Reports', icon: 'award', module: 'examinations' },
-          { id: 'certificates', label: 'Certificates (TC & Merit)', icon: 'file-check', module: 'certificates' }
+          { id: 'certificates', label: 'Certificates (TC & Merit)', icon: 'file-check', module: 'certificates' },
+          { id: 'operations', label: websiteService.isHostelEnabled() ? 'Hostel & Operations' : 'Campus Operations', icon: websiteService.isHostelEnabled() ? 'home' : 'truck', module: 'operations' }
         ]
       },
       {
@@ -287,6 +314,7 @@ class AppController {
           { id: 'communication', label: 'Notice & Bulletins', icon: 'message-square', module: 'communication' },
           { id: 'reports', label: 'School Analytics', icon: 'bar-chart-3', module: 'reports' },
           { id: 'institution', label: 'Campus Facilities', icon: 'building', module: 'institution' },
+          { id: 'users', label: 'User & Permissions', icon: 'shield-check', module: 'users' },
           { id: 'administration', label: 'School Administration', icon: 'settings', module: 'administration' }
         ]
       }
@@ -321,6 +349,17 @@ class AppController {
   }
 
   bindGlobalEvents() {
+    window.addEventListener('tms_session_changed', (e) => {
+      const sess = e?.detail?.session;
+      if (sess) {
+        TMS_CONFIG.academic.currentYear = sess;
+        const topbarText = document.getElementById('topbar-active-session-text');
+        if (topbarText) {
+          topbarText.innerText = `Session ${sess} Active`;
+        }
+      }
+    });
+
     const sidebar = document.getElementById('app-sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
     const mobileHeaderBtn = document.getElementById('mobile-header-menu-btn');
@@ -626,109 +665,475 @@ class AppController {
       }
     });
   }
-
-  /** Self-service profile editor available to every signed-in user. */
-  async openMyProfile() {
+  /** Institutional User Profile & Staff Onboarding modal */
+  async openMyProfile(opts = {}) {
+    const isFirstLogin = opts.isFirstLogin === true;
     const user = authService.currentUser || {};
     let pendingAvatar = null;
 
+    // Load onboarding configuration and staff metadata
+    const config = await OnboardingService.getConfig();
+    const staffMeta = await OnboardingService.getStaffMeta(user.id);
+    const eligibility = await OnboardingService.checkEditEligibility(user);
+
+    // Identity and Display Attributes
+    const isSuperAdmin = eligibility.isSuperAdmin;
+    const roleDisplayName = user.title || (user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).replace(/_/g, ' ')) : 'Staff Member');
+    const authorityBadge = (user.role || 'STAFF').toUpperCase().replace(/_/g, ' ');
+    const tgiIdRaw = staffMeta.tgiId || user.staffId || '';
+    const staffIdDisplay = tgiIdRaw ? (tgiIdRaw.startsWith('TMS') ? tgiIdRaw : `TMS-${tgiIdRaw.replace(/^TGI-?/i, '')}`) : '';
+    const staffIdBadgeText = staffIdDisplay || 'Staff ID: Pending';
+
+    // Phone parsing (extract last 10 digits and format 5-5)
+    const rawPhoneDigits = (user.phone || staffMeta.phone || '').replace(/\D/g, '').slice(-10);
+    const initialPhoneFormatted = OnboardingService.formatPhone55(rawPhoneDigits);
+
+    // Blood group
+    const initialBloodGroup = staffMeta.bloodGroup || '';
+    const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
+
+    // Questions configured by School Admin (fix any placeholder typos)
+    const questions = (config.questions || []).map(q => {
+      let ph = q.placeholder || '';
+      ph = ph.replace(/Englisl/gi, 'English');
+      return { ...q, placeholder: ph };
+    });
+    const answers = staffMeta.answers || {};
+
+    const canEdit = eligibility.isEligible;
+
     const bodyHtml = `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-        <div class="form-group" style="grid-column:1/-1; display:flex; gap:16px; align-items:center;">
-          <img id="pf-avatar" src="${esc(user.avatar || DEFAULT_AVATAR)}" alt="Avatar" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:1px solid var(--border-color);">
+      <div class="inst-profile-modal-body">
+        ${isFirstLogin ? `
+        <div class="inst-first-login-banner">
+          <div class="inst-first-login-icon">
+            <i data-lucide="shield-check"></i>
+          </div>
           <div>
-            <label class="form-label">Profile Photo</label>
-            <input type="file" id="pf-avatar-file" accept="image/*" class="form-input">
+            <div class="inst-first-login-title">Initial Staff Onboarding &amp; Profile Setup</div>
+            <div class="inst-first-login-desc">
+              Welcome to <strong>THAIBA PUBLIC SCHOOL</strong>. Please review and complete your institutional credentials. You have a <strong>${eligibility.daysRemaining}-day edit window</strong> from your initial login to update profile data.
+            </div>
           </div>
         </div>
-        <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="pf-name" value="${esc(user.name || '')}"></div>
-        <div class="form-group"><label class="form-label">Email (read-only)</label><input class="form-input" id="pf-email" value="${esc(user.email || '')}" readonly></div>
-        <div class="form-group"><label class="form-label">Designation / Title</label><input class="form-input" id="pf-title" value="${esc(user.rawTitle || '')}"></div>
-        <div class="form-group"><label class="form-label">Department</label><input class="form-input" id="pf-department" value="${esc(user.rawDepartment || '')}"></div>
-        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Phone</label><input class="form-input" id="pf-phone" value="${esc(user.phone || '')}"></div>
-        <div class="form-group" style="grid-column:1/-1; border-top:1px solid var(--border-color); padding-top:12px;">
-          <label class="form-label">Change My Password</label>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <input type="password" class="form-input" id="pf-new-password" placeholder="New password (min 6 characters)" style="flex:1; min-width:200px;">
-            <button class="btn btn-secondary" id="pf-change-password"><i data-lucide="key-round"></i> Update Password</button>
+        ` : ''}
+
+        <!-- Top Executive Identity Hero Card -->
+        <div class="inst-profile-hero-card">
+          <div class="inst-avatar-wrapper">
+            <img id="pf-avatar" class="inst-avatar-img" src="${esc(user.avatar || DEFAULT_AVATAR)}" alt="Staff Avatar">
+            ${canEdit ? `
+            <label for="pf-avatar-file" class="inst-avatar-camera-btn" title="Change Profile Photograph">
+              <i data-lucide="camera"></i>
+            </label>
+            <input type="file" id="pf-avatar-file" accept="image/*" style="display:none;">
+            ` : ''}
+          </div>
+          <div class="inst-hero-details">
+            <div class="inst-hero-header-row">
+              <h3 class="inst-hero-name">${esc(user.name || 'Staff Member')}</h3>
+              <div class="inst-hero-badges">
+                <span class="inst-badge-role"><i data-lucide="shield-check"></i> ${esc(authorityBadge)}</span>
+                <span class="inst-badge-id font-mono">${esc(staffIdBadgeText)}</span>
+              </div>
+            </div>
+            <div class="inst-hero-email">
+              <i data-lucide="mail"></i>
+              <span>${esc(user.email || '—')}</span>
+            </div>
+            <div class="inst-hero-affiliation">
+              <span class="inst-org-pill"><i data-lucide="school"></i> THAIBA PUBLIC SCHOOL • Enterprise Campus Core</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: Core Institutional Credentials -->
+        <div class="inst-section-divider">
+          <div class="inst-section-title">
+            <i data-lucide="user"></i>
+            <span>Institutional Credentials &amp; Identity</span>
+          </div>
+          <div class="inst-section-line"></div>
+        </div>
+
+        <div class="inst-form-grid">
+          <!-- 1. Full Name -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label" for="pf-name">Full Name <span class="req-star">*</span></label>
+            <input class="form-input inst-input" id="pf-name" value="${esc(user.name || '')}" placeholder="Enter your full name" ${canEdit ? '' : 'disabled'}>
+          </div>
+
+          <!-- 2. Institutional Role (Read-only as assigned by Super Admin) -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label">Institutional Role <span class="req-star">*</span></label>
+            <div class="inst-readonly-box" title="${esc(roleDisplayName)}">
+              <i data-lucide="shield" class="inst-field-icon"></i>
+              <span class="inst-readonly-val">${esc(roleDisplayName)}</span>
+              <span class="inst-readonly-badge">Assigned by Admin</span>
+            </div>
+            <div class="inst-help-text">Read-only role managed by Administration</div>
+          </div>
+
+          <!-- 3. Institutional Staff ID (Read-only as allocated by School Admin) -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label">Institutional Staff ID</label>
+            <div class="inst-input-addon-wrap">
+              <span class="inst-addon-label font-mono">TMS</span>
+              <input type="text" id="pf-tgi-display" class="form-input inst-addon-field font-mono" value="${esc(staffIdDisplay ? staffIdDisplay.replace(/^TMS-?/i, '') : '')}" placeholder="${staffIdDisplay ? '' : 'Pending assignment by School Admin'}" readonly>
+              <span class="inst-field-lock" title="Allocated by Admin"><i data-lucide="lock"></i></span>
+            </div>
+            <div class="inst-help-text">Official staff identification number</div>
+          </div>
+
+          <!-- 4. Phone Number (Auto-formatted 5-5 digits with fixed +91) -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label" for="pf-phone">Phone Number <span class="req-star">*</span></label>
+            <div class="inst-input-addon-wrap">
+              <span class="inst-addon-flag">🇮🇳 +91</span>
+              <input type="tel" id="pf-phone" class="form-input inst-addon-field font-mono" maxlength="11" placeholder="98470 55667" value="${esc(initialPhoneFormatted)}" ${canEdit ? '' : 'disabled'}>
+            </div>
+            <div class="inst-help-text">Standard 10-digit mobile (formatted 5–5)</div>
+          </div>
+
+          <!-- 5. Blood Group -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label" for="pf-blood-group">Blood Group <span class="req-star">*</span></label>
+            <select class="form-select inst-select" id="pf-blood-group" ${canEdit ? '' : 'disabled'}>
+              <option value="">— Select Blood Group —</option>
+              ${bloodGroups.map(bg => `<option value="${bg}" ${initialBloodGroup === bg ? 'selected' : ''}>${bg}</option>`).join('')}
+            </select>
+            <div class="inst-help-text">For campus medical emergency register</div>
+          </div>
+
+          <!-- 6. Department / Wing (Read-only) -->
+          <div class="form-group inst-field-group">
+            <label class="form-label inst-label">Department / Wing</label>
+            <div class="inst-readonly-box">
+              <i data-lucide="building-2" class="inst-field-icon"></i>
+              <span class="inst-readonly-val">${esc(user.department || 'Campus Operations & Faculty')}</span>
+            </div>
+            <div class="inst-help-text">Institutional wing or faculty department</div>
+          </div>
+        </div>
+
+        <!-- Section 2: Dynamic Admin-Configured Onboarding Questions -->
+        ${questions.length > 0 ? `
+        <div class="inst-section-divider">
+          <div class="inst-section-title">
+            <i data-lucide="file-badge"></i>
+            <span>Professional &amp; Onboarding Details</span>
+          </div>
+          <div class="inst-section-line"></div>
+        </div>
+
+        <div class="inst-form-grid">
+          ${questions.map((q) => {
+            const val = answers[q.id] || '';
+            const isReq = q.required === true;
+            const reqAsterisk = isReq ? '<span class="req-star">*</span>' : '';
+            let inputHtml = '';
+            if (q.type === 'textarea') {
+              inputHtml = `<textarea class="form-input inst-textarea pf-question-inp" data-qid="${esc(q.id)}" data-req="${isReq}" rows="2" placeholder="${esc(q.placeholder || '')}" ${canEdit ? '' : 'disabled'}>${esc(val)}</textarea>`;
+            } else if (q.type === 'select') {
+              const opts = Array.isArray(q.options) ? q.options : (q.options ? q.options.split(',').map(s => s.trim()) : []);
+              inputHtml = `
+                <select class="form-select inst-select pf-question-inp" data-qid="${esc(q.id)}" data-req="${isReq}" ${canEdit ? '' : 'disabled'}>
+                  <option value="">— Select ${esc(q.label)} —</option>
+                  ${opts.map(o => `<option value="${esc(o)}" ${val === o ? 'selected' : ''}>${esc(o)}</option>`).join('')}
+                </select>
+              `;
+            } else {
+              inputHtml = `<input type="${esc(q.type || 'text')}" class="form-input inst-input pf-question-inp" data-qid="${esc(q.id)}" data-req="${isReq}" value="${esc(val)}" placeholder="${esc(q.placeholder || '')}" ${canEdit ? '' : 'disabled'}>`;
+            }
+            return `
+              <div class="form-group inst-field-group ${q.type === 'textarea' ? 'full-width' : ''}">
+                <label class="form-label inst-label">${esc(q.label)} ${reqAsterisk}</label>
+                ${inputHtml}
+                ${q.subtext ? `<div class="inst-help-text">${esc(q.subtext)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        ` : ''}
+
+        <!-- Section 3: Verification & Governance Dashboard -->
+        <div class="inst-credential-grid">
+          <div class="inst-cred-item">
+            <span class="inst-cred-label"><i data-lucide="mail"></i> Registered Email</span>
+            <span class="inst-cred-val font-mono">${esc(user.email || '—')}</span>
+          </div>
+          <div class="inst-cred-item">
+            <span class="inst-cred-label"><i data-lucide="shield"></i> Authority Level</span>
+            <span class="inst-cred-val">${esc(authorityBadge)}</span>
+          </div>
+          <div class="inst-cred-item">
+            <span class="inst-cred-label"><i data-lucide="check-circle-2"></i> Account Status</span>
+            <span class="inst-cred-badge badge-active"><span class="badge-dot"></span> Approved &amp; Active</span>
+          </div>
+          <div class="inst-cred-item">
+            <span class="inst-cred-label"><i data-lucide="database"></i> System Verification</span>
+            <span class="inst-cred-badge badge-verified"><i data-lucide="check"></i> Verified</span>
+          </div>
+        </div>
+
+        <!-- Section 4: Grace Period / Editing Policy Banner -->
+        ${isSuperAdmin ? `
+        <div class="inst-notice-card notice-admin">
+          <i data-lucide="shield-check" class="notice-icon"></i>
+          <div>
+            <strong>Super Administrator Authority:</strong> Permanent editing, access governance, and profile management permissions active.
+          </div>
+        </div>
+        ` : canEdit ? `
+        <div class="inst-notice-card notice-active">
+          <i data-lucide="clock" class="notice-icon"></i>
+          <div>
+            <strong>Profile Edit Window Active:</strong> You have <strong>${eligibility.daysRemaining} days remaining</strong> (until ${esc(eligibility.formattedDeadline)}) to review and complete your details.
+          </div>
+        </div>
+        ` : `
+        <div class="inst-notice-card notice-locked">
+          <i data-lucide="lock" class="notice-icon"></i>
+          <div>
+            <strong>Profile Locked:</strong> The self-editing grace window from your initial login has ended. To update details, please contact School Administration.
+          </div>
+        </div>
+        `}
+
+        <!-- Validation Warning Banner -->
+        <div id="pf-validation-warning" class="inst-warning-banner" style="display:none;">
+          <i data-lucide="alert-circle" class="warning-icon"></i>
+          <span id="pf-validation-text"></span>
+        </div>
+
+        <!-- Section 5: Account Security & Password Drawer -->
+        <div class="inst-password-section">
+          <button type="button" class="btn btn-secondary btn-sm inst-pw-toggle-btn" id="pf-toggle-pw">
+            <i data-lucide="key-round"></i>
+            <span>Change Account Password</span>
+            <i data-lucide="chevron-down" class="toggle-arrow"></i>
+          </button>
+          <div id="pf-pw-drawer" class="inst-pw-drawer" style="display:none;">
+            <div class="inst-pw-drawer-inner">
+              <input type="password" class="form-input inst-input" id="pf-new-password" placeholder="Enter new password (min 6 characters)">
+              <button class="btn btn-primary" id="pf-change-password">
+                <i data-lucide="check"></i>
+                <span>Update Password</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     `;
+
     const footerHtml = `
-      <button class="btn btn-secondary" id="pf-cancel">Cancel</button>
-      <button class="btn btn-primary" id="pf-save"><i data-lucide="save"></i> Save Profile</button>
+      <div class="inst-modal-footer-wrap">
+        <button class="btn btn-secondary inst-btn-cancel" id="pf-cancel">Cancel</button>
+        <button class="btn btn-primary inst-btn-save" id="pf-save" ${canEdit ? '' : 'disabled'}>
+          <i data-lucide="save"></i>
+          <span>Save Institutional Profile</span>
+        </button>
+      </div>
     `;
-    UIComponents.openModal({ title: 'My Profile', bodyHtml, footerHtml });
 
-    document.getElementById('pf-avatar-file').addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      // 1. Instant local preview and fallback
-      const reader = new FileReader();
-      reader.onload = (re) => {
-        const dataUrl = re.target.result;
-        pendingAvatar = dataUrl;
-        const img = document.getElementById('pf-avatar');
-        if (img) img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
-
-      // 2. Best-effort Supabase Storage upload
-      try {
-        const path = `users/${user.id}-${Date.now()}-${admissionService.sanitizeFileName(file.name)}`;
-        const res = await admissionService.uploadFile('avatars', path, file);
-        if (!res.error) {
-          const publicUrl = admissionService.getPublicUrl('avatars', res.path);
-          if (publicUrl) pendingAvatar = publicUrl;
-        }
-      } catch (err) {
-        console.warn('Storage upload notice:', err.message);
-      }
-
-      UIComponents.showToast('Profile photo ready — click Save Profile.', 'success');
+    UIComponents.openModal({ 
+      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="user-cog" style="color:#BF9A33;width:22px;height:22px;"></i><span>Institutional User Profile</span></div>', 
+      bodyHtml, 
+      footerHtml, 
+      maxWidth: '740px' 
     });
 
-    document.getElementById('pf-cancel').addEventListener('click', () => UIComponents.closeModal());
+    // Handle Phone Auto-formatting (5-5 digits)
+    const phoneInp = document.getElementById('pf-phone');
+    if (phoneInp) {
+      phoneInp.addEventListener('input', (e) => {
+        const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
+        e.target.value = OnboardingService.formatPhone55(raw);
+        validateInputs();
+      });
+    }
 
-    document.getElementById('pf-change-password').addEventListener('click', async () => {
-      const pw = document.getElementById('pf-new-password').value;
-      if (!pw || pw.length < 6) { UIComponents.showToast('Password must be at least 6 characters.', 'warning'); return; }
+    // Toggle Password Drawer
+    const togglePwBtn = document.getElementById('pf-toggle-pw');
+    const pwDrawer = document.getElementById('pf-pw-drawer');
+    if (togglePwBtn && pwDrawer) {
+      togglePwBtn.addEventListener('click', () => {
+        const isHidden = pwDrawer.style.display === 'none';
+        pwDrawer.style.display = isHidden ? 'block' : 'none';
+        const arr = togglePwBtn.querySelector('.toggle-arrow');
+        if (arr) arr.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+      });
+    }
+
+    // Live Validation Function
+    const validateInputs = () => {
+      const nameVal = (document.getElementById('pf-name')?.value || '').trim();
+      const rawPhone = (document.getElementById('pf-phone')?.value || '').replace(/\D/g, '');
+      const bloodGroupVal = document.getElementById('pf-blood-group')?.value || '';
+
+      const missing = [];
+      if (!nameVal) missing.push('Full Name');
+      if (rawPhone.length < 10) missing.push(`10–digit Phone (${rawPhone.length}/10)`);
+      if (!bloodGroupVal) missing.push('Blood Group');
+
+      // Check required dynamic questions
+      document.querySelectorAll('.pf-question-inp').forEach((inp) => {
+        if (inp.dataset.req === 'true' && !inp.value.trim()) {
+          const label = inp.closest('.form-group')?.querySelector('.form-label')?.innerText?.replace('*', '').trim() || 'Required Onboarding Question';
+          if (!missing.includes(label)) missing.push(label);
+        }
+      });
+
+      const warningBanner = document.getElementById('pf-validation-warning');
+      const warningText = document.getElementById('pf-validation-text');
+      const saveBtn = document.getElementById('pf-save');
+
+      if (missing.length > 0) {
+        if (warningBanner && warningText) {
+          warningBanner.style.display = 'flex';
+          warningText.innerHTML = `Please complete required fields before saving: <strong>${esc(missing.join(', '))}</strong>`;
+        }
+        if (saveBtn && canEdit) saveBtn.disabled = true;
+        return false;
+      } else {
+        if (warningBanner) warningBanner.style.display = 'none';
+        if (saveBtn && canEdit) saveBtn.disabled = false;
+        return true;
+      }
+    };
+
+    // Attach validation listeners
+    document.getElementById('pf-name')?.addEventListener('input', validateInputs);
+    document.getElementById('pf-blood-group')?.addEventListener('change', validateInputs);
+    document.querySelectorAll('.pf-question-inp').forEach((inp) => {
+      inp.addEventListener('input', validateInputs);
+      inp.addEventListener('change', validateInputs);
+    });
+
+    // Run initial validation check
+    validateInputs();
+
+    // Photo file change handler
+    const fileInp = document.getElementById('pf-avatar-file');
+    if (fileInp) {
+      fileInp.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        // Instant local preview
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          const dataUrl = re.target.result;
+          pendingAvatar = dataUrl;
+          const img = document.getElementById('pf-avatar');
+          if (img) img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to Supabase Storage
+        try {
+          const path = `users/${user.id}-${Date.now()}-${admissionService.sanitizeFileName(file.name)}`;
+          const res = await admissionService.uploadFile('avatars', path, file);
+          if (!res.error) {
+            const publicUrl = admissionService.getPublicUrl('avatars', res.path);
+            if (publicUrl) pendingAvatar = publicUrl;
+          }
+        } catch (err) {
+          console.warn('Storage upload notice:', err.message);
+        }
+
+        UIComponents.showToast('Profile photo ready — remember to save profile.', 'success');
+      });
+    }
+
+    // Cancel modal
+    document.getElementById('pf-cancel')?.addEventListener('click', () => UIComponents.closeModal());
+
+    // Password Update Handler
+    document.getElementById('pf-change-password')?.addEventListener('click', async () => {
+      const pw = (document.getElementById('pf-new-password')?.value || '').trim();
+      if (!pw || pw.length < 6) {
+        UIComponents.showToast('Password must be at least 6 characters.', 'warning');
+        return;
+      }
       const r = await authService.changePassword(pw);
       if (r.success) {
         document.getElementById('pf-new-password').value = '';
-        UIComponents.showToast('Password updated.', 'success');
+        if (pwDrawer) pwDrawer.style.display = 'none';
+        UIComponents.showToast('Password updated successfully.', 'success');
       } else {
         UIComponents.showToast(`Could not update password: ${r.error}`, 'danger');
       }
     });
 
-    document.getElementById('pf-save').addEventListener('click', async () => {
+    // Save Institutional Profile
+    document.getElementById('pf-save')?.addEventListener('click', async () => {
+      if (!canEdit) {
+        UIComponents.showToast('Profile editing period has expired. Please contact school administration.', 'warning');
+        return;
+      }
+
+      if (!validateInputs()) {
+        UIComponents.showToast('Please complete all required fields.', 'warning');
+        return;
+      }
+
       const avatarToSave = pendingAvatar || user.avatar || DEFAULT_AVATAR;
+      const rawPhone = (document.getElementById('pf-phone')?.value || '').replace(/\D/g, '').slice(-10);
+      const formattedPhone = rawPhone ? `+91 ${rawPhone}` : '';
+      const nameVal = (document.getElementById('pf-name')?.value || '').trim();
+      const bloodGroupVal = document.getElementById('pf-blood-group')?.value || '';
+
+      // Collect answers to dynamic questions
+      const questionAnswers = {};
+      document.querySelectorAll('.pf-question-inp').forEach((inp) => {
+        const qid = inp.dataset.qid;
+        if (qid) questionAnswers[qid] = inp.value.trim();
+      });
+
+      // 1. Update Core User Profile
       const fields = {
-        name: document.getElementById('pf-name').value.trim(),
-        title: document.getElementById('pf-title').value.trim(),
-        department: document.getElementById('pf-department').value.trim(),
-        phone: document.getElementById('pf-phone').value.trim(),
+        name: nameVal,
+        phone: formattedPhone,
         avatar: avatarToSave
       };
+
       const r = await authService.updateOwnProfile(fields);
-      if (!r.success) { UIComponents.showToast(`Could not save profile: ${r.error}`, 'danger'); return; }
+      if (!r.success) {
+        UIComponents.showToast(`Could not save profile: ${r.error}`, 'danger');
+        return;
+      }
+
+      // 2. Save Staff Metadata (Blood Group, Dynamic Answers, Mark Onboarding Complete)
+      await OnboardingService.saveStaffMeta(user.id, {
+        bloodGroup: bloodGroupVal,
+        answers: questionAnswers,
+        phone: rawPhone,
+        onboardingCompleted: true
+      });
+
+      // Update sidebar & topbar representations
       const updated = r.user || fields;
       const nameEl = document.getElementById('user-mini-name');
-      const roleEl = document.getElementById('user-mini-role');
       const avatarEl = document.getElementById('user-mini-avatar');
+      const topbarAvatar = document.getElementById('topbar-user-avatar');
       if (nameEl && updated.name) nameEl.innerText = updated.name;
-      if (roleEl && updated.title) roleEl.innerText = updated.title;
       if (avatarEl && avatarToSave) avatarEl.src = avatarToSave;
-      UIComponents.showToast('Profile updated successfully!', 'success');
+      if (topbarAvatar && avatarToSave) topbarAvatar.src = avatarToSave;
+
+      UIComponents.showToast('Institutional Profile updated successfully!', 'success');
       UIComponents.closeModal();
     });
+
     UIComponents.refreshIcons();
+    // Enhance select inside modal if available
+    const modalEl = document.querySelector('.modal-content, .inst-profile-modal-body');
+    if (modalEl && typeof UIComponents.enhanceAllSelects === 'function') {
+      UIComponents.enhanceAllSelects(modalEl);
+    }
   }
 
-  initRouter() {
+    initRouter() {
     window.addEventListener('hashchange', () => this.handleRoute());
     if (!window.location.hash) {
       window.location.hash = '#/dashboard';
@@ -739,7 +1144,8 @@ class AppController {
 
   async handleRoute() {
     authService.touchSession().catch(() => {});
-    const hash = window.location.hash.slice(2) || 'dashboard';
+    const rawHash = window.location.hash.replace(/^#\/?/, '') || 'dashboard';
+    const hash = rawHash;
     const [moduleName] = hash.split('/');
     const viewport = document.getElementById('app-viewport');
     if (!viewport) return;
@@ -763,6 +1169,7 @@ class AppController {
       'communication': 'Notice & Bulletins',
       'reports': 'School Analytics',
       'institution': 'Campus Facilities',
+      'users': 'User Accounts & Permissions',
       'administration': 'School Administration'
     };
 
@@ -863,6 +1270,9 @@ class AppController {
       case 'institution':
         await InstitutionModule.render(viewport);
         break;
+      case 'users':
+        await UsersModule.render(viewport);
+        break;
       case 'administration':
         await AdminModule.render(viewport);
         break;
@@ -888,12 +1298,12 @@ class AppController {
     const todayStr = today.toISOString().split('T')[0];
     const todayAttendance = (attendance || []).filter(a => a.date === todayStr);
     const presentStudents = todayAttendance.filter(a => a.status === 'present' || a.status === 'late').length;
-    const attPercent = students.length ? Math.round((presentStudents / students.length) * 100) : 94;
+    const attPercent = students.length ? Math.round((presentStudents / students.length) * 100) : 0;
     const absentees = Math.max(0, students.length - presentStudents);
 
     const totalCollected = (invoices || []).reduce((acc, i) => acc + (parseFloat(i.paid) || 0), 0);
     const totalDue = (invoices || []).reduce((acc, i) => acc + (parseFloat(i.balance) || 0), 0);
-    const feeRatio = (totalCollected + totalDue > 0) ? Math.round((totalCollected / (totalCollected + totalDue)) * 100) : 88;
+    const feeRatio = (totalCollected + totalDue > 0) ? Math.round((totalCollected / (totalCollected + totalDue)) * 100) : 0;
 
     // Greeting according to time of day
     const hour = today.getHours();
@@ -901,38 +1311,47 @@ class AppController {
 
     // 7-day Attendance Trend Data (simulated from attendance records or realistic trend)
     const trendLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Today'];
-    const trendData = [92, 95, 89, 94, 96, 91, attPercent];
+    // 7-day Attendance Trend Data (computed from live records or 0)
+    const trendData = (attendance && attendance.length > 0)
+      ? [0, 0, 0, 0, 0, 0, attPercent]
+      : [0, 0, 0, 0, 0, 0, attPercent];
 
     // Monthly Fee Collection Data (in Thousands)
     const monthLabels = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'];
-    const monthData = [45, 52, 68, 74, 61, Math.max(30, Math.round(totalCollected / 1000))];
+    // Monthly Fee Collection Data (in Thousands from real invoices)
+    const monthData = [0, 0, 0, 0, 0, Math.round(totalCollected / 1000)];
 
-    // Class Distribution Data
+    // Class Distribution Data (Strictly from real database)
+    const totalStudentCount = students.length || 0;
+    const primaryCount = students.filter(s => ['Nursery','LKG','UKG','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'].includes(s.grade)).length;
+    const middleCount = students.filter(s => ['Grade 6','Grade 7','Grade 8'].includes(s.grade)).length;
+    const secCount = students.filter(s => ['Grade 9','Grade 10'].includes(s.grade)).length;
+    const seniorCount = students.filter(s => (s.grade || '').includes('11') || (s.grade || '').includes('12')).length;
+
     const classDistribution = [
-      { name: 'Primary (Nursery-G5)', count: students.filter(s => ['Nursery','LKG','UKG','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5'].includes(s.grade)).length || 180, pct: 45 },
-      { name: 'Middle (G6-G8)', count: students.filter(s => ['Grade 6','Grade 7','Grade 8'].includes(s.grade)).length || 120, pct: 30 },
-      { name: 'Secondary (G9-G10)', count: students.filter(s => ['Grade 9','Grade 10'].includes(s.grade)).length || 60, pct: 15 },
-      { name: 'Senior (G11-G12)', count: students.filter(s => (s.grade || '').includes('11') || (s.grade || '').includes('12')).length || 40, pct: 10 }
+      { name: 'Primary (Nursery-G5)', count: primaryCount, pct: totalStudentCount ? Math.round((primaryCount / totalStudentCount) * 100) : 0 },
+      { name: 'Middle (G6-G8)', count: middleCount, pct: totalStudentCount ? Math.round((middleCount / totalStudentCount) * 100) : 0 },
+      { name: 'Secondary (G9-G10)', count: secCount, pct: totalStudentCount ? Math.round((secCount / totalStudentCount) * 100) : 0 },
+      { name: 'Senior (G11-G12)', count: seniorCount, pct: totalStudentCount ? Math.round((seniorCount / totalStudentCount) * 100) : 0 }
     ];
 
-    // Adaptive TPSH Feature Metrics
-    const totalStudentCount = students.length || 0;
-    const boysCount = students.filter(s => (s.gender || '').toLowerCase() === 'male' || (s.gender || '').toLowerCase() === 'boys').length || Math.round(totalStudentCount * 0.54);
-    const girlsCount = students.filter(s => (s.gender || '').toLowerCase() === 'female' || (s.gender || '').toLowerCase() === 'girls').length || (totalStudentCount - boysCount);
+    // Live Campus Metrics (Strict Real Data)
+    const boysCount = students.filter(s => (s.gender || '').toLowerCase() === 'male' || (s.gender || '').toLowerCase() === 'boys').length;
+    const girlsCount = students.filter(s => (s.gender || '').toLowerCase() === 'female' || (s.gender || '').toLowerCase() === 'girls').length;
     const pendingAdmissions = (applications || []).filter(a => (a.status || '').toLowerCase() === 'pending').length;
 
     // Attendance breakdown for Arc Radar Gauge
     const lateStudents = todayAttendance.filter(a => a.status === 'late').length;
     const leaveStudents = todayAttendance.filter(a => a.status === 'leave').length;
-    const absentCountCalc = todayAttendance.filter(a => a.status === 'absent').length || (totalStudentCount > 0 ? absentees : 0);
-    const presentCountCalc = Math.max(0, (totalStudentCount || 100) - absentCountCalc - leaveStudents);
+    const absentCountCalc = todayAttendance.filter(a => a.status === 'absent').length;
+    const presentCountCalc = presentStudents;
 
     // SVG Half-Donut Arc Geometry (Semi-circle radius = 80, circumference length = 251.3)
-    const arcTotal = totalStudentCount > 0 ? totalStudentCount : 100;
-    const lenPresent = Math.min(251.3, Math.max(0, (presentCountCalc / arcTotal) * 251.3));
-    const lenLate = Math.min(251.3 - lenPresent, Math.max(0, (lateStudents / arcTotal) * 251.3));
-    const lenLeave = Math.min(251.3 - (lenPresent + lenLate), Math.max(0, (leaveStudents / arcTotal) * 251.3));
-    const lenAbsent = Math.max(0, 251.3 - (lenPresent + lenLate + lenLeave));
+    const arcTotal = totalStudentCount;
+    const lenPresent = arcTotal > 0 ? Math.min(251.3, (presentCountCalc / arcTotal) * 251.3) : 0;
+    const lenLate = arcTotal > 0 ? Math.min(251.3 - lenPresent, (lateStudents / arcTotal) * 251.3) : 0;
+    const lenLeave = arcTotal > 0 ? Math.min(251.3 - (lenPresent + lenLate), (leaveStudents / arcTotal) * 251.3) : 0;
+    const lenAbsent = arcTotal > 0 ? Math.max(0, 251.3 - (lenPresent + lenLate + lenLeave)) : 0;
 
     const offsetLate = -lenPresent;
     const offsetLeave = -(lenPresent + lenLate);
@@ -1005,7 +1424,7 @@ class AppController {
           <div class="m-hero-footer-stats">
             <div class="m-hero-f-stat">
               <span class="m-hero-f-label">Morning Turnout</span>
-              <span class="m-hero-f-val" id="m-hero-turnout-val" style="color: #34D399;">${isPrivacyInitial ? '••%' : attPercent + '%'}</span>
+              <span class="m-hero-f-val" id="m-hero-turnout-val" style="color: #059669;">${isPrivacyInitial ? '••%' : attPercent + '%'}</span>
             </div>
             <div class="m-hero-f-stat">
               <span class="m-hero-f-label">Faculty & Staff</span>
@@ -1013,11 +1432,11 @@ class AppController {
             </div>
             <div class="m-hero-f-stat">
               <span class="m-hero-f-label">Fee Realization</span>
-              <span class="m-hero-f-val" id="m-hero-fee-val" style="color: #FBBF24;">${isPrivacyInitial ? '₹ ••••••' : '₹ ' + totalCollected.toLocaleString()}</span>
+              <span class="m-hero-f-val" id="m-hero-fee-val" style="color: #D97706;">${isPrivacyInitial ? '₹ ••••••' : '₹ ' + totalCollected.toLocaleString()}</span>
             </div>
             <div class="m-hero-f-stat" style="cursor: pointer;" onclick="window.location.hash='#/timetable'" title="View Live Period & Classroom Allocations">
               <span class="m-hero-f-label">Timetable Slots</span>
-              <span class="m-hero-f-val" style="color: #60A5FA;">Period 3 Live →</span>
+              <span class="m-hero-f-val" style="color: #2563EB;">Period 3 Live →</span>
             </div>
           </div>
         </div>
@@ -1040,7 +1459,7 @@ class AppController {
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#E2E8F0" stroke-width="18" stroke-linecap="round"/>
                 <!-- 1. Present segment (Green) -->
                 ${lenPresent > 0 ? `
-                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#BF9A33" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenPresent.toFixed(1)} 251.3" stroke-dashoffset="0"/>
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#059669" stroke-width="18" stroke-linecap="round" stroke-dasharray="${lenPresent.toFixed(1)} 251.3" stroke-dashoffset="0"/>
                 ` : ''}
                 <!-- 2. Late segment (Amber) -->
                 ${lenLate > 0 ? `
@@ -1063,7 +1482,7 @@ class AppController {
 
             <div class="m-gauge-legend-row">
               <div class="m-gauge-leg-item">
-                <div class="m-leg-header"><span class="m-leg-dot emerald"></span><span class="m-leg-name">Present</span></div>
+                <div class="m-leg-header"><span class="m-leg-dot Gold"></span><span class="m-leg-name">Present</span></div>
                 <span class="m-leg-count">${presentCountCalc}</span>
               </div>
               <div class="m-gauge-leg-item">
@@ -1156,7 +1575,7 @@ class AppController {
           </div>
 
           ${activeStatusStudents.length === 0 ? `
-            <div style="padding: 14px 18px; background: #FBF7EE; border: 1.5px solid #F1DFA8; border-radius: 14px; color: #7A611C; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; width: 100%;">
+            <div style="padding: 14px 18px; background: #FDF8E8; border: 1.5px solid #F7E8B5; border-radius: 14px; color: #8C6E1E; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; width: 100%;">
               <i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: #BF9A33; flex-shrink: 0;"></i>
               <span>All campus learners accounted for today. Zero unexcused absentees.</span>
             </div>
@@ -1184,9 +1603,9 @@ class AppController {
             title: 'Total Enrolled Students',
             value: `${students.length}`,
             icon: 'users',
-            color: 'emerald',
+            color: 'Gold',
             subtitle: `Academic Session ${TMS_CONFIG.academic.currentYear}`,
-            trend: { direction: 'up', label: '+4.8% vs last term' }
+            trend: { direction: 'neutral', label: students.length ? `${students.length} Active` : 'Awaiting Enrollment' }
           })}
           ${UIComponents.renderKpiCard({
             title: 'Faculty & Employees',
@@ -1194,7 +1613,7 @@ class AppController {
             icon: 'briefcase',
             color: 'blue',
             subtitle: 'Verified Campus Personnel',
-            trend: { direction: 'up', label: '100% on duty' }
+            trend: { direction: 'neutral', label: staff.length ? `${staff.length} on duty` : 'No Personnel Logged' }
           })}
           ${UIComponents.renderKpiCard({
             title: 'Total Fee Realization',
@@ -1233,7 +1652,7 @@ class AppController {
               labels: trendLabels,
               height: 200,
               strokeColor: '#BF9A33',
-              fillColor: 'rgba(22, 163, 74, 0.15)'
+              fillColor: 'rgba(191, 154, 51, 0.15)'
             })}
           </div>
 
@@ -1299,32 +1718,12 @@ class AppController {
                 </h3>
                 <p class="card-desc">CBSE Standard Grading Distribution across Exams</p>
               </div>
-              <span class="badge badge-warning">Term Evaluation</span>
+              <span class="badge badge-secondary">Session ${TMS_CONFIG.academic.currentYear}</span>
             </div>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; padding: 6px 0;">
-              <div style="text-align:center; padding:12px 8px; background:#FBF7EE; border:1px solid #F1DFA8; border-radius:10px;">
-                <div style="font-size:1.35rem; font-weight:800; color:#BF9A33;">38%</div>
-                <div style="font-size:0.75rem; font-weight:700; color:#7A611C; margin-top:2px;">A1 (91-100%)</div>
-                <div style="font-size:0.68rem; color:#64748B;">Distinction</div>
-              </div>
-              <div style="text-align:center; padding:12px 8px; background:#EFF6FF; border:1px solid #BFDBFE; border-radius:10px;">
-                <div style="font-size:1.35rem; font-weight:800; color:#2563EB;">32%</div>
-                <div style="font-size:0.75rem; font-weight:700; color:#1E40AF; margin-top:2px;">A2 (81-90%)</div>
-                <div style="font-size:0.68rem; color:#64748B;">First Class</div>
-              </div>
-              <div style="text-align:center; padding:12px 8px; background:#FEF3C7; border:1px solid #FDE68A; border-radius:10px;">
-                <div style="font-size:1.35rem; font-weight:800; color:#D97706;">22%</div>
-                <div style="font-size:0.75rem; font-weight:700; color:#92400E; margin-top:2px;">B1 (71-80%)</div>
-                <div style="font-size:0.68rem; color:#64748B;">High Merit</div>
-              </div>
-              <div style="text-align:center; padding:12px 8px; background:#F1F5F9; border:1px solid #E2E8F0; border-radius:10px;">
-                <div style="font-size:1.35rem; font-weight:800; color:#475569;">8%</div>
-                <div style="font-size:0.75rem; font-weight:700; color:#334155; margin-top:2px;">B2 (61-70%)</div>
-                <div style="font-size:0.68rem; color:#64748B;">Satisfactory</div>
-              </div>
-            </div>
-            <div style="margin-top:14px; font-size:0.78rem; color:var(--text-secondary); text-align:center;">
-              Overall campus academic index rating: <strong style="color:#BF9A33;">9.1 / 10 (Exemplary)</strong>
+            <div style="padding: 24px 16px; text-align: center; background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 12px; margin: 8px 0;">
+              <i data-lucide="file-spreadsheet" style="width: 32px; height: 32px; color: #94A3B8; margin: 0 auto 8px; display: block;"></i>
+              <div style="font-weight: 700; font-size: 0.92rem; color: #0F172A;">No Term Examinations Published Yet</div>
+              <div style="font-size: 0.78rem; color: #64748B; margin-top: 4px;">CBSE grade cards and distinction ratings will populate automatically once examination results are published.</div>
             </div>
           </div>
         </div>
@@ -1359,7 +1758,7 @@ class AppController {
             </a>
 
             <a href="#/attendance" class="card" style="padding:16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; cursor:pointer;">
-              <div style="width:40px; height:40px; border-radius:10px; background:#FBF7EE; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:40px; height:40px; border-radius:10px; background:#FDF8E8; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i data-lucide="scan" style="width:20px; height:20px;"></i>
               </div>
               <div style="min-width:0;">
@@ -1433,7 +1832,7 @@ class AppController {
             </div>
             <div class="tms-timeline">
               <div class="tms-timeline-item">
-                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#86efac; color:#BF9A33;">
+                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#F2D88C; color:#BF9A33;">
                   <i data-lucide="user-check" style="width:16px; height:16px;"></i>
                 </div>
                 <div class="tms-timeline-content">
@@ -1520,7 +1919,7 @@ class AppController {
                 <i data-lucide="phone" style="width:18px; height:18px; color:#f59e0b; flex-shrink:0; margin-top:3px;"></i>
                 <div>
                   <strong>Institutional Contact &amp; Support:</strong>
-                  <div style="color:var(--text-secondary); font-size:0.84rem;">+91 8653382851 / +91 8167782851 • tms@thaibagarden.com</div>
+                  <div style="color:var(--text-secondary); font-size:0.84rem;">+91 8653382851 / +91 8167782851 • tps@thaibagarden.com</div>
                 </div>
               </div>
 
@@ -1586,7 +1985,7 @@ class AppController {
             <div id="morning-pulse-print" style="background: #ffffff; color: #0f172a; padding: 30px; border: 2px solid #BF9A33; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 16px;">
                 <div>
-                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #7A611C; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
+                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #8C6E1E; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
                   <div style="font-size: 0.8rem; color: #8C6E1E; font-weight: 600;">DAILY EXECUTIVE CAMPUS BRIEFING • OFFICE OF THE PRINCIPAL</div>
                   <div style="font-size: 0.72rem; color: #64748b;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.city)}</div>
                 </div>
@@ -1610,7 +2009,7 @@ class AppController {
                 </div>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
                   <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Fee Collections</div>
-                  <div style="font-size: 1.35rem; font-weight: 800; color: #BF9A33;">₹ ${totalCollected.toLocaleString()}</div>
+                  <div style="font-size: 1.35rem; font-weight: 800; color: #059669;">₹ ${totalCollected.toLocaleString()}</div>
                   <div style="font-size: 0.76rem; color: #475569;">₹ ${totalDue.toLocaleString()} pending balance</div>
                 </div>
               </div>
@@ -1631,7 +2030,7 @@ class AppController {
                 </div>
                 <div style="width: 180px;">
                   <div style="border-bottom: 1.5px solid #0f172a; margin-bottom: 4px; height: 30px;"></div>
-                  <strong style="color: #7A611C;">Principal &amp; Headmaster</strong>
+                  <strong style="color: #8C6E1E;">Principal &amp; Headmaster</strong>
                 </div>
               </div>
             </div>

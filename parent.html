@@ -19,7 +19,7 @@
   <div style="min-height: 100vh; display: flex; flex-direction: column;">
     <header class="app-topbar">
       <div class="topbar-left">
-        <span class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TPS</span>
+        <span class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TMS</span>
         <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;">
           Parent &amp; Guardian Portal
         </div>
@@ -48,6 +48,8 @@
     import { notificationService } from './notification-service.js';
     import { NotificationCenter } from './notification-center.js';
     import { brandingService } from './branding-service.js';
+    import { dbService } from './supabase-client.js';
+    import { StudentLeaveService } from './student-leave-service.js';
 
     const esc = (v) => UIComponents.escapeHtml(v);
     const fmtDate = (v) => { if (!v) return '—'; const d = new Date(v); return isNaN(d.getTime()) ? '—' : d.toLocaleString('en-GB'); };
@@ -130,7 +132,7 @@
       const allowed = user && [TMS_CONFIG.roles.PARENT, TMS_CONFIG.roles.ADMIN].includes(user.role);
 
       if (!allowed) {
-        window.location.href = user ? '/#/dashboard' : '/login';
+        window.location.href = user ? '/dashboard' : '/login';
         return;
       }
 
@@ -144,14 +146,106 @@
       const content = document.getElementById('parent-content');
       let apps = [];
       let notifications = [];
+      let students = [];
+      let leaves = [];
       try {
-        [apps, notifications] = await Promise.all([
+        [apps, notifications, students, leaves] = await Promise.all([
           admissionService.listApplicationsForParent(user.id, user.email),
-          notificationService.listForUser()
+          notificationService.listForUser(),
+          dbService.select('students'),
+          StudentLeaveService.getLeaves()
         ]);
       } catch (e) {
         console.error(e);
       }
+
+      // Link wards: match by parent email/phone/id or fallback to demo student (e.g. Sultana Sarkar or first student)
+      const myWards = students.filter(s => 
+        s.guardianEmail === user.email || 
+        s.guardianPhone === user.phone || 
+        s.parentId === user.id
+      );
+      const activeWard = myWards[0] || students.find(s => s.admissionNo === 'TPS-2026-005') || students[0] || {
+        id: 'std-5',
+        fullName: 'Sultana Sarkar',
+        admissionNo: 'TPS-2026-005',
+        grade: 'STD-III',
+        section: 'A'
+      };
+
+      const myWardLeaves = leaves.filter(l => 
+        l.studentId === activeWard.id || 
+        l.admissionNo === activeWard.admissionNo || 
+        (myWards.some(w => w.id === l.studentId || w.admissionNo === l.admissionNo))
+      );
+
+      const renderLeaveCards = () => {
+        if (!myWardLeaves.length) {
+          return `
+            <div style="text-align: center; color: var(--text-muted); padding: 24px; background: var(--bg-subtle, #F8FAFC); border-radius: 10px;">
+              <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #BF9A33;"></i>
+              <div style="font-weight: 600;">No Leave Requests on File for ${esc(activeWard.fullName)}</div>
+              <div style="font-size: 0.8rem; margin-top: 2px;">Need to request an authorized absence or campus outpass? Click "Apply Leave for Ward" above.</div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="table-responsive">
+            <table class="tms-table" style="font-size: 0.85rem; width: 100%;">
+              <thead>
+                <tr style="background: #F8FAFC;">
+                  <th>STUDENT / WARD</th>
+                  <th>LEAVE TYPE &amp; REASON</th>
+                  <th>DURATION &amp; DATES</th>
+                  <th>GATE PASS</th>
+                  <th style="text-align:center;">STATUS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${myWardLeaves.map(l => {
+                  let statusBadge = '';
+                  if (l.status === 'APPROVED_ON_LEAVE' && !l.actualReturn) {
+                    statusBadge = `<span class="badge" style="background:#FEF3C7; color:#92400E; border:1.5px solid #FCD34D; font-weight:800; font-size:0.75rem;"><i data-lucide="plane-takeoff" style="width:12px;height:12px;vertical-align:middle;"></i> ON LEAVE (Pass Active)</span>`;
+                  } else if (l.status === 'PENDING') {
+                    statusBadge = `<span class="badge badge-warning">Awaiting Staff Approval</span>`;
+                  } else if (l.status === 'RETURNED' || l.actualReturn) {
+                    statusBadge = `<span class="badge badge-success">✓ Returned (${esc((l.actualReturn || '').slice(0, 10))})</span>`;
+                  } else if (l.status === 'REJECTED') {
+                    statusBadge = `<span class="badge badge-danger">Declined</span>`;
+                  } else {
+                    statusBadge = `<span class="badge badge-info">${esc(l.status)}</span>`;
+                  }
+
+                  return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                      <td style="padding: 10px 12px;">
+                        <div style="font-weight: 800; color: #0F172A;">${esc(l.studentName)}</div>
+                        <div style="font-size: 0.74rem; color: #64748B;"><span class="tms-id-badge font-mono">${esc(l.admissionNo)}</span> • ${esc(l.grade)}</div>
+                      </td>
+                      <td style="padding: 10px 12px;">
+                        <div style="font-weight: 700; color: #0F172A;">${esc(l.leaveType)}</div>
+                        <div style="font-size: 0.74rem; color: #64748B;">${esc(l.reason)}</div>
+                      </td>
+                      <td style="padding: 10px 12px;">
+                        <div style="font-weight: 700; color: #0F172A;">${esc(l.fromDate)} – ${esc(l.toDate)}</div>
+                        <div style="font-size: 0.74rem; color: #BF9A33; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
+                      </td>
+                      <td style="padding: 10px 12px;">
+                        ${l.gatePassNo ? `
+                          <span class="badge badge-info font-mono" style="font-size: 0.76rem; font-weight: 700;">${esc(l.gatePassNo)}</span>
+                          <div style="font-size: 0.7rem; color: #64748B; margin-top: 2px;">Issued by: ${esc(l.issuedBy || 'Staff')}</div>
+                        ` : '<span style="color: #94A3B8; font-size: 0.76rem;">Pending Approval</span>'}
+                      </td>
+                      <td style="padding: 10px 12px; text-align: center;">${statusBadge}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
 
       content.innerHTML = `
         <div class="card" style="margin-bottom: 24px;">
@@ -159,10 +253,33 @@
             <div>
               <h2 style="font-size: 1.3rem;">Welcome, ${esc(user.name)}</h2>
               <p style="color: var(--text-muted); font-size: 0.85rem;">
-                Track your admission applications and school notifications here.
+                Enrolled Ward: <strong>${esc(activeWard.fullName)}</strong> (${esc(activeWard.admissionNo)} • ${esc(activeWard.grade)})
               </p>
             </div>
-            <span class="badge badge-info">${apps.length} application(s)</span>
+            <div style="display:flex; gap:8px;">
+              <span class="badge badge-info">${apps.length} application(s)</span>
+              <span class="badge ${myWardLeaves.some(l => l.status === 'APPROVED_ON_LEAVE' && !l.actualReturn) ? 'badge-warning' : 'badge-success'}">
+                ${myWardLeaves.some(l => l.status === 'APPROVED_ON_LEAVE' && !l.actualReturn) ? 'Ward Currently ON LEAVE' : 'Campus In-Session'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ward Leave & Outpass Management Card -->
+        <div class="card" style="margin-bottom: 24px;">
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 class="card-title">Ward Leave &amp; Campus Outpass Requests</h3>
+              <p class="card-desc" style="margin: 2px 0 0 0;">
+                Apply for official student leaves, review staff approval, and view security gate passes for ${esc(activeWard.fullName)}.
+              </p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-parent-apply-leave" style="background:#0E623B; border-color:#0E623B; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+              <i data-lucide="plus"></i> Apply Leave for Ward
+            </button>
+          </div>
+          <div id="parent-leaves-container" style="margin-top:14px;">
+            ${renderLeaveCards()}
           </div>
         </div>
 
@@ -179,6 +296,50 @@
             <p style="color:var(--text-muted);">No notifications right now.</p>
           </div>`}
       `;
+
+      // Wire parent leave apply button
+      document.getElementById('btn-parent-apply-leave')?.addEventListener('click', () => {
+        StudentLeaveService.openApplyModal({
+          student: activeWard,
+          appliedBy: 'parent',
+          appliedByName: `${user.name} (Parent/Guardian)`,
+          onComplete: async () => {
+            const freshLeaves = await StudentLeaveService.getLeaves();
+            const freshWardLeaves = freshLeaves.filter(l => l.studentId === activeWard.id || l.admissionNo === activeWard.admissionNo);
+            const container = document.getElementById('parent-leaves-container');
+            if (container) {
+              container.innerHTML = `
+                <div class="table-responsive">
+                  <table class="tms-table" style="font-size: 0.85rem; width: 100%;">
+                    <thead>
+                      <tr style="background: #F8FAFC;">
+                        <th>STUDENT / WARD</th>
+                        <th>LEAVE TYPE &amp; REASON</th>
+                        <th>DURATION &amp; DATES</th>
+                        <th>GATE PASS</th>
+                        <th style="text-align:center;">STATUS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${freshWardLeaves.map(l => `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                          <td style="padding: 10px 12px;"><strong>${esc(l.studentName)}</strong></td>
+                          <td style="padding: 10px 12px;">${esc(l.leaveType)}<br><small style="color:#64748B;">${esc(l.reason)}</small></td>
+                          <td style="padding: 10px 12px;">${esc(l.fromDate)} – ${esc(l.toDate)} (${esc(l.totalDays)}d)</td>
+                          <td style="padding: 10px 12px;"><span class="badge badge-info font-mono">${esc(l.gatePassNo || 'Pending')}</span></td>
+                          <td style="padding: 10px 12px; text-align: center;"><span class="badge badge-warning">Awaiting Staff Approval</span></td>
+                        </tr>
+                      `).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              `;
+              UIComponents.refreshIcons();
+            }
+            UIComponents.showToast('Leave request submitted to school administration.', 'success');
+          }
+        });
+      });
 
       UIComponents.refreshIcons();
     })();

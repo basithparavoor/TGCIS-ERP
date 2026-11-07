@@ -20,13 +20,14 @@
     <!-- Portal Header -->
     <header class="app-topbar">
       <div class="topbar-left">
-        <a href="/#/dashboard" class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TPS</a>
+        <a href="/dashboard" class="brand-badge" style="padding: 6px 12px; font-size: 0.95rem;">TMS</a>
         <div style="font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;">
           THAIBA PUBLIC SCHOOL — School Administration Portal
         </div>
       </div>
       <div class="topbar-right">
-        <a href="/#/dashboard" class="btn btn-secondary btn-sm"><i data-lucide="layout-dashboard"></i> Main ERP</a>
+        <a href="/" target="_blank" class="btn btn-secondary btn-sm"><i data-lucide="globe"></i> View Website</a>
+        <a href="/dashboard" class="btn btn-secondary btn-sm"><i data-lucide="layout-dashboard"></i> Main ERP</a>
         <button class="icon-btn" id="btn-logout" title="Sign Out"><i data-lucide="log-out"></i></button>
       </div>
     </header>
@@ -42,10 +43,12 @@
     import { UIComponents } from './ui-components.js';
     import { TMS_CONFIG } from './config.js';
     import { brandingService } from './branding-service.js';
+    import { institutionService } from './institution-service.js';
     import { checkMigration } from './migration-check.js';
 
     (async () => {
       brandingService.refresh();
+      institutionService.refresh();
       checkMigration();
       await authService.init();
       const user = authService.getCurrentUser();
@@ -56,7 +59,7 @@
       );
 
       if (!allowed) {
-        window.location.href = user ? '/#/dashboard' : '/login';
+        window.location.href = user ? '/dashboard' : '/login';
         return;
       }
 

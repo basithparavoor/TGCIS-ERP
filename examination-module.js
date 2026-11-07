@@ -78,7 +78,12 @@ export class ExaminationModule {
         ${UIComponents.renderPageHeader({
           title: 'Examinations & Assessment Engine',
           subtitle: 'Class gradebooks, bulk marks ledger, official CBSE/State-Board A4 Cumulative Progress Report Cards.',
-          breadcrumbs: [{ label: 'Exams & Reports' }],
+          breadcrumbs: [
+            { label: 'Campus Core' },
+            { label: 'Academics & Operations' },
+            { label: 'Examinations & Reports', active: true }
+          ],
+          icon: 'award',
           badge: 'Evaluation Suite',
           actionsHtml: `
             <button class="btn btn-secondary" id="btn-publish-results"><i data-lucide="share-2"></i> Publish Results</button>
@@ -88,7 +93,7 @@ export class ExaminationModule {
 
       <div class="kpi-grid">
         ${UIComponents.renderKpiCard({ title: 'Current Assessment', value: this._selectedTerm, icon: 'calendar', color: 'blue', subtitle: TMS_CONFIG.academic.currentYear })}
-        ${UIComponents.renderKpiCard({ title: 'Class Pass Rate', value: passRate, icon: 'trending-up', color: 'emerald', subtitle: `${passCount} of ${recordedList.length} Assessed` })}
+        ${UIComponents.renderKpiCard({ title: 'Class Pass Rate', value: passRate, icon: 'trending-up', color: 'Gold', subtitle: `${passCount} of ${recordedList.length} Assessed` })}
         ${UIComponents.renderKpiCard({ title: 'Class Toppers (A1/A2)', value: recordedList.length ? `${topperCount}` : '—', icon: 'star', color: 'amber', subtitle: 'Score ≥ 90%' })}
         ${UIComponents.renderKpiCard({ title: 'Remedial Support', value: recordedList.length ? `${remedialCount}` : '—', icon: 'alert-triangle', color: 'rose', subtitle: 'Score < 33%' })}
       </div>
@@ -128,8 +133,11 @@ export class ExaminationModule {
       </div>
 
       <!-- Tabs Navigation -->
-      <div class="tms-tab-rail-wrapper">
-        <div class="tms-segmented-tabs">
+      <div class="tms-tab-scroll-wrapper">
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-prev" aria-label="Scroll left" title="Scroll tabs left">
+          <i data-lucide="chevron-left"></i>
+        </button>
+        <div class="tms-segmented-tabs tms-tab-scroll-rail">
           <button class="tms-tab-pill ${this._examViewTab === 'ledger' ? 'active' : ''}" id="tab-exam-ledger">
             <i data-lucide="table"></i>
             <span>Marks Ledger &amp; Report Cards</span>
@@ -145,6 +153,9 @@ export class ExaminationModule {
             <span class="tab-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669;">${filteredStudents.length}</span>
           </button>
         </div>
+        <button type="button" class="tms-tab-nav-btn tms-tab-nav-next" aria-label="Scroll right" title="Scroll tabs right">
+          <i data-lucide="chevron-right"></i>
+        </button>
       </div>
 
       ${this._examViewTab === 'ledger' ? `
@@ -214,7 +225,7 @@ export class ExaminationModule {
                       ${hasMarks ? `
                         <div style="display: flex; align-items: center; gap: 6px;">
                           <div style="width: 50px; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
-                            <div style="width: ${Math.min(pct, 100)}%; background: ${pct >= 75 ? '#16a34a' : pct >= 50 ? '#3b82f6' : pct >= 33 ? '#eab308' : '#ef4444'}; height: 100%;"></div>
+                            <div style="width: ${Math.min(pct, 100)}%; background: ${pct >= 75 ? '#BF9A33' : pct >= 50 ? '#3b82f6' : pct >= 33 ? '#eab308' : '#ef4444'}; height: 100%;"></div>
                           </div>
                           <strong>${pct}%</strong>
                         </div>
@@ -320,7 +331,7 @@ export class ExaminationModule {
                     <td><span class="badge ${riskBadge}">${pct !== null ? calculateGrade(pct).grade : '—'}</span></td>
                     <td>
                       <div style="font-size: 0.78rem; line-height: 1.3;">
-                        ${reasons.map(r => `<div style="color: ${riskLevel === 'critical' ? '#dc2626' : riskLevel === 'moderate' ? '#d97706' : '#16a34a'}; font-weight: 600;">• ${esc(r)}</div>`).join('')}
+                        ${reasons.map(r => `<div style="color: ${riskLevel === 'critical' ? '#dc2626' : riskLevel === 'moderate' ? '#d97706' : '#BF9A33'}; font-weight: 600;">• ${esc(r)}</div>`).join('')}
                       </div>
                     </td>
                     <td>
@@ -329,7 +340,7 @@ export class ExaminationModule {
                     <td style="text-align: right;">
                       <div style="display: inline-flex; gap: 6px;">
                         ${riskLevel !== 'none' ? `
-                          <button class="btn btn-secondary btn-sm btn-remedial-wa" data-student-id="${esc(s.id)}" data-name="${esc(s.fullName)}" data-phone="${esc(s.phone || s.guardianPhone || '')}" data-grade="${esc(s.grade || '')}" data-reasons="${esc(reasons.join(' | '))}" title="Send Remedial WhatsApp Notice" style="color: #16a34a;">
+                          <button class="btn btn-secondary btn-sm btn-remedial-wa" data-student-id="${esc(s.id)}" data-name="${esc(s.fullName)}" data-phone="${esc(s.phone || s.guardianPhone || '')}" data-grade="${esc(s.grade || '')}" data-reasons="${esc(reasons.join(' | '))}" title="Send Remedial WhatsApp Notice" style="color: #BF9A33;">
                             <i data-lucide="message-circle"></i> WhatsApp
                           </button>
                           <button class="btn btn-primary btn-sm btn-remedial-plan" data-student-id="${esc(s.id)}" data-name="${esc(s.fullName)}" data-adm="${esc(s.admissionNo || '')}" data-grade="${esc(s.grade || '')}" data-pct="${esc(pct || '0')}" data-reasons="${esc(reasons.join(', '))}" title="Generate Academic Intervention Plan">
@@ -361,7 +372,7 @@ export class ExaminationModule {
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
           <div>
             <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="ticket" style="color: #16a34a;"></i> Admit Card Studio &amp; Hall Seating Engine
+              <i data-lucide="ticket" style="color: #BF9A33;"></i> Admit Card Studio &amp; Hall Seating Engine
             </h3>
             <p class="card-desc">Generate official A4 Hall Tickets (2 per page) and room door seating rosters for ${esc(this._selectedGrade)} ${this._selectedSection !== 'all' ? `(Sec ${esc(this._selectedSection)})` : ''}.</p>
           </div>
@@ -449,18 +460,18 @@ export class ExaminationModule {
             return pairs.map((pair, pIdx) => `
               <div class="admit-card-sheet-a4" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
                 ${pair.map(st => `
-                  <div style="border: 2px solid #16a34a; border-radius: 10px; padding: 16px 20px; background: #ffffff; color: #0f172a; position: relative; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                  <div style="border: 2px solid #BF9A33; border-radius: 10px; padding: 16px 20px; background: #ffffff; color: #0f172a; position: relative; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                     <!-- Card Header -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #16a34a; padding-bottom: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1.5px solid #BF9A33; padding-bottom: 8px; margin-bottom: 10px;">
                       <div style="flex-shrink: 0;">${TMS_LOGO.emblemSvg(42)}</div>
                       <div style="text-align: center; flex: 1; padding: 0 10px;">
-                        <h2 style="font-size: 1.15rem; font-weight: 800; color: #166534; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <h2 style="font-size: 1.15rem; font-weight: 800; color: #8C6E1E; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
                           ${esc(TMS_CONFIG.institution.name)}
                         </h2>
-                        <div style="font-size: 0.72rem; color: #15803d; font-weight: 600;">
+                        <div style="font-size: 0.72rem; color: #8C6E1E; font-weight: 600;">
                           ${esc(TMS_CONFIG.institution.subtitle || 'Run by : Thaiba Heritage, Kolkata')} • ${esc(TMS_CONFIG.institution.address.campus)}
                         </div>
-                        <div style="display: inline-block; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 0.72rem; font-weight: 700; padding: 1px 12px; border-radius: 10px; margin-top: 4px;">
+                        <div style="display: inline-block; background: #FDF8E8; border: 1px solid #F2D88C; color: #8C6E1E; font-size: 0.72rem; font-weight: 700; padding: 1px 12px; border-radius: 10px; margin-top: 4px;">
                           OFFICIAL EXAMINATION ADMIT CARD / HALL TICKET • ${esc(this._selectedTerm).toUpperCase()}
                         </div>
                       </div>
@@ -473,7 +484,7 @@ export class ExaminationModule {
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 0.78rem;">
                       <div><span style="color: #64748b;">Candidate Name:</span> <strong style="color: #0f172a; display: block;">${esc(st.fullName)}</strong></div>
                       <div><span style="color: #64748b;">Admission No:</span> <strong class="font-mono" style="color: #0f172a; display: block;">${esc(st.admissionNo)}</strong></div>
-                      <div><span style="color: #64748b;">Roll Number:</span> <strong style="color: #16a34a; font-size: 0.88rem; display: block;">${esc(st.rollNo || '—')}</strong></div>
+                      <div><span style="color: #64748b;">Roll Number:</span> <strong style="color: #BF9A33; font-size: 0.88rem; display: block;">${esc(st.rollNo || '—')}</strong></div>
                       <div><span style="color: #64748b;">Class &amp; Section:</span> <strong style="color: #0f172a; display: block;">${esc(st.grade)} ${esc(st.section || 'A')}</strong></div>
                     </div>
 
@@ -522,7 +533,7 @@ export class ExaminationModule {
                         </div>
                         <div>
                           <div style="border-bottom: 1px solid #0f172a; width: 110px; margin-bottom: 2px; height: 16px;"></div>
-                          <strong style="color: #166534;">Controller of Exams</strong>
+                          <strong style="color: #8C6E1E;">Controller of Exams</strong>
                         </div>
                       </div>
                     </div>
@@ -1166,7 +1177,7 @@ export class ExaminationModule {
         background: #ffffff;
         color: #0f172a;
         padding: 32px 36px;
-        border: 2px solid #16a34a;
+        border: 2px solid #BF9A33;
         border-radius: 12px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.06);
         max-width: 820px;
@@ -1174,21 +1185,21 @@ export class ExaminationModule {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       ">
         <!-- Official Institutional Header -->
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #16a34a; padding-bottom: 14px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 14px; margin-bottom: 16px;">
           <div style="flex-shrink: 0;">
             ${emblem}
           </div>
           <div style="text-align: center; flex: 1; padding: 0 16px;">
-            <h1 style="font-size: 1.55rem; font-weight: 800; color: #166534; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+            <h1 style="font-size: 1.55rem; font-weight: 800; color: #8C6E1E; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
               ${esc(TMS_CONFIG.institution.name)}
             </h1>
-            <p style="font-size: 0.85rem; font-weight: 700; color: #15803d; margin: 2px 0;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: #8C6E1E; margin: 2px 0;">
               ${esc(TMS_CONFIG.institution.subtitle || 'Run by : Thaiba Heritage, Kolkata')}
             </p>
             <p style="font-size: 0.76rem; color: #64748b; margin: 0;">
               ${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.city)} • Phone: ${esc(TMS_CONFIG.institution.contact.phone)}
             </p>
-            <div style="display: inline-block; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 0.78rem; font-weight: 700; padding: 2px 14px; border-radius: 12px; margin-top: 6px;">
+            <div style="display: inline-block; background: #FDF8E8; border: 1px solid #F2D88C; color: #8C6E1E; font-size: 0.78rem; font-weight: 700; padding: 2px 14px; border-radius: 12px; margin-top: 6px;">
               CUMULATIVE PROGRESS REPORT CARD • ${esc(this._selectedTerm).toUpperCase()}
             </div>
           </div>
@@ -1206,7 +1217,7 @@ export class ExaminationModule {
           <div><span style="color: #64748b;">Date of Birth:</span> <strong>${esc(student.dob || student.dateOfBirth || '—')}</strong></div>
           <div><span style="color: #64748b;">Academic Year:</span> <strong>${esc(TMS_CONFIG.academic.currentYear)}</strong></div>
           <div><span style="color: #64748b;">Guardian / Father:</span> <strong>${esc(student.parentName || student.guardianName || '—')}</strong></div>
-          <div><span style="color: #64748b;">Attendance:</span> <strong style="color: #16a34a;">${esc(assess?.attendanceRatio || '95%')}</strong></div>
+          <div><span style="color: #64748b;">Attendance:</span> <strong style="color: #BF9A33;">${esc(assess?.attendanceRatio || '95%')}</strong></div>
           <div><span style="color: #64748b;">Issue Date:</span> <strong>${new Date().toLocaleDateString('en-GB')}</strong></div>
         </div>
 
@@ -1240,7 +1251,7 @@ export class ExaminationModule {
                     <td style="padding: 6px 10px; text-align: center; border: 1px solid #cbd5e1; color: #64748b;">${sm.maxPractical || 20}</td>
                     <td style="padding: 6px 10px; text-align: center; border: 1px solid #cbd5e1; font-weight: 600;">${sm.practical ?? '—'}</td>
                     <td style="padding: 6px 10px; text-align: center; border: 1px solid #cbd5e1; font-weight: 700; color: #0f172a;">${subjTot}</td>
-                    <td style="padding: 6px 10px; text-align: center; border: 1px solid #cbd5e1; font-weight: 700; color: ${subjTot >= 75 ? '#16a34a' : subjTot >= 50 ? '#2563eb' : '#d97706'};">${g.grade}</td>
+                    <td style="padding: 6px 10px; text-align: center; border: 1px solid #cbd5e1; font-weight: 700; color: ${subjTot >= 75 ? '#BF9A33' : subjTot >= 50 ? '#2563eb' : '#d97706'};">${g.grade}</td>
                     <td style="padding: 6px 10px; border: 1px solid #cbd5e1; font-size: 0.78rem; color: #475569;">${esc(sm.remark || g.remark)}</td>
                   </tr>
                 `;
@@ -1248,9 +1259,9 @@ export class ExaminationModule {
               <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #94a3b8;">
                 <td style="padding: 8px 10px; border: 1px solid #cbd5e1;">Grand Cumulative Aggregate</td>
                 <td colspan="4" style="padding: 8px 10px; text-align: right; border: 1px solid #cbd5e1; color: #64748b;">Max Total: ${totalMax}</td>
-                <td style="padding: 8px 10px; text-align: center; border: 1px solid #cbd5e1; font-size: 0.95rem; color: #166534;">${totalScored}</td>
-                <td style="padding: 8px 10px; text-align: center; border: 1px solid #cbd5e1; font-size: 0.95rem; color: #166534;">${gradeObj.grade}</td>
-                <td style="padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 0.88rem; color: #166534;">Score: ${pct}%</td>
+                <td style="padding: 8px 10px; text-align: center; border: 1px solid #cbd5e1; font-size: 0.95rem; color: #8C6E1E;">${totalScored}</td>
+                <td style="padding: 8px 10px; text-align: center; border: 1px solid #cbd5e1; font-size: 0.95rem; color: #8C6E1E;">${gradeObj.grade}</td>
+                <td style="padding: 8px 10px; border: 1px solid #cbd5e1; font-size: 0.88rem; color: #8C6E1E;">Score: ${pct}%</td>
               </tr>
             </tbody>
           </table>
@@ -1273,16 +1284,16 @@ export class ExaminationModule {
         </div>
 
         <!-- Teacher Remarks & Result Banner -->
-        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 10px 14px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="background: #FDF8E8; border: 1px solid #F2D88C; border-radius: 6px; padding: 10px 14px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <div style="font-size: 0.78rem; font-weight: 700; color: #166534; text-transform: uppercase;">Class Teacher's Observations:</div>
-            <div style="font-size: 0.84rem; color: #14532d; font-style: italic; margin-top: 2px;">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #8C6E1E; text-transform: uppercase;">Class Teacher's Observations:</div>
+            <div style="font-size: 0.84rem; color: #7A611C; font-style: italic; margin-top: 2px;">
               "${esc(assess?.teacherRemarks || 'Consistent academic performance, keen learner and well behaved in all campus activities.')}"
             </div>
           </div>
           <div style="text-align: right;">
-            <span style="font-size: 0.72rem; color: #166534; text-transform: uppercase; display: block; font-weight: 700;">Result Status:</span>
-            <span style="font-size: 0.95rem; font-weight: 800; color: ${pct >= 33 ? '#166534' : '#b91c1c'};">${passStatus}</span>
+            <span style="font-size: 0.72rem; color: #8C6E1E; text-transform: uppercase; display: block; font-weight: 700;">Result Status:</span>
+            <span style="font-size: 0.95rem; font-weight: 800; color: ${pct >= 33 ? '#8C6E1E' : '#b91c1c'};">${passStatus}</span>
           </div>
         </div>
 
@@ -1302,7 +1313,7 @@ export class ExaminationModule {
             <strong>Academic Coordinator</strong>
           </div>
           <div style="width: 170px;">
-            <div style="border: 2px dashed #16a34a; border-radius: 50%; width: 56px; height: 56px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #166534; text-transform: uppercase; text-align: center; line-height: 1.1;">
+            <div style="border: 2px dashed #BF9A33; border-radius: 50%; width: 56px; height: 56px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; color: #8C6E1E; text-transform: uppercase; text-align: center; line-height: 1.1;">
               OFFICIAL<br>TMS SEAL
             </div>
             <strong>Principal / Headmaster</strong>
@@ -1327,7 +1338,7 @@ export class ExaminationModule {
             width: 100% !important;
             max-width: 100% !important;
             padding: 15mm !important;
-            border: 2px solid #16a34a !important;
+            border: 2px solid #BF9A33 !important;
             box-shadow: none !important;
             page-break-after: avoid !important;
           }
@@ -1413,19 +1424,19 @@ export class ExaminationModule {
 
     const bodyHtml = `
       ${printStyles}
-      <div id="door-chart-print-area" style="background: #ffffff; color: #0f172a; padding: 28px 32px; border: 2px solid #16a34a; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #16a34a; padding-bottom: 12px; margin-bottom: 16px;">
+      <div id="door-chart-print-area" style="background: #ffffff; color: #0f172a; padding: 28px 32px; border: 2px solid #BF9A33; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 16px;">
           <div>${emblem}</div>
           <div style="text-align: center; flex: 1; padding: 0 12px;">
-            <h2 style="font-size: 1.4rem; font-weight: 800; color: #166534; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
-            <div style="font-size: 0.78rem; color: #15803d; font-weight: 600;">OFFICE OF THE CONTROLLER OF EXAMINATIONS • SESSION ${esc(TMS_CONFIG.academic.currentYear)}</div>
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: #8C6E1E; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
+            <div style="font-size: 0.78rem; color: #8C6E1E; font-weight: 600;">OFFICE OF THE CONTROLLER OF EXAMINATIONS • SESSION ${esc(TMS_CONFIG.academic.currentYear)}</div>
             <div style="display: inline-block; background: #fef3c7; border: 1.5px solid #f59e0b; color: #b45309; font-weight: 800; font-size: 0.85rem; padding: 3px 18px; border-radius: 12px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
               EXAMINATION HALL NOTICE BOARD DOOR CHART
             </div>
           </div>
           <div style="text-align: right; font-size: 0.75rem; color: #64748b;">
             <div>Date: <strong>${new Date().toLocaleDateString('en-GB')}</strong></div>
-            <div>Room: <strong style="color: #16a34a; font-size: 0.9rem;">HALL 01</strong></div>
+            <div>Room: <strong style="color: #BF9A33; font-size: 0.9rem;">HALL 01</strong></div>
           </div>
         </div>
 
@@ -1450,7 +1461,7 @@ export class ExaminationModule {
           <tbody>
             ${filtered.map((s, idx) => `
               <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#fafafa'};">
-                <td style="padding: 5px 8px; text-align: center; border: 1px solid #cbd5e1; font-weight: 800; color: #166534;">${String(idx + 1).padStart(2, '0')}</td>
+                <td style="padding: 5px 8px; text-align: center; border: 1px solid #cbd5e1; font-weight: 800; color: #8C6E1E;">${String(idx + 1).padStart(2, '0')}</td>
                 <td style="padding: 5px 8px; text-align: center; border: 1px solid #cbd5e1; font-weight: 700;">${esc(s.rollNo || (idx + 1))}</td>
                 <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-family: monospace;">${esc(s.admissionNo)}</td>
                 <td style="padding: 5px 8px; border: 1px solid #cbd5e1; font-weight: 600;">${esc(s.fullName)}</td>
@@ -1472,7 +1483,7 @@ export class ExaminationModule {
           </div>
           <div style="width: 180px;">
             <div style="border-bottom: 1.5px solid #0f172a; margin-bottom: 4px; height: 20px;"></div>
-            <strong style="color: #166534;">Chief Superintendent</strong>
+            <strong style="color: #8C6E1E;">Chief Superintendent</strong>
           </div>
         </div>
       </div>
@@ -1511,10 +1522,10 @@ export class ExaminationModule {
     const planHtml = `
       <div id="remedial-plan-print" style="background: #ffffff; color: #0f172a; padding: 24px; border: 2px solid #064e3b; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif;">
         <!-- Header -->
-        <div style="text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="text-align: center; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 16px;">
           <div style="display: flex; justify-content: center; margin-bottom: 6px;">${emblem}</div>
-          <h2 style="font-size: 1.35rem; font-weight: 800; color: #166534; text-transform: uppercase; margin: 0;">${esc(TMS_CONFIG.institution.name)}</h2>
-          <div style="font-size: 0.8rem; font-weight: 600; color: #15803d;">Run by : Thaiba Heritage, Kolkata • Academic Session: ${TMS_CONFIG.academic.currentYear}</div>
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: #8C6E1E; text-transform: uppercase; margin: 0;">${esc(TMS_CONFIG.institution.name)}</h2>
+          <div style="font-size: 0.8rem; font-weight: 600; color: #8C6E1E;">Run by : Thaiba Heritage, Kolkata • Academic Session: ${TMS_CONFIG.academic.currentYear}</div>
           <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">DEPARTMENT OF ACADEMIC MONITORING &amp; REMEDIAL EDUCATION</div>
           <div style="display: inline-block; margin-top: 8px; background: #fef2f2; border: 1.5px solid #ef4444; color: #991b1b; padding: 4px 14px; border-radius: 6px; font-weight: 800; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em;">
             Individualized Academic Intervention &amp; Remedial Roadmap
@@ -1541,7 +1552,7 @@ export class ExaminationModule {
 
         <!-- Corrective Action Measures -->
         <div style="margin-bottom: 20px;">
-          <h4 style="font-size: 0.88rem; color: #166534; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+          <h4 style="font-size: 0.88rem; color: #8C6E1E; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
             Target Remedial Measures &amp; Action Plan:
           </h4>
           <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem; border: 1px solid #cbd5e1;">
