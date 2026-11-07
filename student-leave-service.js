@@ -33,6 +33,7 @@ export class StudentLeaveService {
       return window.institutionService.filterByActiveSchool(records);
     }
     return records;
+  }
 
   /* ------------------------------------------------------------------ */
   /* Check if student is actively ON LEAVE for a specific date          */

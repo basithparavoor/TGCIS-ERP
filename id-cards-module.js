@@ -17,7 +17,6 @@ import { TMS_LOGO } from './logo.js';
 import { QRCodeGenerator } from './qr-generator.js';
 import { exportPdf, formatPdfFilename } from './export-utils.js';
 import { BiometricCredentialModal } from './biometric-credential-modal.js';
-import { [] } from './student-module.js';
 
 export const CARD_TEMPLATES = {
   Gold: {
