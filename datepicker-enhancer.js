@@ -58,12 +58,12 @@ function ensureStyles() {
 }
 
 .tps-date-input-field:hover {
-  border-color: #D4AF37 !important;
+  border-color: #1A659F !important;
   background-color: #FAFAFA !important;
 }
 
 .tps-date-input-field:focus {
-  border-color: #D4AF37 !important;
+  border-color: #1A659F !important;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
@@ -72,7 +72,7 @@ function ensureStyles() {
   right: 14px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  color: #D4AF37 !important;
+  color: #1A659F !important;
   pointer-events: none !important;
   display: flex !important;
   align-items: center !important;
@@ -133,7 +133,7 @@ function ensureStyles() {
   display: inline-flex !important;
   align-items: center !important;
   gap: 0.4rem !important;
-  background: #eef5fa !important; border: 1.5px solid #F7E8B5 !important; color: #134e7a !important;
+  background: #eef5fa !important; border: 1.5px solid #bfdbfe !important; color: #134e7a !important;
   border-radius: 12px !important;
   padding: 0.45rem 0.8rem !important;
   font-size: 0.85rem !important;
@@ -164,7 +164,7 @@ function ensureStyles() {
   position: relative !important;
   width: 62px !important;
   height: 64px !important;
-  background: linear-gradient(145deg, #D4AF37 0%, #1A659F 55%, #134e7a 100%) !important;
+  background: linear-gradient(145deg, #1A659F 0%, #1A659F 55%, #134e7a 100%) !important;
   box-shadow: 0 8px 20px rgba(26, 101, 159, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
   border-radius: 16px !important;
   display: flex !important;
@@ -266,7 +266,7 @@ function ensureStyles() {
 }
 
 .tps-cal-day.selected {
-  background: linear-gradient(135deg, #D4AF37 0%, #1A659F 100%) !important;
+  background: linear-gradient(135deg, #1A659F 0%, #1A659F 100%) !important;
   color: #FFFFFF !important;
   font-weight: 800 !important;
   border-radius: 12px !important;
@@ -296,7 +296,7 @@ function ensureStyles() {
 }
 
 .tps-cal-confirm-btn {
-  background: linear-gradient(135deg, #D4AF37 0%, #1A659F 55%, #134e7a 100%) !important;
+  background: linear-gradient(135deg, #1A659F 0%, #1A659F 55%, #134e7a 100%) !important;
   box-shadow: 0 8px 22px rgba(26, 101, 159, 0.35) !important;
   color: #FFFFFF !important;
   font-family: inherit !important;
@@ -316,7 +316,7 @@ function ensureStyles() {
 .tps-cal-confirm-btn:hover {
   transform: translateY(-2px) !important;
   box-shadow: 0 14px 28px rgba(15, 81, 50, 0.42) !important;
-  background: linear-gradient(135deg, #D4AF37, #134e7a) !important;
+  background: linear-gradient(135deg, #1A659F, #134e7a) !important;
 }
 
 .tps-cal-confirm-btn:active {

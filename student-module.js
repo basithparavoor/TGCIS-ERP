@@ -633,6 +633,7 @@ export class StudentModule {
     const newAdmBtn = container.querySelector('#btn-new-admission');
     if (newAdmBtn) {
       newAdmBtn.addEventListener('click', () => {
+        const esc = (v) => UIComponents.escapeHtml(v);
         UIComponents.openModal({
           title: 'Enroll Student — New or Previous Years',
           maxWidth: '720px',
