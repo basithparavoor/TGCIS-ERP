@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Universal Attendance & Timetable Governance Suite
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Universal Attendance & Timetable Governance Suite
  * Fully functional multi-modal biometric & attendance suite:
  * 1. Timetable & Roll Call (Live Duty, Dynamic Timing, Session Submission to Database)
  * 2. Smart QR Scanner Kiosk (Real Camera Stream, Barcode Gun Support, Instant Check-in & Audio)
@@ -878,20 +878,20 @@ export class AttendanceModule {
       <div class="card" style="max-width:760px; margin:0 auto; padding:24px; text-align:center;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding-bottom:14px; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
           <div style="text-align:left;">
-            <div style="font-size:0.75rem; text-transform:uppercase; color:#BF9A33; font-weight:700; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
+            <div style="font-size:0.75rem; text-transform:uppercase; color:#1A659F; font-weight:700; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
               <span class="live-pulse-dot" style="width:8px; height:8px;"></span>
               GATE 01 • SMART QR TERMINAL ONLINE
             </div>
             <div style="font-size:1.15rem; font-weight:800; color:#0F172A; margin-top:2px;">${esc(TMS_CONFIG.institution.name)}</div>
           </div>
           <div style="text-align:right;">
-            <div id="qr-live-clock" style="font-size:1.25rem; font-weight:800; font-family:var(--font-mono); color:#BF9A33;">--:--:--</div>
+            <div id="qr-live-clock" style="font-size:1.25rem; font-weight:800; font-family:var(--font-mono); color:#1A659F;">--:--:--</div>
             <div style="font-size:0.75rem; color:#64748B;">${new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </div>
         </div>
 
         <!-- Camera Viewfinder with Live Stream -->
-        <div style="position:relative; width:340px; height:260px; margin:0 auto 18px; border-radius:18px; overflow:hidden; background:#0F172A; border:2px solid #BF9A33; box-shadow:0 8px 24px rgba(191, 154, 51, 0.25);">
+        <div style="position:relative; width:340px; height:260px; margin:0 auto 18px; border-radius:18px; overflow:hidden; background:#0F172A; border:2px solid #1A659F; box-shadow:0 8px 24px rgba(26, 101, 159, 0.25);">
           <!-- Video element for real camera stream -->
           <video id="qr-camera-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none;"></video>
           

@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Account provisioning helpers
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Account provisioning helpers
  *
  * Creating a login used to go through the public `/auth/v1/signup` endpoint.
  * That endpoint is rate limited (HTTP 429) and only works when "Confirm email"

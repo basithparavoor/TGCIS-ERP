@@ -1,10 +1,10 @@
 /**
- * THAIBA PUBLIC SCHOOL ERP — Universal 3D-Badge Date Picker Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES ERP — Universal 3D-Badge Date Picker Engine
  * Pixel-perfect adaptation of TPSH calendar with:
  * - 3D Gold Calendar Badge with metallic white rings and selected day
  * - Pill selectors for Month (Nov ▾) and Year (2026 ▾)
  * - SUN-SAT weekday headers with Gold SUN
- * - 7-column days grid with dark gold selected day (#BF9A33) & scale animations
+ * - 7-column days grid with dark gold selected day (#1A659F) & scale animations
  * - Prominent Gold "Confirm" button
  * - Month view (Select Month YYYY) with 3x4 grid cards and Back to Days link
  * - Year view (Decade window) with 3x4 grid cards and Back to Days link
@@ -133,12 +133,12 @@ function ensureStyles() {
   display: inline-flex !important;
   align-items: center !important;
   gap: 0.4rem !important;
-  background: #FDF8E8 !important; border: 1.5px solid #F7E8B5 !important; color: #8C6E1E !important;
+  background: #eef5fa !important; border: 1.5px solid #F7E8B5 !important; color: #134e7a !important;
   border-radius: 12px !important;
   padding: 0.45rem 0.8rem !important;
   font-size: 0.85rem !important;
   font-weight: 700 !important;
-  color: #8C6E1E !important; cursor: pointer !important;
+  color: #134e7a !important; cursor: pointer !important;
   transition: all 0.15s ease !important;
   outline: none !important;
   font-family: inherit !important;
@@ -147,7 +147,7 @@ function ensureStyles() {
 .tps-cal-pill-btn:hover {
   background: #E2E8F0 !important;
   border-color: #CBD5E1 !important;
-  color: #BF9A33 !important;
+  color: #1A659F !important;
 }
 
 .tps-cal-pill-btn svg {
@@ -156,7 +156,7 @@ function ensureStyles() {
 }
 
 .tps-cal-pill-btn:hover svg {
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   transform: translateY(1px) !important;
 }
 
@@ -164,8 +164,8 @@ function ensureStyles() {
   position: relative !important;
   width: 62px !important;
   height: 64px !important;
-  background: linear-gradient(145deg, #D4AF37 0%, #BF9A33 55%, #8C6E1E 100%) !important;
-  box-shadow: 0 8px 20px rgba(191, 154, 51, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
+  background: linear-gradient(145deg, #D4AF37 0%, #1A659F 55%, #134e7a 100%) !important;
+  box-shadow: 0 8px 20px rgba(26, 101, 159, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;
   border-radius: 16px !important;
   display: flex !important;
   align-items: center !important;
@@ -218,7 +218,7 @@ function ensureStyles() {
 }
 
 .tps-cal-weekdays span.weekday-sun {
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   font-weight: 800 !important;
 }
 
@@ -255,27 +255,27 @@ function ensureStyles() {
 }
 
 .tps-cal-day.col-sun:not(.selected):not(.other-month) {
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   font-weight: 700 !important;
 }
 
 .tps-cal-day:hover:not(.selected) {
   background: #ECFDF5 !important;
-  color: #8C6E1E !important;
+  color: #134e7a !important;
   transform: scale(1.06) !important;
 }
 
 .tps-cal-day.selected {
-  background: linear-gradient(135deg, #D4AF37 0%, #BF9A33 100%) !important;
+  background: linear-gradient(135deg, #D4AF37 0%, #1A659F 100%) !important;
   color: #FFFFFF !important;
   font-weight: 800 !important;
   border-radius: 12px !important;
-  box-shadow: 0 6px 16px rgba(191, 154, 51, 0.45) !important;
+  box-shadow: 0 6px 16px rgba(26, 101, 159, 0.45) !important;
   transform: scale(1.04) !important;
 }
 
 .tps-cal-day.today:not(.selected) {
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   font-weight: 800 !important;
 }
 
@@ -285,7 +285,7 @@ function ensureStyles() {
   bottom: 3px !important;
   width: 14px !important;
   height: 2.5px !important;
-  background: #BF9A33 !important;
+  background: #1A659F !important;
   border-radius: 2px !important;
 }
 
@@ -296,8 +296,8 @@ function ensureStyles() {
 }
 
 .tps-cal-confirm-btn {
-  background: linear-gradient(135deg, #D4AF37 0%, #BF9A33 55%, #8C6E1E 100%) !important;
-  box-shadow: 0 8px 22px rgba(191, 154, 51, 0.35) !important;
+  background: linear-gradient(135deg, #D4AF37 0%, #1A659F 55%, #134e7a 100%) !important;
+  box-shadow: 0 8px 22px rgba(26, 101, 159, 0.35) !important;
   color: #FFFFFF !important;
   font-family: inherit !important;
   font-size: 0.95rem !important;
@@ -316,7 +316,7 @@ function ensureStyles() {
 .tps-cal-confirm-btn:hover {
   transform: translateY(-2px) !important;
   box-shadow: 0 14px 28px rgba(15, 81, 50, 0.42) !important;
-  background: linear-gradient(135deg, #D4AF37, #8C6E1E) !important;
+  background: linear-gradient(135deg, #D4AF37, #134e7a) !important;
 }
 
 .tps-cal-confirm-btn:active {
@@ -390,14 +390,14 @@ function ensureStyles() {
 .tps-cal-grid-item:hover {
   background: #ECFDF5 !important;
   border-color: #A7F3D0 !important;
-  color: #8C6E1E !important;
+  color: #134e7a !important;
   transform: translateY(-1px) !important;
 }
 
 .tps-cal-grid-item.selected {
-  background: #BF9A33 !important;
+  background: #1A659F !important;
   color: #FFFFFF !important;
-  border-color: #BF9A33 !important;
+  border-color: #1A659F !important;
   box-shadow: 0 4px 10px rgba(15, 81, 50, 0.3) !important;
 }
 
@@ -410,7 +410,7 @@ function ensureStyles() {
 .tps-cal-today-action {
   font-size: 0.85rem !important;
   font-weight: 700 !important;
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   background: transparent !important;
   border: none !important;
   cursor: pointer !important;
@@ -419,7 +419,7 @@ function ensureStyles() {
 }
 
 .tps-cal-today-action:hover {
-  color: #8C6E1E !important;
+  color: #134e7a !important;
   text-decoration: underline !important;
 }
 `;

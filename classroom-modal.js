@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Universal Classroom & Period Modal Builder
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Universal Classroom & Period Modal Builder
  * Matches the reference design with 7-Day circle toggles, tenure window, and custom inputs.
  */
 

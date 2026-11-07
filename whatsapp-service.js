@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — WhatsApp Parent Dispatch Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — WhatsApp Parent Dispatch Engine
  * Creates instant, pre-composed WhatsApp links to notify parents on mobile and desktop web
  * Works out-of-the-box without requiring paid API subscriptions
  */
@@ -62,7 +62,7 @@ https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi%3A%2F%2Fpay%3F
 
 *Bank Account Details for Online Transfer:*
 • Bank: State Bank of India
-• A/C Name: THAIBA PUBLIC SCHOOL
+• A/C Name: THAIBA COLLEGE OF INTEGRATED STUDIES
 • A/C No: 38947291039
 • IFSC: SBIN0001234
 • Branch: Kolkata Central

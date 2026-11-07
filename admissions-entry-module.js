@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Admissions Entry (Office Boy workspace)
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Admissions Entry (Office Boy workspace)
  * Lets data-entry staff open the admission form (which records "done by" them)
  * and review the applications they have entered.
  */

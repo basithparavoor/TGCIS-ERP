@@ -1,6 +1,6 @@
 import { institutionService } from './institution-service.js';
 /**
- * THAIBA PUBLIC SCHOOL — Finance, Invoicing & Cash Counter Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Finance, Invoicing & Cash Counter Module
  */
 
 import { TMS_CONFIG } from './config.js';
@@ -35,7 +35,7 @@ export class FinanceModule {
       <div class="tms-content-wrapper">
         ${UIComponents.renderPageHeader({
           title: 'Fees & Financial Operations',
-          subtitle: 'Tuition fee structures, invoicing engine, cash counter receipts, and student ledger for THAIBA PUBLIC SCHOOL.',
+          subtitle: 'Tuition fee structures, invoicing engine, cash counter receipts, and student ledger for THAIBA COLLEGE OF INTEGRATED STUDIES.',
           breadcrumbs: [{ label: 'Finance & Accounts' }],
           badge: 'Accounts Active',
           actionsHtml: `
@@ -726,7 +726,7 @@ export class FinanceModule {
           <!-- Bank & Session Details -->
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px; margin-bottom: 8px; font-size: 0.66rem;">
             <div><strong>Bank:</strong> State Bank of India • Kolkata Central</div>
-            <div><strong>A/C Name:</strong> Thaiba Public School</div>
+            <div><strong>A/C Name:</strong> Thaiba College of Integrated Studies</div>
             <div><strong>A/C No:</strong> <span class="font-mono" style="font-weight: 700;">38947291039</span> • <strong>IFSC:</strong> SBIN0001234</div>
             <div style="display: flex; justify-content: space-between; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 3px;">
               <span><strong>Challan:</strong> <span class="font-mono">${esc(data.invoiceNo || 'CHL-2027-001')}</span></span>

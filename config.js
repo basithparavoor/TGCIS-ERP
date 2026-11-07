@@ -1,6 +1,6 @@
 /**
  * THAIBA HERITAGE GROUP OF INSTITUTIONS — ERP Master Configuration
- * Multi-Institution Architecture: Central Management & Sub-Managements
+ * Multi-Campus Architecture: Central Management & Campuses
  */
 
 export const TMS_CONFIG = {
@@ -21,14 +21,14 @@ export const TMS_CONFIG = {
       director: "C. M. Basith",
       directorEmail: "cmbasith786@gmail.com"
     },
-    // Sub-Managements / Member Schools
+    // Campuses / Operating Units
     schools: [
       {
-        id: "tps",
-        code: "TPS-TAPAN",
-        name: "THAIBA PUBLIC SCHOOL",
-        shortName: "TPS (Tapan)",
-        tagline: "Modern Education with Morality",
+        id: "tgcis",
+        code: "TGCIS-TAPAN",
+        name: "THAIBA COLLEGE OF INTEGRATED STUDIES",
+        shortName: "TGCIS (Main)",
+        tagline: "Higher Secondary & Integrated Studies",
         board: "State / Central Affiliated",
         status: "Active",
         principal: "C. M. Basith",
@@ -36,7 +36,7 @@ export const TMS_CONFIG = {
         contact: {
           phone1: "+91 8653382851",
           phone2: "+91 8167782851",
-          email: "tps@thaibagarden.com",
+          email: "tgcis@thaibagarden.com",
           website: "https://tps.clubad.space"
         },
         address: {
@@ -49,9 +49,9 @@ export const TMS_CONFIG = {
           pin: "733127",
           locality: "Thaiba Garden, Tapan"
         },
-        themeColor: "#BF9A33",
+        themeColor: "#1A659F",
         logo: "tps-logo.png",
-        logoBadge: "TPS",
+        logoBadge: "TGCIS",
         founded: "2011",
         gpsGeofence: {
           latitude: 25.2891,
@@ -99,14 +99,14 @@ export const TMS_CONFIG = {
   },
 
   institution: {
-    name: "THAIBA PUBLIC SCHOOL",
+    name: "THAIBA COLLEGE OF INTEGRATED STUDIES",
     tagline: "Run by : Thaiba Heritage, Kolkata",
-    code: "TPS-TAPAN",
+    code: "TGCIS-TAPAN",
     trust: "Thaiba Heritage, Kolkata",
     regNo: "IV 01894/2011",
     founded: "2011",
-    logoText: "THAIBA",
-    logoBadge: "TPS",
+    logoText: "TGCIS",
+    logoBadge: "TGCIS",
     address: {
       campus: "Baghait, Tapan",
       village: "Baghait",
@@ -120,7 +120,7 @@ export const TMS_CONFIG = {
     contact: {
       phone1: "+91 8653382851",
       phone2: "+91 8167782851",
-      email: "tps@thaibagarden.com",
+      email: "tgcis@thaibagarden.com",
       website: "https://tps.clubad.space"
     },
     gpsGeofence: {
@@ -146,8 +146,8 @@ export const TMS_CONFIG = {
   },
 
   supabase: {
-    url: "https://bphjbvvapbefiyacfosm.supabase.co",
-    anonKey: "sb_publishable_GS3oZFWHs--BrLMbbssFVg_suPP77Vb",
+    url: "https://oyttyawpiqdfdzaasvvr.supabase.co",
+    anonKey: "sb_publishable_-yMIbrh_pbkb-x4kx4uAXg_wWo9ZRqO",
     storageBuckets: {
       documents: "tms-documents",
       avatars: "avatars",

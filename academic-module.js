@@ -24,7 +24,7 @@ export async function syncActiveAcademicSession() {
 
 import { ClassroomModal } from './classroom-modal.js';
 /**
- * THAIBA PUBLIC SCHOOL — Academic & Curriculum Management Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Academic & Curriculum Management Module
  * Comprehensive CRUD Suite: Classes, Sections, Period & Bell Timetable,
  * Teacher Allocation, Academic Sessions, Subject Master & Syllabus Tracker.
  */
@@ -243,7 +243,7 @@ export class AcademicModule {
                 <div class="tms-data-card-row full-width">
                   <span class="tms-data-card-label">Assigned Class Teacher</span>
                   <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
-                    <div style="width: 26px; height: 26px; border-radius: 50%; background: #BF9A33; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">
+                    <div style="width: 26px; height: 26px; border-radius: 50%; background: #1A659F; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">
                       ${esc((c.teacher || 'T').slice(0, 1))}
                     </div>
                     <span class="tms-data-card-value">${esc(c.teacher || 'Unassigned')}</span>
@@ -402,13 +402,13 @@ export class AcademicModule {
         <div class="tms-cards-grid">
           ${this._periods.map(p => {
             const isBreak = p.isBreak;
-            const borderCol = isBreak ? '#f59e0b' : '#BF9A33';
+            const borderCol = isBreak ? '#f59e0b' : '#1A659F';
             const iconName = isBreak ? 'coffee' : 'clock';
             return `
               <div class="tms-data-card" style="border-left: 4px solid ${borderCol};">
                 <div class="tms-data-card-header">
                   <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: ${isBreak ? 'rgba(245,158,11,0.1)' : 'rgba(191, 154, 51,0.1)'}; color: ${borderCol}; display: flex; align-items: center; justify-content: center;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: ${isBreak ? 'rgba(245,158,11,0.1)' : 'rgba(26, 101, 159,0.1)'}; color: ${borderCol}; display: flex; align-items: center; justify-content: center;">
                       <i data-lucide="${iconName}" style="width: 18px; height: 18px;"></i>
                     </div>
                     <div>
@@ -471,7 +471,7 @@ export class AcademicModule {
 
         <div class="tms-cards-grid">
           ${this._sessions.map(s => `
-            <div class="tms-data-card" style="${s.isCurrent ? 'border-color: #BF9A33; box-shadow: 0 4px 14px rgba(191, 154, 51,0.12);' : ''}">
+            <div class="tms-data-card" style="${s.isCurrent ? 'border-color: #1A659F; box-shadow: 0 4px 14px rgba(26, 101, 159,0.12);' : ''}">
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title" style="display: flex; align-items: center; gap: 8px;">
@@ -547,7 +547,7 @@ export class AcademicModule {
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title">${esc(s.name)}</div>
-                  <div class="tms-data-card-subtitle font-mono font-bold" style="color: #8C6E1E;">${esc(s.code)}</div>
+                  <div class="tms-data-card-subtitle font-mono font-bold" style="color: #134e7a;">${esc(s.code)}</div>
                 </div>
                 <span class="badge badge-secondary">${esc(s.classification)}</span>
               </div>
@@ -626,16 +626,16 @@ export class AcademicModule {
             </select>
           </div>
           <div style="margin-left:auto; display:flex; align-items:center; gap:10px;">
-            <span style="font-size:0.88rem; font-weight:700; color:#BF9A33;">${completed}/${total} Units Completed (${pct}%)</span>
+            <span style="font-size:0.88rem; font-weight:700; color:#1A659F;">${completed}/${total} Units Completed (${pct}%)</span>
             <div style="width:120px; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
-              <div style="width:${pct}%; height:100%; background:#BF9A33; transition:width 0.3s ease;"></div>
+              <div style="width:${pct}%; height:100%; background:#1A659F; transition:width 0.3s ease;"></div>
             </div>
           </div>
         </div>
 
         <div class="tms-cards-grid">
           ${filtered.length ? filtered.map(t => `
-            <div class="tms-data-card" style="border-left: 4px solid ${t.completed ? '#BF9A33' : '#f59e0b'};">
+            <div class="tms-data-card" style="border-left: 4px solid ${t.completed ? '#1A659F' : '#f59e0b'};">
               <div class="tms-data-card-header">
                 <div>
                   <div class="tms-data-card-title">${esc(t.title)}</div>
@@ -753,7 +753,7 @@ export class AcademicModule {
 
     const bodyHtml = `
       <div style="display:flex; flex-direction:column; gap:14px;">
-        <div style="padding:12px; background:rgba(191, 154, 51,0.06); border-radius:8px; border:1px solid rgba(191, 154, 51,0.2);">
+        <div style="padding:12px; background:rgba(26, 101, 159,0.06); border-radius:8px; border:1px solid rgba(26, 101, 159,0.2);">
           <strong>Class:</strong> ${esc(cls.grade)} - Section ${esc(cls.section || 'A')}<br>
           <span style="font-size:0.85rem; color:var(--text-muted);">Current Teacher: ${esc(cls.teacher || 'None')}</span>
         </div>

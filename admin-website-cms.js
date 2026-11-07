@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Institutional Website CMS Admin Controller
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Institutional Website CMS Admin Controller
  *
  * Provides comprehensive, end-to-end administration for the public institutional website:
  * - Brand identity, motto & custom logo color theme
@@ -617,7 +617,7 @@ export class AdminWebsiteCms {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
           <div>
             <h4 style="margin:0; font-size:1.15rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-              <i data-lucide="building-2" style="color:#BF9A33;"></i> Website Campuses &amp; Branches Showcase Pages
+              <i data-lucide="building-2" style="color:#1A659F;"></i> Website Campuses &amp; Branches Showcase Pages
             </h4>
             <p style="margin:4px 0 0; font-size:0.84rem; color:#64748b;">
               Configure all campus branch profiles, descriptions, banner photos, and facility highlights displayed on the public website.
@@ -638,7 +638,7 @@ export class AdminWebsiteCms {
               <div class="card" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:20px; background:#ffffff; box-shadow:0 2px 8px rgba(15,23,42,0.03);" data-campus-id="${esc(sch.id)}">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px; flex-wrap:wrap; gap:10px;">
                   <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="width:38px; height:38px; border-radius:10px; background:${sch.themeColor || '#BF9A33'}15; color:${sch.themeColor || '#BF9A33'}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:${sch.themeColor || '#1A659F'}15; color:${sch.themeColor || '#1A659F'}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem;">
                       ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
                     </div>
                     <div>
@@ -725,7 +725,7 @@ export class AdminWebsiteCms {
                   </div>
                   <div class="form-group">
                     <label class="form-label" style="font-size:0.78rem; font-weight:700;">Theme Accent Color</label>
-                    <input type="color" class="form-input camp-input-color" value="${esc(sch.themeColor || '#BF9A33')}" style="height:38px; padding:2px;">
+                    <input type="color" class="form-input camp-input-color" value="${esc(sch.themeColor || '#1A659F')}" style="height:38px; padding:2px;">
                   </div>
                 </div>
               </div>
@@ -832,7 +832,7 @@ export class AdminWebsiteCms {
     container.innerHTML = `
       <div style="max-width: 1200px; margin: 0 auto;">
         <!-- Header Banner & Stats -->
-        <div class="card" style="margin-bottom: 24px; padding: 22px 24px; border: 1.5px solid #F7E8B5; background: linear-gradient(180deg, #FDF8E8 0%, #ffffff 100%); border-radius: 16px;">
+        <div class="card" style="margin-bottom: 24px; padding: 22px 24px; border: 1.5px solid #F7E8B5; background: linear-gradient(180deg, #eef5fa 0%, #ffffff 100%); border-radius: 16px;">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 18px;">
             <div style="display: flex; align-items: center; gap: 14px;">
               <div style="width: 48px; height: 48px; border-radius: 12px; background: #ecfdf5; border: 1.5px solid #a7f3d0; display: flex; align-items: center; justify-content: center; color: #059669; flex-shrink: 0;">
@@ -851,7 +851,7 @@ export class AdminWebsiteCms {
             <!-- Quick Batch Controls -->
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <button type="button" class="btn btn-secondary btn-sm" id="btn-sec-enable-all" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-                <i data-lucide="check-check" style="width: 15px; height: 15px; color: #BF9A33;"></i>
+                <i data-lucide="check-check" style="width: 15px; height: 15px; color: #1A659F;"></i>
                 <span>Turn All ON</span>
               </button>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-sec-reset-defaults" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
@@ -867,7 +867,7 @@ export class AdminWebsiteCms {
               <span class="badge" style="font-size: 0.80rem; font-weight: 800; background: #ffffff; border: 1.5px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 999px;">
                 Total Areas: <strong style="color: #0f172a;">${allItems.length}</strong>
               </span>
-              <span class="badge" style="font-size: 0.80rem; font-weight: 800; background: #FCF4D9; border: 1.5px solid #F2D88C; color: #8C6E1E; padding: 6px 12px; border-radius: 999px;">
+              <span class="badge" style="font-size: 0.80rem; font-weight: 800; background: #ddebf5; border: 1.5px solid #F2D88C; color: #134e7a; padding: 6px 12px; border-radius: 999px;">
                 ● Visible (Active): <strong id="sec-active-count">${activeCount}</strong>
               </span>
               <span class="badge" style="font-size: 0.80rem; font-weight: 800; background: #fee2e2; border: 1.5px solid #fca5a5; color: #b91c1c; padding: 6px 12px; border-radius: 999px;">
@@ -889,7 +889,7 @@ export class AdminWebsiteCms {
             <div class="card sec-group-box" data-group-id="${group.group}" style="padding: 22px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 34px; height: 34px; border-radius: 9px; background: #FDF8E8; color: #BF9A33; display: flex; align-items: center; justify-content: center;">
+                  <div style="width: 34px; height: 34px; border-radius: 9px; background: #eef5fa; color: #1A659F; display: flex; align-items: center; justify-content: center;">
                     <i data-lucide="${group.groupIcon}" style="width: 18px; height: 18px;"></i>
                   </div>
                   <div>
@@ -917,7 +917,7 @@ export class AdminWebsiteCms {
                             </div>
                             <div>
                               <div style="font-weight: 800; font-size: 0.90rem; color: #0f172a; line-height: 1.25;">${esc(item.label)}</div>
-                              <span class="badge" style="font-size: 0.68rem; font-family: monospace; background: ${isChecked ? '#FCF4D9' : '#e2e8f0'}; color: ${isChecked ? '#8C6E1E' : '#64748b'}; padding: 1px 6px; border-radius: 6px; margin-top: 3px; display: inline-block;">${esc(item.target)}</span>
+                              <span class="badge" style="font-size: 0.68rem; font-family: monospace; background: ${isChecked ? '#ddebf5' : '#e2e8f0'}; color: ${isChecked ? '#134e7a' : '#64748b'}; padding: 1px 6px; border-radius: 6px; margin-top: 3px; display: inline-block;">${esc(item.target)}</span>
                             </div>
                           </div>
 
@@ -931,8 +931,8 @@ export class AdminWebsiteCms {
                         <p style="font-size: 0.80rem; color: #64748b; margin: 0; line-height: 1.45;">${esc(item.desc)}</p>
                       </div>
 
-                      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid ${isChecked ? '#FDF8E8' : '#e2e8f0'}; padding-top: 10px; margin-top: 4px;">
-                        <span class="sec-status-text" style="font-size: 0.72rem; font-weight: 800; color: ${isChecked ? '#8C6E1E' : '#94a3b8'};">
+                      <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid ${isChecked ? '#eef5fa' : '#e2e8f0'}; padding-top: 10px; margin-top: 4px;">
+                        <span class="sec-status-text" style="font-size: 0.72rem; font-weight: 800; color: ${isChecked ? '#134e7a' : '#94a3b8'};">
                           ${isChecked ? '● VISIBLE' : '○ HIDDEN'}
                         </span>
 
@@ -980,7 +980,7 @@ export class AdminWebsiteCms {
       const stText = card.querySelector('.sec-status-text');
       if (stText) {
         stText.innerText = isChecked ? '● VISIBLE' : '○ HIDDEN';
-        stText.style.color = isChecked ? '#8C6E1E' : '#94a3b8';
+        stText.style.color = isChecked ? '#134e7a' : '#94a3b8';
       }
     };
 
@@ -1122,7 +1122,7 @@ export class AdminWebsiteCms {
 
     const banner = document.createElement('div');
     banner.className = 'card tms-sec-banner-card';
-    banner.style.cssText = `margin-bottom: 22px; border: 1.5px solid ${isLive ? '#F7E8B5' : '#e2e8f0'}; background: ${isLive ? 'linear-gradient(180deg, #FDF8E8 0%, #ffffff 100%)' : '#ffffff'}; padding: 16px 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;`;
+    banner.style.cssText = `margin-bottom: 22px; border: 1.5px solid ${isLive ? '#F7E8B5' : '#e2e8f0'}; background: ${isLive ? 'linear-gradient(180deg, #eef5fa 0%, #ffffff 100%)' : '#ffffff'}; padding: 16px 20px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;`;
     banner.innerHTML = `
       <div style="display:flex; align-items:center; gap:12px;">
         <div style="width:38px; height:38px; border-radius:10px; background:${isLive ? '#ecfdf5' : '#f1f5f9'}; color:${isLive ? '#059669' : '#64748b'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
@@ -1134,7 +1134,7 @@ export class AdminWebsiteCms {
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:14px;">
-        <span class="badge" style="font-size:0.75rem; font-weight:800; background:${isLive ? '#FCF4D9' : '#f1f5f9'}; color:${isLive ? '#8C6E1E' : '#64748b'}; padding:5px 12px; border-radius:999px;">
+        <span class="badge" style="font-size:0.75rem; font-weight:800; background:${isLive ? '#ddebf5' : '#f1f5f9'}; color:${isLive ? '#134e7a' : '#64748b'}; padding:5px 12px; border-radius:999px;">
           ${isLive ? '● Currently Visible on Website' : '○ Currently Hidden from Public'}
         </span>
         <label class="switch" style="cursor:pointer; margin:0;">
@@ -1176,7 +1176,7 @@ export class AdminWebsiteCms {
         <!-- Left: Institution Identity -->
         <div class="card" style="margin:0;">
           <h4 style="font-family:var(--font-display); font-size:1.05rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="landmark" style="width:18px; height:18px; color:#BF9A33;"></i>
+            <i data-lucide="landmark" style="width:18px; height:18px; color:#1A659F;"></i>
             <span>Institution Identity &amp; Accreditation</span>
           </h4>
 
@@ -1215,7 +1215,7 @@ export class AdminWebsiteCms {
         <!-- Right: Logo & Theme Palette -->
         <div class="card" style="margin:0;">
           <h4 style="font-family:var(--font-display); font-size:1.05rem; font-weight:700; color:var(--text-main); margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-            <i data-lucide="palette" style="width:18px; height:18px; color:#BF9A33;"></i>
+            <i data-lucide="palette" style="width:18px; height:18px; color:#1A659F;"></i>
             <span>Logo Color Theme &amp; Emblem</span>
           </h4>
 
@@ -1234,8 +1234,8 @@ export class AdminWebsiteCms {
             <div class="form-group">
               <label class="form-label">Primary Brand Color (Gold)</label>
               <div style="display:flex; gap:8px; align-items:center;">
-                <input type="color" id="theme-primary" value="${esc(theme.primaryColor || '#BF9A33')}" style="width:40px; height:38px; padding:2px; border:1px solid var(--border-color); border-radius:8px; cursor:pointer;">
-                <input type="text" id="theme-primary-txt" class="form-input" value="${esc(theme.primaryColor || '#BF9A33')}" style="flex:1;">
+                <input type="color" id="theme-primary" value="${esc(theme.primaryColor || '#1A659F')}" style="width:40px; height:38px; padding:2px; border:1px solid var(--border-color); border-radius:8px; cursor:pointer;">
+                <input type="text" id="theme-primary-txt" class="form-input" value="${esc(theme.primaryColor || '#1A659F')}" style="flex:1;">
               </div>
             </div>
 
@@ -1248,7 +1248,7 @@ export class AdminWebsiteCms {
             </div>
           </div>
 
-          <div style="margin-top:14px; padding:14px; background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; font-size:0.82rem; color:#8C6E1E;">
+          <div style="margin-top:14px; padding:14px; background:#eef5fa; border:1px solid #F7E8B5; border-radius:10px; font-size:0.82rem; color:#134e7a;">
             <div style="font-weight:700; margin-bottom:4px;">✨ Color Theme Inheritance</div>
             Buttons, glows, badges, navigation highlights, and card accents immediately adapt to this Gold/amber palette.
           </div>
@@ -1832,7 +1832,7 @@ export class AdminWebsiteCms {
 
     container.innerHTML = `
       <!-- TOP CONTROL & MASTER TOGGLE BANNER (Light Theme) -->
-      <div class="card tms-hostel-banner-card" style="margin-bottom: 24px; border: 1.5px solid ${isLive ? '#F7E8B5' : '#e2e8f0'}; background: ${isLive ? 'linear-gradient(180deg, #FDF8E8 0%, #ffffff 100%)' : '#ffffff'}; padding: 22px 24px; border-radius: 14px;">
+      <div class="card tms-hostel-banner-card" style="margin-bottom: 24px; border: 1.5px solid ${isLive ? '#F7E8B5' : '#e2e8f0'}; background: ${isLive ? 'linear-gradient(180deg, #eef5fa 0%, #ffffff 100%)' : '#ffffff'}; padding: 22px 24px; border-radius: 14px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
           <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 320px;">
             <div style="width: 48px; height: 48px; border-radius: 13px; background: ${isLive ? '#ecfdf5' : '#f8fafc'}; border: 1.5px solid ${isLive ? '#a7f3d0' : '#e2e8f0'}; display: flex; align-items: center; justify-content: center; color: ${isLive ? '#059669' : '#64748b'}; box-shadow: 0 2px 6px rgba(0,0,0,0.03); flex-shrink: 0;">
@@ -1843,7 +1843,7 @@ export class AdminWebsiteCms {
                 <h3 style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">
                   Hostel Managing Setup &amp; Public Portal
                 </h3>
-                <span id="hostel-live-badge" class="badge" style="font-size: 0.78rem; padding: 4px 11px; font-weight: 700; border-radius: 9999px; ${isLive ? 'background:#FCF4D9; color:#8C6E1E; border:1px solid #F2D88C;' : 'background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;'}">
+                <span id="hostel-live-badge" class="badge" style="font-size: 0.78rem; padding: 4px 11px; font-weight: 700; border-radius: 9999px; ${isLive ? 'background:#ddebf5; color:#134e7a; border:1px solid #F2D88C;' : 'background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;'}">
                   ${isLive ? '● Live: Hostel Button Active' : '○ Disabled: Hostel Button Hidden'}
                 </span>
               </div>
@@ -1857,7 +1857,7 @@ export class AdminWebsiteCms {
           <div class="tms-hostel-switch-box" style="border: 1.5px solid ${isLive ? '#F2D88C' : '#e2e8f0'}; flex-shrink: 0;">
             <div style="text-align: right;">
               <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a;">Have a Hostel Button</div>
-              <div style="font-size: 0.74rem; font-weight: 600; color: ${isLive ? '#8C6E1E' : '#64748b'};" id="hostel-switch-status">${isLive ? 'Turned ON (Visible on Website)' : 'Turned OFF (Hidden)'}</div>
+              <div style="font-size: 0.74rem; font-weight: 600; color: ${isLive ? '#134e7a' : '#64748b'};" id="hostel-switch-status">${isLive ? 'Turned ON (Visible on Website)' : 'Turned OFF (Hidden)'}</div>
             </div>
             <label class="switch" style="cursor:pointer;">
               <input type="checkbox" id="hostel-master-toggle" ${isLive ? 'checked' : ''}>
@@ -2319,12 +2319,12 @@ export class AdminWebsiteCms {
         if (val) {
           if (badge) {
             badge.innerText = '● LIVE: Hostel Button Active';
-            badge.style.background = '#FCF4D9';
-            badge.style.color = '#8C6E1E';
+            badge.style.background = '#ddebf5';
+            badge.style.color = '#134e7a';
             badge.style.borderColor = '#F2D88C';
           }
           if (statusText) statusText.innerText = 'Turned ON (Visible on Website)';
-          if (slider) slider.style.backgroundColor = '#BF9A33';
+          if (slider) slider.style.backgroundColor = '#1A659F';
         } else {
           if (badge) {
             badge.innerText = '○ DISABLED: Hostel Button Hidden';

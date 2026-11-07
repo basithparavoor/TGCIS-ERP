@@ -1,18 +1,18 @@
-# THAIBA PUBLIC SCHOOL — ERP Management & Campus Operations Suite
+# THAIBA COLLEGE OF INTEGRATED STUDIES — ERP Management & Campus Operations Suite
 
 [![Status](https://img.shields.io/badge/Status-Operational-10b981?style=for-the-badge)](https://thaibaschool.edu.in)
 [![Institution](https://img.shields.io/badge/Institution-THAIBA_MODEL_SCHOOL-3b82f6?style=for-the-badge)](https://thaibaschool.edu.in)
 [![Database](https://img.shields.io/badge/Backend-Supabase_PostgreSQL-3ecf8e?style=for-the-badge)](https://supabase.com)
 
-**Enterprise School Management & Campus Operations Suite for THAIBA PUBLIC SCHOOL.**
+**Enterprise School Management & Campus Operations Suite for THAIBA COLLEGE OF INTEGRATED STUDIES.**
 
 ---
 
 ## 🏛️ System Architecture
 
-- **Scope:** Single-institution ERP exclusively for THAIBA PUBLIC SCHOOL. No multi-institution switching or cross-campus data leakage.
+- **Scope:** Single-institution ERP exclusively for THAIBA COLLEGE OF INTEGRATED STUDIES. No multi-institution switching or cross-campus data leakage.
 - **Frontend Stack:** HTML5, Vanilla ES6+ Modular JavaScript, Native Web Components.
-- **Design Engine:** THAIBA PUBLIC SCHOOL Enterprise Design Engine (`app.css`) with HSL design tokens, high-contrast dark mode (`.dark`), ambient canvas mesh, and glassmorphism.
+- **Design Engine:** THAIBA COLLEGE OF INTEGRATED STUDIES Enterprise Design Engine (`app.css`) with HSL design tokens, high-contrast dark mode (`.dark`), ambient canvas mesh, and glassmorphism.
 - **Icons & Typography:** Lucide Icons, Outfit (headings), Plus Jakarta Sans (body), JetBrains Mono (data/codes).
 - **Backend & Cloud:** Supabase Database (PostgreSQL), Supabase Auth, Row-Level Security (RLS) policies.
 - **Telemetry & Geofencing:** GPS geofencing with 5-minute automated polling and 3-minute exit grace window, QR code terminal scanning, NFC integration support, and AI facial matching.
@@ -22,7 +22,7 @@
 ## 📂 File Manifest & Structure
 
 ```text
-THAIBA PUBLIC SCHOOL ERP/
+THAIBA COLLEGE OF INTEGRATED STUDIES ERP/
 ├── 🌐 Clean Professional Portals & Routes
 │   ├── /                           # Main ERP Dashboard (index.html)
 │   ├── /login                      # Universal Authentication Gateway (login.html)
@@ -39,7 +39,7 @@ THAIBA PUBLIC SCHOOL ERP/
 │   ├── permission-engine.js        # Data Access Scopes & Capability Matrix
 │   ├── audit-service.js            # Immutable Append-Only Audit Trail
 │   ├── ui-components.js            # Modals, Toasts, Tables & Theme Engine
-│   ├── logo.js                     # Official Thaiba Public School SVG Logo Engine
+│   ├── logo.js                     # Official Thaiba College of Integrated Studies SVG Logo Engine
 │   └── app.css                     # Premium Styling Tokens & A4 Print Engine
 │
 ├── 🚀 Application Controller
@@ -203,7 +203,7 @@ Authorisation is enforced **server-side** by Row-Level Security policies that re
 the caller's role and scope from the `profiles` table (`auth.uid()` based). The
 client UI mirrors these rules but never *is* the security boundary.
 
-- `school_wide`: Authorized administrative and principal oversight across THAIBA PUBLIC SCHOOL.
+- `school_wide`: Authorized administrative and principal oversight across THAIBA COLLEGE OF INTEGRATED STUDIES.
 - `assigned_class`: Teachers restricted to assigned classes and sections (e.g. Grade 9A).
 - `finance_scope`: Authorized bursar and accounts staff.
 - `own_records`: Students restricted to their individual academic files and timetable.
@@ -262,4 +262,4 @@ client UI mirrors these rules but never *is* the security boundary.
 4. Sign in with a provisioned institutional account.
 
 ---
-© 2024 THAIBA PUBLIC SCHOOL. All Rights Reserved.
+© 2024 THAIBA COLLEGE OF INTEGRATED STUDIES. All Rights Reserved.

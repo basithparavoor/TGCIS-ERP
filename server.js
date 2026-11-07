@@ -180,7 +180,7 @@ let currentPort = PORT;
 
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.warn(`[TPS ERP] Port ${currentPort} in use, trying port ${currentPort + 1}...`);
+    console.warn(`[TGCIS ERP] Port ${currentPort} in use, trying port ${currentPort + 1}...`);
     currentPort++;
     server.listen(currentPort, '0.0.0.0');
   } else {
@@ -195,7 +195,7 @@ process.on('uncaughtException', (err) => {
 server.listen(currentPort, '0.0.0.0', () => {
   const ip = getNetworkIp();
   console.log(`\n=============================================`);
-  console.log(`  THAIBA PUBLIC SCHOOL ERP — Server Online`);
+  console.log(`  THAIBA COLLEGE OF INTEGRATED STUDIES ERP — Server Online`);
   console.log(`  Local URL:   http://localhost:${currentPort}/`);
   console.log(`  Wi-Fi URL:   http://${ip}:${currentPort}/`);
   console.log(`=============================================\n`);

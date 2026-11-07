@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Database migration self-check
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Database migration self-check
  *
  * The ERP relies on add-on objects created by `schema.sql` (sections 15-31) /
  * `schema-update-2.sql`. If that migration has not been applied to the connected

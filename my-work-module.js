@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — THAIBA PUBLIC SCHOOL Faculty & Staff Workspace (My Work)
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — THAIBA COLLEGE OF INTEGRATED STUDIES Faculty & Staff Workspace (My Work)
  */
 
 import { TMS_CONFIG } from './config.js';
@@ -486,7 +486,7 @@ export class MyWorkModule {
           <div class="card-header">
             <div>
               <h3 class="card-title">My Payslips & CTC Salary Ledger</h3>
-              <p class="card-desc">Official Thaiba Public School monthly compensation and deductions ledger.</p>
+              <p class="card-desc">Official Thaiba College of Integrated Studies monthly compensation and deductions ledger.</p>
             </div>
             <button class="btn btn-secondary" onclick="window.print()"><i data-lucide="printer"></i> Print Payslip</button>
           </div>

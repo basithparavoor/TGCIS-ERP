@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Campus Logistics, Library, Transport & Inventory Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Campus Logistics, Library, Transport & Inventory Module
  */
 
 import { TMS_CONFIG } from './config.js';
@@ -167,7 +167,7 @@ export class OperationsModule {
           <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div>
               <h3 class="card-title" style="font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px;">
-                <i data-lucide="home" style="color:#BF9A33;"></i>
+                <i data-lucide="home" style="color:#1A659F;"></i>
                 Student Hostel &amp; Dormitory Operations
               </h3>
               <p class="card-desc" style="margin:2px 0 0;">Residential wings, student bed allotments, pastoral warden contact, and leave status.</p>
@@ -184,12 +184,12 @@ export class OperationsModule {
               <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                   <span class="badge ${w.gender === 'Girls' ? 'badge-warning' : 'badge-info'}" style="font-weight:700;">${w.gender || 'Wing'}</span>
-                  <span style="font-size:0.8rem; font-weight:800; color:#BF9A33;">${w.occupied || 0} / ${w.capacity || 0} Beds Occupied</span>
+                  <span style="font-size:0.8rem; font-weight:800; color:#1A659F;">${w.occupied || 0} / ${w.capacity || 0} Beds Occupied</span>
                 </div>
                 <h4 style="font-size:1rem; font-weight:800; margin:0 0 4px; color:var(--text-main);">${w.name}</h4>
                 <div style="font-size:0.78rem; color:#64748b; margin-bottom:8px;">${w.rooms || 'Dormitory'} &bull; Supervisor: <strong>${w.supervisor || 'Warden'}</strong></div>
                 <div style="width:100%; height:6px; background:#e2e8f0; border-radius:999px; overflow:hidden;">
-                  <div style="width:${Math.round(((w.occupied || 0) / (w.capacity || 1)) * 100)}%; height:100%; background:#BF9A33; border-radius:999px;"></div>
+                  <div style="width:${Math.round(((w.occupied || 0) / (w.capacity || 1)) * 100)}%; height:100%; background:#1A659F; border-radius:999px;"></div>
                 </div>
               </div>
             `).join('')}

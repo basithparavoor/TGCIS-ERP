@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Communication, Circulars & Broadcast Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Communication, Circulars & Broadcast Module
  *
  * Circulars can be published, edited, deleted and selected in bulk. Publishing
  * or resending a circular also raises an in-app notification for the target

@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Class Timetable & Academic Schedule Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Class Timetable & Academic Schedule Engine
  * Interactive Weekly Period Matrix, Teacher Workload Assignment & Printable A4 Class Schedule
  */
 
@@ -373,7 +373,7 @@ export class TimetableModule {
                       <td>${esc(s.grade)} (${esc(s.section)})</td>
                       <td><strong>${esc(s.subject)}</strong></td>
                       <td><span style="color: #ef4444; font-weight: 600;">${esc(s.absentTeacherName)}</span></td>
-                      <td><span style="color: #BF9A33; font-weight: 700;">${esc(s.substituteTeacherName)}</span></td>
+                      <td><span style="color: #1A659F; font-weight: 700;">${esc(s.substituteTeacherName)}</span></td>
                       <td><span class="badge badge-success">Assigned</span></td>
                       <td style="text-align: right;">
                         <button class="btn btn-secondary btn-sm btn-delete-sub" data-id="${esc(s.id)}" style="color: #ef4444;" title="Cancel">
@@ -703,7 +703,7 @@ export class TimetableModule {
             width: 100% !important;
             padding: 0 !important;
             margin: 0 !important;
-            border: 2px solid #BF9A33 !important;
+            border: 2px solid #1A659F !important;
           }
           .tms-modal-overlay, .tms-modal, .tms-modal-content {
             background: transparent !important;
@@ -716,24 +716,24 @@ export class TimetableModule {
         }
       </style>
 
-      <div id="printable-timetable-sheet" style="background: #fff; color: #0f172a; padding: 24px; border: 2px solid #BF9A33; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <div id="printable-timetable-sheet" style="background: #fff; color: #0f172a; padding: 24px; border: 2px solid #1A659F; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
         <!-- Header -->
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1A659F; padding-bottom: 12px; margin-bottom: 14px;">
           <div>${emblem}</div>
           <div style="text-align: center; flex: 1;">
-            <h1 style="font-size: 1.4rem; font-weight: 800; color: #8C6E1E; text-transform: uppercase; margin: 0;">
+            <h1 style="font-size: 1.4rem; font-weight: 800; color: #134e7a; text-transform: uppercase; margin: 0;">
               ${esc(TMS_CONFIG.institution.name)}
             </h1>
-            <p style="font-size: 0.78rem; font-weight: 700; color: #8C6E1E; margin: 2px 0;">
+            <p style="font-size: 0.78rem; font-weight: 700; color: #134e7a; margin: 2px 0;">
               ${esc(TMS_CONFIG.institution.subtitle || 'Run by : Thaiba Heritage, Kolkata')}
             </p>
             <div style="font-size: 0.72rem; color: #64748b;">
               ${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.city)}
             </div>
           </div>
-          <div style="text-align: right; background: #FDF8E8; border: 1px solid #F2D88C; border-radius: 6px; padding: 6px 12px;">
-            <div style="font-size: 1rem; font-weight: 800; color: #8C6E1E;">${esc(this._selectedGrade)} - ${esc(this._selectedSection)}</div>
-            <div style="font-size: 0.72rem; color: #8C6E1E; font-weight: 600;">Academic Session ${esc(TMS_CONFIG.academic.currentYear)}</div>
+          <div style="text-align: right; background: #eef5fa; border: 1px solid #F2D88C; border-radius: 6px; padding: 6px 12px;">
+            <div style="font-size: 1rem; font-weight: 800; color: #134e7a;">${esc(this._selectedGrade)} - ${esc(this._selectedSection)}</div>
+            <div style="font-size: 0.72rem; color: #134e7a; font-weight: 600;">Academic Session ${esc(TMS_CONFIG.academic.currentYear)}</div>
           </div>
         </div>
 
@@ -841,7 +841,7 @@ export class TimetableModule {
                 <span style="font-weight:800; color:#4f46e5;">SLIP #${i + 1} • Period ${esc(sub.period)}</span>
                 <span style="font-weight:700; color:#0f172a;">${esc(sub.grade)} (${esc(sub.section)})</span>
               </div>
-              <div><strong>Assigned Substitute:</strong> <span style="color:#BF9A33; font-weight:700;">${esc(sub.substituteTeacherName)}</span></div>
+              <div><strong>Assigned Substitute:</strong> <span style="color:#1A659F; font-weight:700;">${esc(sub.substituteTeacherName)}</span></div>
               <div><strong>Faculty on Leave:</strong> <span style="color:#ef4444;">${esc(sub.absentTeacherName)}</span></div>
               <div><strong>Subject / Activity:</strong> ${esc(sub.subject)}</div>
               <div style="margin-top:8px; font-size:0.68rem; color:#64748b;">

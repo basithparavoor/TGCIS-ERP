@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Authentication & Identity Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Authentication & Identity Service
  * Strict Production Mode:
  *   - Authenticates exclusively against Supabase Auth.
  *   - Authorisation (role/scope) is read ONLY from the server-side `profiles` table.

@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Student Leave & Gate Pass Governance Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Student Leave & Gate Pass Governance Service
  * Handles:
  * 1. Leave application from Student & Parent Portals
  * 2. Leave review, approval & gate pass issuance by Assigned Staff & Higher Authorities

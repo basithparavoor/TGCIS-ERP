@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Biometric & NFC Credential Management Center
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Biometric & NFC Credential Management Center
  * Comprehensive enrollment modal for:
  * 1. NFC / RFID Physical Card Binding & Tap-to-Detect
  * 2. AI Face ID Registration (Live Webcam Snapshot, Landmark Analysis & Neural Token)
@@ -159,15 +159,15 @@ export class BiometricCredentialModal {
 
         <!-- TAB 1: NFC & RFID Contactless Smart Badge -->
         <div id="cred-pane-nfc" class="cred-pane">
-          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
+          <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <strong style="color:#8C6E1E; font-size:0.95rem;">Contactless Smart Card Status</strong>
-                <div style="font-size:0.8rem; color:#8C6E1E;">Enable 13.56MHz Mifare RFID &amp; NFC chip authorization for gate access and attendance.</div>
+                <strong style="color:#134e7a; font-size:0.95rem;">Contactless Smart Card Status</strong>
+                <div style="font-size:0.8rem; color:#134e7a;">Enable 13.56MHz Mifare RFID &amp; NFC chip authorization for gate access and attendance.</div>
               </div>
               <label style="position:relative; display:inline-block; width:48px; height:26px;">
                 <input type="checkbox" id="modal-nfc-enabled" ${nfcEnabled ? 'checked' : ''} style="opacity:0; width:0; height:0;">
-                <span style="position:absolute; cursor:pointer; inset:0; background:${nfcEnabled ? '#BF9A33' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-nfc-slider"></span>
+                <span style="position:absolute; cursor:pointer; inset:0; background:${nfcEnabled ? '#1A659F' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-nfc-slider"></span>
               </label>
             </div>
           </div>
@@ -215,15 +215,15 @@ export class BiometricCredentialModal {
 
         <!-- TAB 2: AI Face ID & Biometric Vision -->
         <div id="cred-pane-face" class="cred-pane" style="display:none;">
-          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
+          <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <strong style="color:#8C6E1E; font-size:0.95rem;">AI Face ID Enrollment Status</strong>
-                <div style="font-size:0.8rem; color:#8C6E1E;">Enable contactless neural facial recognition for campus kiosks.</div>
+                <strong style="color:#134e7a; font-size:0.95rem;">AI Face ID Enrollment Status</strong>
+                <div style="font-size:0.8rem; color:#134e7a;">Enable contactless neural facial recognition for campus kiosks.</div>
               </div>
               <label style="position:relative; display:inline-block; width:48px; height:26px;">
                 <input type="checkbox" id="modal-face-enabled" ${faceIdEnrolled ? 'checked' : ''} style="opacity:0; width:0; height:0;">
-                <span style="position:absolute; cursor:pointer; inset:0; background:${faceIdEnrolled ? '#BF9A33' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-face-slider"></span>
+                <span style="position:absolute; cursor:pointer; inset:0; background:${faceIdEnrolled ? '#1A659F' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-face-slider"></span>
               </label>
             </div>
           </div>
@@ -280,15 +280,15 @@ export class BiometricCredentialModal {
 
         <!-- TAB 3: Fingerprint & Facility Access Permissions -->
         <div id="cred-pane-finger" class="cred-pane" style="display:none;">
-          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
+          <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:14px; padding:16px; margin-bottom:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <div>
-                <strong style="color:#8C6E1E; font-size:0.95rem;">Fingerprint Biometric Sensor Status</strong>
-                <div style="font-size:0.8rem; color:#8C6E1E;">Optical / capacitive biometric turnstile check-in.</div>
+                <strong style="color:#134e7a; font-size:0.95rem;">Fingerprint Biometric Sensor Status</strong>
+                <div style="font-size:0.8rem; color:#134e7a;">Optical / capacitive biometric turnstile check-in.</div>
               </div>
               <label style="position:relative; display:inline-block; width:48px; height:26px;">
                 <input type="checkbox" id="modal-fp-enabled" ${fingerprintEnrolled ? 'checked' : ''} style="opacity:0; width:0; height:0;">
-                <span style="position:absolute; cursor:pointer; inset:0; background:${fingerprintEnrolled ? '#BF9A33' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-fp-slider"></span>
+                <span style="position:absolute; cursor:pointer; inset:0; background:${fingerprintEnrolled ? '#1A659F' : '#CBD5E1'}; border-radius:26px; transition:0.2s;" id="modal-fp-slider"></span>
               </label>
             </div>
           </div>
@@ -383,7 +383,7 @@ export class BiometricCredentialModal {
       const sld = modal.querySelector(`#${sliderId}`);
       if (chk && sld) {
         chk.addEventListener('change', () => {
-          sld.style.background = chk.checked ? '#BF9A33' : '#CBD5E1';
+          sld.style.background = chk.checked ? '#1A659F' : '#CBD5E1';
         });
       }
     };
@@ -483,7 +483,7 @@ export class BiometricCredentialModal {
       if (faceEnabledChk) {
         faceEnabledChk.checked = true;
         const sld = modal.querySelector('#modal-face-slider');
-        if (sld) sld.style.background = '#BF9A33';
+        if (sld) sld.style.background = '#1A659F';
       }
 
       const newToken = `NEURAL-EMB-${idKey}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;

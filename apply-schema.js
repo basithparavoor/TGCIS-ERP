@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL - Apply schema.sql to the Supabase project.
+ * THAIBA COLLEGE OF INTEGRATED STUDIES - Apply schema.sql to the Supabase project.
  *
  * This avoids copy/paste corruption of large SQL by sending the file's exact
  * bytes to the Supabase Management API. No secrets are stored in this file;
@@ -7,7 +7,7 @@
  *
  * Usage (PowerShell):
  *   $env:SUPABASE_ACCESS_TOKEN = "sbp_xxx"      # Supabase -> Account -> Access Tokens
- *   $env:SUPABASE_PROJECT_REF  = "bphjbvvapbefiyacfosm"   # optional, defaults below
+ *   $env:SUPABASE_PROJECT_REF  = "oyttyawpiqdfdzaasvvr"   # optional, defaults below
  *   node apply-schema.js
  *
  * Usage (bash):
@@ -23,7 +23,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
-const projectRef = process.env.SUPABASE_PROJECT_REF || 'bphjbvvapbefiyacfosm';
+const projectRef = process.env.SUPABASE_PROJECT_REF || 'oyttyawpiqdfdzaasvvr';
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 
 if (!token) {

@@ -1,6 +1,6 @@
 import { institutionService } from './institution-service.js';
 /**
- * THAIBA PUBLIC SCHOOL — Staff & Human Resources Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Staff & Human Resources Module
  *
  * Registry of every employee plus full lifecycle management:
  *   - appoint new staff (creates the record AND a real login),
@@ -565,7 +565,7 @@ export class StaffModule {
 
     document.getElementById('cred-done').addEventListener('click', () => UIComponents.closeModal());
     document.getElementById('cred-copy').addEventListener('click', async () => {
-      const text = `THAIBA PUBLIC SCHOOL — Staff Login\nName: ${name}\nUsername: ${username}\nPassword: ${password}\nE-mail: ${email}`;
+      const text = `THAIBA COLLEGE OF INTEGRATED STUDIES — Staff Login\nName: ${name}\nUsername: ${username}\nPassword: ${password}\nE-mail: ${email}`;
       try {
         await navigator.clipboard.writeText(text);
         UIComponents.showToast('Credentials copied.', 'success');

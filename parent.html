@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parent Portal — THAIBA PUBLIC SCHOOL</title>
+  <title>Parent Portal — THAIBA COLLEGE OF INTEGRATED STUDIES</title>
   <link rel="icon" type="image/png" href="./tps-logo.png">
   <link rel="apple-touch-icon" href="./tps-logo.png">
   <link rel="stylesheet" href="app.css">
@@ -96,14 +96,14 @@
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
             <div>
-              <h4 style="font-size:0.92rem; margin-bottom:8px; color:#8C6E1E;">Fee Summary</h4>
+              <h4 style="font-size:0.92rem; margin-bottom:8px; color:#134e7a;">Fee Summary</h4>
               <table class="tms-table" style="font-size:0.83rem;"><tbody>
                 ${(a.feeItems || []).map((f) => `<tr><th style="text-align:left;">${esc(f.name)}</th><td style="text-align:right;">${fmtMoney(f.amount)}</td></tr>`).join('') || '<tr><td style="color:var(--text-muted);">No fees.</td></tr>'}
                 <tr><th style="text-align:left;">Total</th><td style="text-align:right; font-weight:800;">${fmtMoney(a.feeTotal)}</td></tr>
               </tbody></table>
             </div>
             <div>
-              <h4 style="font-size:0.92rem; margin-bottom:8px; color:#8C6E1E;">Payment Ledger</h4>
+              <h4 style="font-size:0.92rem; margin-bottom:8px; color:#134e7a;">Payment Ledger</h4>
               <table class="tms-table" style="font-size:0.83rem;">
                 <thead><tr><th>Date</th><th>Mode</th><th>Reference</th><th style="text-align:right;">Amount</th></tr></thead>
                 <tbody>${ledger}</tbody>
@@ -116,7 +116,7 @@
 
     function notificationCard(n) {
       return `
-        <div style="padding:12px; border:1px solid var(--border-color); border-left:4px solid ${n.isRead ? 'var(--border-color)' : '#BF9A33'}; border-radius:8px; margin-bottom:10px; background:${n.isRead ? 'transparent' : 'rgba(191, 154, 51,0.04)'};">
+        <div style="padding:12px; border:1px solid var(--border-color); border-left:4px solid ${n.isRead ? 'var(--border-color)' : '#1A659F'}; border-radius:8px; margin-bottom:10px; background:${n.isRead ? 'transparent' : 'rgba(26, 101, 159,0.04)'};">
           <div style="display:flex; justify-content:space-between; gap:10px;">
             <strong style="font-size:0.92rem;">${esc(n.title)}</strong>
             <span class="badge ${n.priority === 'Urgent' ? 'badge-danger' : (n.priority === 'High' ? 'badge-warning' : 'badge-info')}">${esc(n.priority || 'Normal')}</span>
@@ -183,7 +183,7 @@
         if (!myWardLeaves.length) {
           return `
             <div style="text-align: center; color: var(--text-muted); padding: 24px; background: var(--bg-subtle, #F8FAFC); border-radius: 10px;">
-              <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #BF9A33;"></i>
+              <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #1A659F;"></i>
               <div style="font-weight: 600;">No Leave Requests on File for ${esc(activeWard.fullName)}</div>
               <div style="font-size: 0.8rem; margin-top: 2px;">Need to request an authorized absence or campus outpass? Click "Apply Leave for Ward" above.</div>
             </div>
@@ -229,7 +229,7 @@
                       </td>
                       <td style="padding: 10px 12px;">
                         <div style="font-weight: 700; color: #0F172A;">${esc(l.fromDate)} – ${esc(l.toDate)}</div>
-                        <div style="font-size: 0.74rem; color: #BF9A33; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
+                        <div style="font-size: 0.74rem; color: #1A659F; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
                       </td>
                       <td style="padding: 10px 12px;">
                         ${l.gatePassNo ? `

@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Main ERP Controller & Router
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Main ERP Controller & Router
  * Hash Router: #/module/tab
  * Strict Authentication Mode & Official TMS Branding
  */
@@ -123,7 +123,7 @@ export class AppController {
     }
     const isCentral = institutionService.isCentralManagementMode();
     const activeSchool = institutionService.getActiveSchool();
-    const brandTitle = isCentral ? 'THAIBA HERITAGE' : (activeSchool.shortName || activeSchool.name || 'THAIBA PUBLIC SCHOOL');
+    const brandTitle = isCentral ? 'THAIBA HERITAGE' : (activeSchool.shortName || activeSchool.name || 'THAIBA COLLEGE OF INTEGRATED STUDIES');
     const brandSub = isCentral ? 'Group of Institutions' : (activeSchool.code ? `Campus ERP • ${activeSchool.code}` : 'Campus ERP');
     const root = document.getElementById('app-root');
     if (!root) return;
@@ -192,7 +192,7 @@ export class AppController {
 
             <div class="topbar-right">
               <div class="ticker-badge" title="Campus Active">
-                <span style="width: 7px; height: 7px; border-radius: 50%; background: #BF9A33; display: inline-block; animation: badgePulse 2s infinite;"></span>
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #1A659F; display: inline-block; animation: badgePulse 2s infinite;"></span>
                 <span id="topbar-active-session-text">Session ${TMS_CONFIG.academic.currentYear} Active</span>
               </div>
 
@@ -353,7 +353,7 @@ export class AppController {
     html += `
       <div class="sidebar-group-title" style="margin-top: 14px;">Dedicated Portals</div>
       <a class="nav-item" href="/admission" target="_blank" data-tooltip="Admission Form (A4)">
-        <i data-lucide="file-text" style="color: #BF9A33;"></i>
+        <i data-lucide="file-text" style="color: #1A659F;"></i>
         <span>Admission Form (A4)</span>
       </a>
     `;
@@ -376,7 +376,7 @@ export class AppController {
     if (isCentralAdmin) {
       wrap.innerHTML = `
         <button class="branch-switcher-btn" id="btn-topbar-branch-switcher" title="Switch Operating Context (Central Group HQ or Branch)" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 10px; background: #ffffff; color: #0f172a; border: 1.5px solid #e2e8f0; padding: 6px 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(15,23,42,0.04); font-size: 0.82rem; margin-right: 6px;">
-          <div style="width: 24px; height: 24px; border-radius: 6px; background: ${isCentral ? '#eff6ff' : '#FCF4D9'}; color: ${isCentral ? '#2563eb' : '#BF9A33'}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <div style="width: 24px; height: 24px; border-radius: 6px; background: ${isCentral ? '#eff6ff' : '#ddebf5'}; color: ${isCentral ? '#2563eb' : '#1A659F'}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <i data-lucide="${isCentral ? 'layers' : 'building-2'}" style="width: 14px; height: 14px;"></i>
           </div>
           <span style="white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: #0f172a;">
@@ -395,7 +395,7 @@ export class AppController {
     } else {
       wrap.innerHTML = `
         <div style="display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 10px; background: #f8fafc; color: #334155; border: 1px solid #e2e8f0; padding: 6px 12px; font-size: 0.8rem; margin-right: 6px;">
-          <i data-lucide="building-2" style="width: 15px; height: 15px; color: #BF9A33;"></i>
+          <i data-lucide="building-2" style="width: 15px; height: 15px; color: #1A659F;"></i>
           <span style="white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;">
             ${esc(activeSchool.shortName || activeSchool.name)}
           </span>
@@ -414,7 +414,7 @@ export class AppController {
     const groupProfile = institutionService.getGroupProfile();
 
     UIComponents.openModal({
-      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="layers" style="color:#BF9A33;width:22px;height:22px;"></i><span>Central Management — Switch Operating Context</span></div>',
+      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="layers" style="color:#1A659F;width:22px;height:22px;"></i><span>Central Management — Switch Operating Context</span></div>',
       bodyHtml: `
         <div style="display: flex; flex-direction: column; gap: 16px;">
           <p style="font-size: 0.86rem; color: #64748b; margin: 0;">
@@ -445,15 +445,15 @@ export class AppController {
           <!-- Sub-Managements / Schools List -->
           <div>
             <div style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; margin-bottom: 10px;">
-              Controlled Sub-Managements (Member Schools)
+              Campuses (Member Campuses)
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
               ${schools.map(s => {
                 const isSelected = activeId === s.id;
                 return `
-                  <div class="switcher-school-card" data-id="${esc(s.id)}" style="background: ${isSelected ? '#FCF4D9' : '#ffffff'}; border: 2px solid ${isSelected ? '#BF9A33' : '#e2e8f0'}; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
+                  <div class="switcher-school-card" data-id="${esc(s.id)}" style="background: ${isSelected ? '#ddebf5' : '#ffffff'}; border: 2px solid ${isSelected ? '#1A659F' : '#e2e8f0'}; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: all 0.2s ease;">
                     <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
-                      <div style="width: 38px; height: 38px; border-radius: 10px; background: ${s.themeColor ? s.themeColor + '18' : '#f1f5f9'}; color: ${s.themeColor || '#BF9A33'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.88rem; flex-shrink: 0;">
+                      <div style="width: 38px; height: 38px; border-radius: 10px; background: ${s.themeColor ? s.themeColor + '18' : '#f1f5f9'}; color: ${s.themeColor || '#1A659F'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.88rem; flex-shrink: 0;">
                         ${esc(s.logoBadge || s.code?.substring(0, 3) || 'SCH')}
                       </div>
                       <div style="min-width: 0;">
@@ -577,8 +577,8 @@ export class AppController {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', async () => {
         const confirmed = await UIComponents.confirm({
-          title: 'Sign Out of TPS ERP?',
-          message: 'Are you sure you want to end your current session? You will be safely signed out of Thaiba Public School Campus Gateway.',
+          title: 'Sign Out of TGCIS ERP?',
+          message: 'Are you sure you want to end your current session? You will be safely signed out of Thaiba College of Integrated Studies Campus Gateway.',
           confirmText: 'Sign Out',
           cancelText: 'Stay Signed In',
           type: 'danger',
@@ -625,7 +625,7 @@ export class AppController {
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="kiosk" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="scan" style="color: #BF9A33;"></i>
+              <i data-lucide="scan" style="color: #1A659F;"></i>
               <div><strong>Launch QR Kiosk</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Attendance Terminal</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="challan" style="justify-content: flex-start; padding: 10px; text-align: left;">
@@ -641,11 +641,11 @@ export class AppController {
               <div><strong>Transfer Certificate</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Issue Official TC</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="reports" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="award" style="color: #BF9A33;"></i>
+              <i data-lucide="award" style="color: #1A659F;"></i>
               <div><strong>Exam Gradebook</strong><div style="font-size: 0.7rem; color: var(--text-muted);">CBSE Progress Reports</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="id-cards" style="justify-content: flex-start; padding: 10px; text-align: left;">
-              <i data-lucide="contact-2" style="color: #BF9A33;"></i>
+              <i data-lucide="contact-2" style="color: #1A659F;"></i>
               <div><strong>ID Cards Studio</strong><div style="font-size: 0.7rem; color: var(--text-muted);">Batch A4 Badges</div></div>
             </button>
             <button class="btn btn-secondary btn-sm cmd-action-btn" data-action="homework" style="justify-content: flex-start; padding: 10px; text-align: left;">
@@ -735,7 +735,7 @@ export class AppController {
           let html = '';
 
           if (matchedStudents.length) {
-            html += `<div style="font-weight: 700; color: #BF9A33; font-size: 0.78rem; text-transform: uppercase; margin: 8px 0 4px;">Students (${matchedStudents.length}):</div>`;
+            html += `<div style="font-weight: 700; color: #1A659F; font-size: 0.78rem; text-transform: uppercase; margin: 8px 0 4px;">Students (${matchedStudents.length}):</div>`;
             matchedStudents.forEach(s => {
               html += `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding: 8px 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-subtle, #f8fafc); border-radius: 6px; margin-bottom: 4px;">
@@ -744,7 +744,7 @@ export class AppController {
                     <span style="color: var(--text-muted); font-size: 0.75rem; margin-left: 6px;">(${esc(s.admissionNo)} • ${esc(s.grade)})</span>
                   </div>
                   <div style="display: flex; gap: 4px;">
-                    <button class="btn btn-secondary btn-sm cmd-wa-student" data-phone="${esc(s.phone || s.parentPhone || '')}" data-name="${esc(s.fullName)}" title="WhatsApp Contact" style="padding: 2px 6px; color: #BF9A33;">
+                    <button class="btn btn-secondary btn-sm cmd-wa-student" data-phone="${esc(s.phone || s.parentPhone || '')}" data-name="${esc(s.fullName)}" title="WhatsApp Contact" style="padding: 2px 6px; color: #1A659F;">
                       <i data-lucide="message-circle" style="width: 13px; height: 13px;"></i>
                     </button>
                     <button class="btn btn-secondary btn-sm cmd-view-student" data-id="${esc(s.id)}" style="padding: 2px 8px; font-size: 0.72rem;">View Profile</button>
@@ -762,11 +762,11 @@ export class AppController {
                   <div>
                     <span class="font-mono" style="font-weight: 700;">${esc(inv.invoiceNo)}</span>
                     <span style="margin-left: 6px;">${esc(inv.studentName)}</span>
-                    <span style="color: ${inv.balance > 0 ? '#ef4444' : '#BF9A33'}; font-weight: 700; margin-left: 6px;">(₹ ${(inv.balance || inv.amount || 0).toLocaleString()})</span>
+                    <span style="color: ${inv.balance > 0 ? '#ef4444' : '#1A659F'}; font-weight: 700; margin-left: 6px;">(₹ ${(inv.balance || inv.amount || 0).toLocaleString()})</span>
                   </div>
                   <div style="display: flex; gap: 4px;">
                     ${inv.balance > 0 ? `
-                      <button class="btn btn-secondary btn-sm cmd-wa-invoice" data-name="${esc(inv.studentName)}" data-inv="${esc(inv.invoiceNo)}" data-bal="${esc(inv.balance)}" data-due="${esc(inv.dueDate || '')}" title="WhatsApp Reminder" style="padding: 2px 6px; color: #BF9A33;">
+                      <button class="btn btn-secondary btn-sm cmd-wa-invoice" data-name="${esc(inv.studentName)}" data-inv="${esc(inv.invoiceNo)}" data-bal="${esc(inv.balance)}" data-due="${esc(inv.dueDate || '')}" title="WhatsApp Reminder" style="padding: 2px 6px; color: #1A659F;">
                         <i data-lucide="message-circle" style="width: 13px; height: 13px;"></i>
                       </button>
                     ` : ''}
@@ -889,7 +889,7 @@ export class AppController {
           <div>
             <div class="inst-first-login-title">Initial Staff Onboarding &amp; Profile Setup</div>
             <div class="inst-first-login-desc">
-              Welcome to <strong>THAIBA PUBLIC SCHOOL</strong>. Please review and complete your institutional credentials. You have a <strong>${eligibility.daysRemaining}-day edit window</strong> from your initial login to update profile data.
+              Welcome to <strong>THAIBA COLLEGE OF INTEGRATED STUDIES</strong>. Please review and complete your institutional credentials. You have a <strong>${eligibility.daysRemaining}-day edit window</strong> from your initial login to update profile data.
             </div>
           </div>
         </div>
@@ -919,7 +919,7 @@ export class AppController {
               <span>${esc(user.email || '—')}</span>
             </div>
             <div class="inst-hero-affiliation">
-              <span class="inst-org-pill"><i data-lucide="school"></i> THAIBA PUBLIC SCHOOL • Enterprise Campus Core</span>
+              <span class="inst-org-pill"><i data-lucide="school"></i> THAIBA COLLEGE OF INTEGRATED STUDIES • Enterprise Campus Core</span>
             </div>
           </div>
         </div>
@@ -1114,7 +1114,7 @@ export class AppController {
     `;
 
     UIComponents.openModal({ 
-      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="user-cog" style="color:#BF9A33;width:22px;height:22px;"></i><span>Institutional User Profile</span></div>', 
+      title: '<div style="display:flex;align-items:center;gap:10px;"><i data-lucide="user-cog" style="color:#1A659F;width:22px;height:22px;"></i><span>Institutional User Profile</span></div>', 
       bodyHtml, 
       footerHtml, 
       maxWidth: '740px' 
@@ -1574,7 +1574,7 @@ export class AppController {
               <i data-lucide="printer"></i> Executive Pulse (A4)
             </button>
             <a href="/admission" target="_blank" class="btn btn-secondary btn-sm">
-              <i data-lucide="file-plus" style="color: #BF9A33;"></i> Admission Portal (A4)
+              <i data-lucide="file-plus" style="color: #1A659F;"></i> Admission Portal (A4)
             </a>
             <a href="#/attendance" class="btn btn-primary btn-sm">
               <i data-lucide="scan"></i> Gate Kiosk
@@ -1613,7 +1613,7 @@ export class AppController {
           <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
             <div>
               <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="layers" style="color:#BF9A33; width:18px; height:18px;"></i>
+                <i data-lucide="layers" style="color:#1A659F; width:18px; height:18px;"></i>
                 Sub-Managements &amp; Member Schools Matrix
               </h3>
               <p class="card-desc">Live status, student enrollments, faculty size, and financial collections across member school branches.</p>
@@ -1675,14 +1675,14 @@ export class AppController {
         </div>
         ` : `
         <!-- Sub-Management Campus Header Banner -->
-        <div class="sub-management-banner" style="background: #ffffff; color: #0f172a; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 10px rgba(15,23,42,0.03);">
+        <div class="campus-banner" style="background: #ffffff; color: #0f172a; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 10px rgba(15,23,42,0.03);">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(191,154,51,0.2); color: #BF9A33; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(26, 101, 159,0.2); color: #1A659F; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;">
               ${esc(activeSchool.logoBadge || activeSchool.code?.substring(0,3) || 'SCH')}
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #BF9A33;">Sub-Management Console</span>
+                <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #1A659F;">Campus Console</span>
                 <span class="badge badge-success" style="font-size: 0.68rem;">Live Active</span>
               </div>
               <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;">
@@ -1703,7 +1703,7 @@ export class AppController {
             <a href="${pendingAdmissions > 0 ? '/admission' : '#/attendance'}" class="m-hero-brand-pill ${pendingAdmissions > 0 ? 'has-alert' : ''}" id="m-hero-brand-pill" title="Official Institutional Real-Time Synchronization">
               <span class="m-hero-live-indicator"></span>
               <span class="m-hero-brand-text">
-                ${pendingAdmissions > 0 ? `${pendingAdmissions} Admissions Pending Review` : `THAIBA PUBLIC SCHOOL • CAMPUS LIVE`}
+                ${pendingAdmissions > 0 ? `${pendingAdmissions} Admissions Pending Review` : `THAIBA COLLEGE OF INTEGRATED STUDIES • CAMPUS LIVE`}
               </span>
             </a>
             <button class="m-hero-eye-btn" id="m-hero-eye-toggle" title="Toggle metrics privacy display" aria-label="Toggle metrics display">
@@ -1878,8 +1878,8 @@ export class AppController {
           </div>
 
           ${activeStatusStudents.length === 0 ? `
-            <div style="padding: 14px 18px; background: #FDF8E8; border: 1.5px solid #F7E8B5; border-radius: 14px; color: #8C6E1E; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; width: 100%;">
-              <i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: #BF9A33; flex-shrink: 0;"></i>
+            <div style="padding: 14px 18px; background: #eef5fa; border: 1.5px solid #F7E8B5; border-radius: 14px; color: #134e7a; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 10px; width: 100%;">
+              <i data-lucide="check-circle-2" style="width: 20px; height: 20px; color: #1A659F; flex-shrink: 0;"></i>
               <span>All campus learners accounted for today. Zero unexcused absentees.</span>
             </div>
           ` : `
@@ -1942,7 +1942,7 @@ export class AppController {
             <div class="card-header">
               <div>
                 <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                  <i data-lucide="trending-up" style="width:18px; height:18px; color:#BF9A33;"></i>
+                  <i data-lucide="trending-up" style="width:18px; height:18px; color:#1A659F;"></i>
                   Student Attendance Trends
                 </h3>
                 <p class="card-desc">7-Day Campus-wide Student Turnout Percentage</p>
@@ -1954,8 +1954,8 @@ export class AppController {
               data: trendData,
               labels: trendLabels,
               height: 200,
-              strokeColor: '#BF9A33',
-              fillColor: 'rgba(191, 154, 51, 0.15)'
+              strokeColor: '#1A659F',
+              fillColor: 'rgba(26, 101, 159, 0.15)'
             })}
           </div>
 
@@ -2004,7 +2004,7 @@ export class AppController {
                     <span>${cd.count} (${cd.pct}%)</span>
                   </div>
                   <div style="height:8px; background:var(--bg-canvas-subtle); border-radius:9999px; overflow:hidden;">
-                    <div style="width:${cd.pct}%; height:100%; background:linear-gradient(90deg, #BF9A33 0%, #3B82F6 100%); border-radius:9999px;"></div>
+                    <div style="width:${cd.pct}%; height:100%; background:linear-gradient(90deg, #1A659F 0%, #3B82F6 100%); border-radius:9999px;"></div>
                   </div>
                 </div>
               `).join('')}
@@ -2041,7 +2041,7 @@ export class AppController {
           </div>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px;">
             <a href="/admission" target="_blank" class="card" style="padding:16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; cursor:pointer;">
-              <div style="width:40px; height:40px; border-radius:10px; background:#ecfdf5; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:40px; height:40px; border-radius:10px; background:#ecfdf5; color:#1A659F; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i data-lucide="file-plus" style="width:20px; height:20px;"></i>
               </div>
               <div style="min-width:0;">
@@ -2061,7 +2061,7 @@ export class AppController {
             </a>
 
             <a href="#/attendance" class="card" style="padding:16px; display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit; cursor:pointer;">
-              <div style="width:40px; height:40px; border-radius:10px; background:#FDF8E8; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <div style="width:40px; height:40px; border-radius:10px; background:#eef5fa; color:#1A659F; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 <i data-lucide="scan" style="width:20px; height:20px;"></i>
               </div>
               <div style="min-width:0;">
@@ -2128,14 +2128,14 @@ export class AppController {
           <div class="card">
             <div class="card-header">
               <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="clock" style="width:18px; height:18px; color:#BF9A33;"></i>
+                <i data-lucide="clock" style="width:18px; height:18px; color:#1A659F;"></i>
                 Recent Institutional Activity
               </h3>
               <span class="badge badge-success">Live Feed</span>
             </div>
             <div class="tms-timeline">
               <div class="tms-timeline-item">
-                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#F2D88C; color:#BF9A33;">
+                <div class="tms-timeline-badge" style="background:#ecfdf5; border-color:#F2D88C; color:#1A659F;">
                   <i data-lucide="user-check" style="width:16px; height:16px;"></i>
                 </div>
                 <div class="tms-timeline-content">
@@ -2196,14 +2196,14 @@ export class AppController {
           <div class="card">
             <div class="card-header">
               <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-                <i data-lucide="building" style="width:18px; height:18px; color:#BF9A33;"></i>
+                <i data-lucide="building" style="width:18px; height:18px; color:#1A659F;"></i>
                 Institution Profile &amp; Campus Status
               </h3>
               <span class="badge badge-info">Dakshin Dinajpur</span>
             </div>
             <div style="font-size: 0.88rem; line-height: 1.65;">
               <div style="padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); display:flex; align-items:flex-start; gap:10px;">
-                <i data-lucide="file-check-2" style="width:18px; height:18px; color:#BF9A33; flex-shrink:0; margin-top:3px;"></i>
+                <i data-lucide="file-check-2" style="width:18px; height:18px; color:#1A659F; flex-shrink:0; margin-top:3px;"></i>
                 <div>
                   <strong>Official Registration / Trust:</strong>
                   <div style="color:var(--text-secondary); font-size:0.84rem;">Regd. No. IV 01894/2011 • Run by Thaiba Heritage, Kolkata</div>
@@ -2285,11 +2285,11 @@ export class AppController {
           title: "Principal's Daily Morning Campus Pulse Briefing",
           bodyHtml: `
             ${printStyles}
-            <div id="morning-pulse-print" style="background: #ffffff; color: #0f172a; padding: 30px; border: 2px solid #BF9A33; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #BF9A33; padding-bottom: 12px; margin-bottom: 16px;">
+            <div id="morning-pulse-print" style="background: #ffffff; color: #0f172a; padding: 30px; border: 2px solid #1A659F; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #1A659F; padding-bottom: 12px; margin-bottom: 16px;">
                 <div>
-                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #8C6E1E; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
-                  <div style="font-size: 0.8rem; color: #8C6E1E; font-weight: 600;">DAILY EXECUTIVE CAMPUS BRIEFING • OFFICE OF THE PRINCIPAL</div>
+                  <h2 style="font-size: 1.45rem; font-weight: 800; color: #134e7a; margin: 0; text-transform: uppercase;">${esc(TMS_CONFIG.institution.name)}</h2>
+                  <div style="font-size: 0.8rem; color: #134e7a; font-weight: 600;">DAILY EXECUTIVE CAMPUS BRIEFING • OFFICE OF THE PRINCIPAL</div>
                   <div style="font-size: 0.72rem; color: #64748b;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.city)}</div>
                 </div>
                 <div style="text-align: right; font-size: 0.8rem;">
@@ -2302,7 +2302,7 @@ export class AppController {
               <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
                   <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Student Muster</div>
-                  <div style="font-size: 1.35rem; font-weight: 800; color: #BF9A33;">${attPercent}% Present</div>
+                  <div style="font-size: 1.35rem; font-weight: 800; color: #1A659F;">${attPercent}% Present</div>
                   <div style="font-size: 0.76rem; color: #475569;">${presentStudents} Present / ${students.length} Enrolled</div>
                 </div>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px;">
@@ -2333,7 +2333,7 @@ export class AppController {
                 </div>
                 <div style="width: 180px;">
                   <div style="border-bottom: 1.5px solid #0f172a; margin-bottom: 4px; height: 30px;"></div>
-                  <strong style="color: #8C6E1E;">Principal &amp; Headmaster</strong>
+                  <strong style="color: #134e7a;">Principal &amp; Headmaster</strong>
                 </div>
               </div>
             </div>

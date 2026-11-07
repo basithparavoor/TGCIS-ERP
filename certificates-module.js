@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Institutional Certificates Generator Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Institutional Certificates Generator Engine
  * Official Transfer Certificates (TC), Character & Conduct Testimonials, and Academic Merit Awards
  */
 

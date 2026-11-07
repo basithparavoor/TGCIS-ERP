@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — UI Components & Theme Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — UI Components & Theme Engine
  */
 
 import { enhanceSelect, enhanceAllSelects, startGlobalSelectObserver } from './dropdown-enhancer.js';
@@ -373,9 +373,9 @@ export class UIComponents {
       <div class="tms-animated-loader" style="padding: 48px 20px; text-align: center;">
         <div class="tms-loader-emblem-wrap" style="position: relative; width: 72px; height: 72px; margin: 0 auto 16px;">
           <div class="tms-loader-aura"></div>
-          <img src="./tps-logo.png" alt="Thaiba Public School" class="tms-loader-img" style="width: 58px; height: 58px; object-fit: contain; position: relative; z-index: 2;">
+          <img src="./tps-logo.png" alt="Thaiba College of Integrated Studies" class="tms-loader-img" style="width: 58px; height: 58px; object-fit: contain; position: relative; z-index: 2;">
         </div>
-        <div class="tms-loader-text" style="font-family: var(--font-display, 'Outfit', sans-serif); font-weight: 700; color: #BF9A33; font-size: 0.92rem; letter-spacing: 0.02em;">
+        <div class="tms-loader-text" style="font-family: var(--font-display, 'Outfit', sans-serif); font-weight: 700; color: #1A659F; font-size: 0.92rem; letter-spacing: 0.02em;">
           ${this.escapeHtml(message)}
         </div>
       </div>
@@ -469,7 +469,7 @@ export class UIComponents {
           <li>
             <a href="#/dashboard" class="tms-breadcrumb-link">
               <span class="tms-breadcrumb-icon"><i data-lucide="home"></i></span>
-              <span>TPS ERP</span>
+              <span>TGCIS ERP</span>
             </a>
           </li>
           ${breadcrumbs.map((b, idx) => `
@@ -539,7 +539,7 @@ export class UIComponents {
     const esc = this.escapeHtml;
     return `
       <div class="tms-empty-state" style="padding: 48px 24px; text-align: center; background: #ffffff; border-radius: 16px; border: 1.5px dashed var(--border-color); margin: 16px 0;">
-        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(191, 154, 51, 0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(26, 101, 159, 0.08); color: var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
           <i data-lucide="${esc(icon)}" style="width: 32px; height: 32px;"></i>
         </div>
         <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 6px;">${esc(title)}</h3>
@@ -582,7 +582,7 @@ export class UIComponents {
   /**
    * Render high-precision responsive SVG Area Chart.
    */
-  static renderAreaChart({ id = 'chart-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, strokeColor = '#BF9A33', fillColor = 'rgba(191, 154, 51, 0.12)', title = '' }) {
+  static renderAreaChart({ id = 'chart-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, strokeColor = '#1A659F', fillColor = 'rgba(26, 101, 159, 0.12)', title = '' }) {
     if (!data || !data.length) return '';
     const maxVal = Math.max(...data, 1);
     const minVal = Math.min(...data, 0);
@@ -639,7 +639,7 @@ export class UIComponents {
   /**
    * Render high-precision responsive SVG Bar Chart.
    */
-  static renderBarChart({ id = 'bar-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, color = '#BF9A33', title = '', valuePrefix = '', valueSuffix = '' }) {
+  static renderBarChart({ id = 'bar-' + Math.random().toString(36).substr(2, 6), data = [], labels = [], height = 180, color = '#1A659F', title = '', valuePrefix = '', valueSuffix = '' }) {
     if (!data || !data.length) return '';
     const maxVal = Math.max(...data, 1);
     const width = 600;
@@ -726,9 +726,9 @@ export class UIComponents {
       let confirmBtnClass = 'btn-danger';
 
       if (type === 'primary' || type === 'info' || type === 'success') {
-        iconColor = '#BF9A33';
-        iconBg = 'rgba(191, 154, 51, 0.1)';
-        iconBorder = 'rgba(191, 154, 51, 0.2)';
+        iconColor = '#1A659F';
+        iconBg = 'rgba(26, 101, 159, 0.1)';
+        iconBorder = 'rgba(26, 101, 159, 0.2)';
         confirmBtnClass = 'btn-primary';
       } else if (type === 'warning') {
         iconColor = '#f59e0b';
@@ -800,9 +800,9 @@ export class UIComponents {
       overlay.id = 'tms-confirm-overlay';
       overlay.className = 'tms-confirm-overlay';
 
-      let iconColor = '#BF9A33';
-      let iconBg = 'rgba(191, 154, 51, 0.1)';
-      let iconBorder = 'rgba(191, 154, 51, 0.2)';
+      let iconColor = '#1A659F';
+      let iconBg = 'rgba(26, 101, 159, 0.1)';
+      let iconBorder = 'rgba(26, 101, 159, 0.2)';
 
       if (type === 'danger' || type === 'error') {
         iconColor = '#ef4444';

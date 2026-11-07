@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Standalone Offline QR Code & SVG Generator
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Standalone Offline QR Code & SVG Generator
  * Generates high-contrast, scalable SVG QR codes without external CDN dependencies.
  * Also wraps window.QRCode when available for canvas rendering.
  */

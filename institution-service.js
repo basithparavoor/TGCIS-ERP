@@ -23,15 +23,15 @@ const SCHOOLS_CACHE_KEY = 'tms_group_schools';
 const ACTIVE_SCHOOL_KEY = 'tms_active_school_id';
 
 const DEFAULT_PROFILE = {
-  name: 'THAIBA PUBLIC SCHOOL',
-  code: 'TPS-TAPAN',
+  name: 'THAIBA COLLEGE OF INTEGRATED STUDIES',
+  code: 'TGCIS-TAPAN',
   tagline: 'Run by : Thaiba Heritage, Kolkata',
   trust: 'Thaiba Heritage, Kolkata',
   regNo: 'Regd. No. IV 01894/2011',
   campusDistrict: 'Dakshin Dinajpur',
   campusLocation: 'Baghait, Tapan, Dakshin Dinajpur, West Bengal 733127',
   contactPhones: '+91 8653382851 / +91 8167782851',
-  contactEmail: 'tps@thaibagarden.com',
+  contactEmail: 'tgcis@thaibagarden.com',
   website: 'https://tps.clubad.space',
   headOfInstitutionName: 'C. M. Basith',
   headOfInstitutionEmail: 'cmbasith786@gmail.com',
@@ -107,11 +107,11 @@ class InstitutionService {
       ? JSON.parse(JSON.stringify(TMS_CONFIG.group.schools))
       : [
           {
-            id: 'tps',
-            code: 'TPS-TAPAN',
-            name: 'THAIBA PUBLIC SCHOOL',
-            shortName: 'TPS (Tapan)',
-            tagline: 'Modern Education with Morality',
+            id: 'tgcis',
+            code: 'TGCIS-TAPAN',
+            name: 'THAIBA COLLEGE OF INTEGRATED STUDIES',
+            shortName: 'TGCIS (Main)',
+            tagline: 'Higher Secondary & Integrated Studies',
             board: 'State / Central Affiliated',
             status: 'Active',
             principal: 'C. M. Basith',
@@ -119,7 +119,7 @@ class InstitutionService {
             contact: {
               phone1: '+91 8653382851',
               phone2: '+91 8167782851',
-              email: 'tps@thaibagarden.com',
+              email: 'tgcis@thaibagarden.com',
               website: 'https://tps.clubad.space'
             },
             address: {
@@ -129,9 +129,9 @@ class InstitutionService {
               state: 'West Bengal',
               pin: '733127'
             },
-            themeColor: '#BF9A33',
+            themeColor: '#1A659F',
             logo: 'tps-logo.png',
-            logoBadge: 'TPS',
+            logoBadge: 'TGCIS',
             founded: '2011'
           },
           {
@@ -252,7 +252,7 @@ class InstitutionService {
         country: schoolData.country || schoolData.address?.country || 'India',
         pin: schoolData.pin || schoolData.address?.pin || '733127'
       },
-      themeColor: schoolData.themeColor || schoolData.theme_color || '#BF9A33',
+      themeColor: schoolData.themeColor || schoolData.theme_color || '#1A659F',
       logo: schoolData.logo || 'tps-logo.png',
       logoBadge: (schoolData.logoBadge || schoolData.logo_badge || schoolData.code || 'SCH').substring(0, 4).toUpperCase(),
       bannerImage: schoolData.bannerImage || schoolData.banner_image || '',
@@ -494,8 +494,8 @@ class InstitutionService {
     if (!TMS_CONFIG.institution) TMS_CONFIG.institution = {};
     const inst = TMS_CONFIG.institution;
 
-    inst.name = active.name || 'THAIBA PUBLIC SCHOOL';
-    inst.code = active.code || 'TPS-TAPAN';
+    inst.name = active.name || 'THAIBA COLLEGE OF INTEGRATED STUDIES';
+    inst.code = active.code || 'TGCIS-TAPAN';
     inst.tagline = active.tagline || 'Run by : Thaiba Heritage, Kolkata';
     inst.trust = active.trust || this.groupProfile.trust;
     inst.regNo = active.regNo || this.groupProfile.regNo;
@@ -635,7 +635,7 @@ class InstitutionService {
               country: r.country || 'India',
               pin: r.pin || '733127'
             },
-            themeColor: r.theme_color || '#BF9A33',
+            themeColor: r.theme_color || '#1A659F',
             logo: 'tps-logo.png',
             logoBadge: r.logo_badge || r.code?.substring(0, 3) || 'SCH',
             bannerImage: r.banner_image || '',
@@ -686,7 +686,7 @@ class InstitutionService {
         <!-- Header: Title & Campus Badge -->
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px;">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:38px; height:38px; border-radius:12px; background:${isCentral ? '#f1f5f9' : '#ecfdf5'}; color:${isCentral ? '#0f172a' : '#BF9A33'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <div style="width:38px; height:38px; border-radius:12px; background:${isCentral ? '#f1f5f9' : '#ecfdf5'}; color:${isCentral ? '#0f172a' : '#1A659F'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
               <i data-lucide="${isCentral ? 'layers' : 'building-2'}" style="width:20px; height:20px;"></i>
             </div>
             <div>
@@ -705,7 +705,7 @@ class InstitutionService {
 
         <!-- Section 1: Official Registration / Trust -->
         <div style="border-top:1px solid #f1f5f9; padding:13px 0; display:flex; align-items:flex-start; gap:14px;">
-          <div style="width:28px; height:28px; border-radius:8px; background:#FDF8E8; color:#BF9A33; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">
+          <div style="width:28px; height:28px; border-radius:8px; background:#eef5fa; color:#1A659F; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;">
             <i data-lucide="shield-check" style="width:16px; height:16px;"></i>
           </div>
           <div style="flex:1; min-width:0;">

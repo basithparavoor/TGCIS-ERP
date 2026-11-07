@@ -1,4 +1,4 @@
-// THAIBA PUBLIC SCHOOL ERP — Universal Custom Dropdown Engine
+// THAIBA COLLEGE OF INTEGRATED STUDIES ERP — Universal Custom Dropdown Engine
 // Replaces standard browser <select> dropdowns with modern pill-shaped triggers,
 // body-portal floating rounded menu cards, green checkmarks on selected options, and smooth animations.
 
@@ -69,13 +69,13 @@ function ensureDropdownStyles() {
 }
 
 .tms-custom-select-trigger:hover {
-  border-color: #BF9A33 !important;
+  border-color: #1A659F !important;
   background: #F8FAFC !important;
 }
 
 .tms-custom-select-wrapper.is-open .tms-custom-select-trigger {
-  border-color: #BF9A33 !important;
-  box-shadow: 0 0 0 3px rgba(191, 154, 51, 0.18) !important;
+  border-color: #1A659F !important;
+  box-shadow: 0 0 0 3px rgba(26, 101, 159, 0.18) !important;
   background: #FFFFFF !important;
 }
 
@@ -98,7 +98,7 @@ function ensureDropdownStyles() {
   margin-left: 8px !important;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
   flex-shrink: 0 !important;
-  color: #BF9A33 !important;
+  color: #1A659F !important;
 }
 
 .tms-custom-select-wrapper.is-open .tms-custom-select-arrow {
@@ -129,7 +129,7 @@ function ensureDropdownStyles() {
   border-radius: 4px !important;
 }
 .tms-custom-select-menu::-webkit-scrollbar-thumb:hover {
-  background: #BF9A33 !important;
+  background: #1A659F !important;
 }
 
 .tms-custom-select-menu.is-active-portal,
@@ -161,14 +161,14 @@ function ensureDropdownStyles() {
 
 .tms-custom-select-option:hover,
 .tms-custom-select-option.is-highlighted {
-  background: #FDF8E8 !important;
-  color: #8C6E1E !important;
+  background: #eef5fa !important;
+  color: #134e7a !important;
   font-weight: 600 !important;
 }
 
 .tms-custom-select-option.is-selected {
-  background: #FCF4D9 !important;
-  color: #8C6E1E !important;
+  background: #ddebf5 !important;
+  color: #134e7a !important;
   font-weight: 700 !important;
 }
 
@@ -176,7 +176,7 @@ function ensureDropdownStyles() {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  color: #BF9A33 !important;
+  color: #1A659F !important;
   margin-left: 8px !important;
   flex-shrink: 0 !important;
 }
@@ -186,13 +186,13 @@ function ensureDropdownStyles() {
 ensureDropdownStyles();
 
 const CHECKMARK_SVG = `
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#BF9A33" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1A659F" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="20 6 9 17 4 12"></polyline>
   </svg>
 `;
 
 const CHEVRON_SVG = `
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#BF9A33" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1A659F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="6 9 12 15 18 9"></polyline>
   </svg>
 `;

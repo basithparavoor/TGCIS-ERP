@@ -1,6 +1,6 @@
 -- ============================================================================
--- THAIBA PUBLIC SCHOOL - Supabase PostgreSQL Schema & RLS Policies
--- Single-Institution Architecture exclusively for THAIBA PUBLIC SCHOOL
+-- THAIBA COLLEGE OF INTEGRATED STUDIES - Supabase PostgreSQL Schema & RLS Policies
+-- Single-Institution & Multi-Campus Architecture exclusively for TGCIS
 --
 -- SECURITY MODEL (v2):
 --   * Identity & authorization are derived ONLY from the server-side profiles
@@ -38,53 +38,6 @@ BEGIN
   END LOOP;
 END;
 $$;
-
--- ============================================================================
--- 1c. Schools & Sub-Managements Registry (Group of Schools Architecture)
--- ============================================================================
-CREATE TABLE IF NOT EXISTS schools (
-    id TEXT PRIMARY KEY,
-    code TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
-    short_name TEXT,
-    tagline TEXT,
-    board TEXT,
-    status TEXT DEFAULT 'Active',
-    principal_name TEXT,
-    principal_email TEXT,
-    contact_phone TEXT,
-    contact_email TEXT,
-    website TEXT,
-    campus_location TEXT,
-    district TEXT,
-    state TEXT,
-    country TEXT DEFAULT 'India',
-    pin TEXT,
-    theme_color TEXT,
-    logo_badge TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "schools_read_all" ON schools;
-CREATE POLICY "schools_read_all" ON schools
-  FOR SELECT TO authenticated, anon
-  USING (true);
-
-DROP POLICY IF EXISTS "schools_manage_central_admin" ON schools;
-CREATE POLICY "schools_manage_central_admin" ON schools
-  FOR ALL TO authenticated
-  USING (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']))
-  WITH CHECK (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']));
-
--- Seed default member schools
-INSERT INTO schools (id, code, name, short_name, tagline, board, status, principal_name, principal_email, contact_phone, contact_email, website, campus_location, district, state, pin, theme_color, logo_badge)
-VALUES
-  ('tps', 'TPS-TAPAN', 'THAIBA PUBLIC SCHOOL', 'TPS (Tapan)', 'Modern Education with Morality', 'State / Central Affiliated', 'Active', 'C. M. Basith', 'cmbasith786@gmail.com', '+91 8653382851', 'tps@thaibagarden.com', 'https://tps.clubad.space', 'Baghait, Tapan, Dakshin Dinajpur', 'Dakshin Dinajpur', 'West Bengal', '733127', '#BF9A33', 'TPS'),
-  ('tms', 'TMS-TAPAN', 'THAIBA MODEL SCHOOL', 'TMS (Main)', 'Excellence in Islamic & Contemporary Education', 'State / Central Affiliated', 'Active', 'Dr. Z. A. Rahman', 'principal@thaibamodel.school', '+91 8653382850', 'tms@thaibagarden.com', 'https://tms.thaibagarden.com', 'Thaiba Garden Campus, Tapan', 'Dakshin Dinajpur', 'West Bengal', '733127', '#16a34a', 'TMS')
-ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
 -- 2. Profiles - server-side source of truth for role, scope & identity
@@ -133,10 +86,74 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
     WHERE id = auth.uid() AND is_active AND (
       role = ANY(roles) OR
       role = 'super_admin' OR
-      is_super_admin = true
+      is_super_admin = true OR
+      lower(email) = lower('cmbasith786@gmail.com')
     )
+  ) OR (
+    lower(COALESCE(auth.jwt()->>'email', '')) = lower('cmbasith786@gmail.com')
   );
 $$;
+
+CREATE OR REPLACE FUNCTION public.is_school_wide()
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND is_active AND scope = 'school_wide'
+  );
+$$;
+
+-- ============================================================================
+-- 1c. Schools & Campuses Registry (Group Architecture)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS schools (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    short_name TEXT,
+    tagline TEXT,
+    board TEXT,
+    status TEXT DEFAULT 'Active',
+    principal_name TEXT,
+    principal_email TEXT,
+    contact_phone TEXT,
+    contact_email TEXT,
+    website TEXT,
+    campus_location TEXT,
+    district TEXT,
+    state TEXT,
+    country TEXT DEFAULT 'India',
+    pin TEXT,
+    theme_color TEXT,
+    logo_badge TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "schools_read_all" ON schools;
+CREATE POLICY "schools_read_all" ON schools
+  FOR SELECT TO authenticated, anon
+  USING (true);
+
+DROP POLICY IF EXISTS "schools_manage_central_admin" ON schools;
+CREATE POLICY "schools_manage_central_admin" ON schools
+  FOR ALL TO authenticated
+  USING (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']))
+  WITH CHECK (public.has_role(ARRAY['admin', 'super_admin', 'central_admin']));
+
+-- Seed default member campuses
+INSERT INTO schools (id, code, name, short_name, tagline, board, status, principal_name, principal_email, contact_phone, contact_email, website, campus_location, district, state, pin, theme_color, logo_badge)
+VALUES
+  ('tgcis', 'TGCIS-TAPAN', 'THAIBA COLLEGE OF INTEGRATED STUDIES', 'TGCIS (Main)', 'Higher Secondary & Integrated Studies', 'State / Central Affiliated', 'Active', 'C. M. Basith', 'cmbasith786@gmail.com', '+91 8653382851', 'tgcis@thaibagarden.com', 'https://tps.clubad.space', 'Baghait, Tapan, Dakshin Dinajpur', 'Dakshin Dinajpur', 'West Bengal', '733127', '#1A659F', 'TGCIS'),
+  ('tps', 'TPS-TAPAN', 'THAIBA COLLEGE OF INTEGRATED STUDIES', 'TGCIS (Campus)', 'Higher Secondary & Integrated Studies', 'State / Central Affiliated', 'Active', 'C. M. Basith', 'cmbasith786@gmail.com', '+91 8653382851', 'tgcis@thaibagarden.com', 'https://tps.clubad.space', 'Baghait, Tapan, Dakshin Dinajpur', 'Dakshin Dinajpur', 'West Bengal', '733127', '#1A659F', 'TGCIS'),
+  ('tms', 'TMS-TAPAN', 'THAIBA MODEL SCHOOL', 'TMS (Main)', 'Excellence in Islamic & Contemporary Education', 'State / Central Affiliated', 'Active', 'Dr. Z. A. Rahman', 'principal@thaibamodel.school', '+91 8653382850', 'tms@thaibagarden.com', 'https://tms.thaibagarden.com', 'Thaiba Garden Campus, Tapan', 'Dakshin Dinajpur', 'West Bengal', '733127', '#16a34a', 'TMS')
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  short_name = EXCLUDED.short_name,
+  tagline = EXCLUDED.tagline,
+  theme_color = EXCLUDED.theme_color,
+  logo_badge = EXCLUDED.logo_badge;
 
 CREATE OR REPLACE FUNCTION public.is_school_wide()
 RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$

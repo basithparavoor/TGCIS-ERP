@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Window-Level RBAC & Permissions Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Window-Level RBAC & Permissions Engine
  * Reference: https://tpsh.vercel.app/#users
  */
 
@@ -109,7 +109,7 @@ export const ROLE_THEMES = {
   hostel_leader: { color: "#D97706", light: "#FFFBEB", border: "#FDE68A", badgeBg: "#FEF3C7", badgeColor: "#92400E" },
   parent: { color: "#E11D48", light: "#FFF1F2", border: "#FECDD3", badgeBg: "#FFE4E6", badgeColor: "#9F1239" },
   student: { color: "#0891B2", light: "#ECFEFF", border: "#A5F3FC", badgeBg: "#CFFAFE", badgeColor: "#155E75" },
-  finance: { color: "#BF9A33", light: "#FDF8E8", border: "#F7E8B5", badgeBg: "#FCF4D9", badgeColor: "#8C6E1E" },
+  finance: { color: "#1A659F", light: "#eef5fa", border: "#F7E8B5", badgeBg: "#ddebf5", badgeColor: "#134e7a" },
   hr: { color: "#9333EA", light: "#FAF5FF", border: "#E9D5FF", badgeBg: "#F3E8FF", badgeColor: "#7E22CE" },
   librarian: { color: "#EA580C", light: "#FFF7ED", border: "#FED7AA", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
   operations: { color: "#475569", light: "#F8FAFC", border: "#E2E8F0", badgeBg: "#F1F5F9", badgeColor: "#334155" },

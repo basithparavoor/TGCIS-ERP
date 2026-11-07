@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Branding Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Branding Service
  *
  * Persists the institute logo (and any future branding values) in the
  * `app_settings` table under the `branding` key, caches it in localStorage for

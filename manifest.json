@@ -1,12 +1,12 @@
 {
-  "name": "Thaiba Public School — ERP & Portal",
-  "short_name": "TPS ERP",
-  "description": "Institutional ERP, Admissions & Campus Management Suite for Thaiba Public School",
+  "name": "Thaiba College of Integrated Studies — ERP & Portal",
+  "short_name": "TGCIS ERP",
+  "description": "Institutional ERP, Admissions & Campus Management Suite for Thaiba College of Integrated Studies",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#BF9A33",
+  "theme_color": "#1A659F",
   "orientation": "any",
   "icons": [
     {

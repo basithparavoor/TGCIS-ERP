@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Digital Homework & Class Assignment Diary Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Digital Homework & Class Assignment Diary Module
  * Daily Homework Logs, Submission Deadlines, WhatsApp Broadcast & Printable A4 Diary Sheets
  */
 

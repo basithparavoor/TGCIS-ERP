@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Business Intelligence & Comprehensive Reporting Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Business Intelligence & Comprehensive Reporting Module
  */
 
 import { TMS_CONFIG } from './config.js';

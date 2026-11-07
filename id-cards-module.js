@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Institutional ID Card & Smart Badge Studio
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Institutional ID Card & Smart Badge Studio
  * Fully functional CR-80 PVC & Lanyard ID Card Studio:
  * 1. Multi-Template Studio (Gold, Sapphire, Crimson, Carbon Minimal, Gold Prestige)
  * 2. Dual Orientation (Horizontal CR-80 & Vertical Lanyard with Punch Slot)
@@ -22,7 +22,7 @@ export const CARD_TEMPLATES = {
   Gold: {
     name: 'Institutional Gold',
     primary: '#064E3B',
-    gradient: 'linear-gradient(135deg, #064E3B 0%, #022C22 100%)',
+    gradient: 'linear-gradient(135deg, #1A659F 0%, #0d2538 100%)',
     border: '#10B981',
     accent: '#34D399',
     badgeBg: '#10B981',
@@ -515,7 +515,7 @@ export class IdCardsModule {
         <ul style="list-style:disc; margin:2px 0 2px 12px; padding:0; font-size:6.8px; color:#94A3B8;">
           <li>This card is institutional property and must be displayed on campus premises.</li>
           <li>Entitles bearer to biometric gate clearance, library, and hostel access.</li>
-          <li>If found, return to THAIBA PUBLIC SCHOOL, Baghait, Tapan, WB.</li>
+          <li>If found, return to THAIBA COLLEGE OF INTEGRATED STUDIES, Baghait, Tapan, WB.</li>
         </ul>
 
         <!-- Residential / Department Details -->

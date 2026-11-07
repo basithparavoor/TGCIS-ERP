@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Institutional Website Service & CMS Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Institutional Website Service & CMS Engine
  *
  * Manages full institutional website data, color theme, navigation, hero,
  * about, academic programs, facilities, notice board, photo gallery,
@@ -20,21 +20,21 @@ const SETTINGS_ID = 'website_cms';
 export const DEFAULT_WEBSITE_CONFIG = {
   // 1. Branding & Color Theme
   theme: {
-    primaryColor: '#BF9A33',     // Gold brand color matching logo
-    primaryHover: '#8C6E1E',
-    primaryLight: '#FCF4D9',
-    primaryDark: '#7A611C',
+    primaryColor: '#1A659F',     // Gold brand color matching logo
+    primaryHover: '#134e7a',
+    primaryLight: '#ddebf5',
+    primaryDark: '#0f3d61',
     accentColor: '#f59e0b',      // Golden amber accent
     accentLight: '#fef3c7',
     darkBg: '#0f172a',
     lightBg: '#f8fafc',
-    heroGradient: 'linear-gradient(135deg, #064e3b 0%, #0f172a 100%)',
+    heroGradient: 'linear-gradient(135deg, #0d324d 0%, #1A659F 100%)',
     customLogoUrl: ''
   },
 
   // 2. Institution Meta & Topbar
   meta: {
-    name: 'THAIBA PUBLIC SCHOOL',
+    name: 'THAIBA COLLEGE OF INTEGRATED STUDIES',
     subtitle: 'Excellence in Academic & Moral Education',
     runBy: 'Thaiba Heritage, Kolkata',
     regNo: 'IV 01894/2011',
@@ -132,12 +132,12 @@ export const DEFAULT_WEBSITE_CONFIG = {
   about: {
     sectionTag: 'DISCOVER OUR HERITAGE',
     title: 'A Visionary Journey in Holistic Education',
-    narrative: 'Thaiba Public School, operated under the aegis of Thaiba Heritage, Kolkata (Regd. No. IV 01894/2011), was established to bridge modern 21st-century academic rigor with profound moral groundedness. Set in a serene, eco-conscious campus in Baghait, Tapan, we cultivate curiosity, critical thinking, creative expression, and strong civic responsibility.',
+    narrative: 'Thaiba College of Integrated Studies, operated under the aegis of Thaiba Heritage, Kolkata (Regd. No. IV 01894/2011), was established to bridge modern 21st-century academic rigor with profound moral groundedness. Set in a serene, eco-conscious campus in Baghait, Tapan, we cultivate curiosity, critical thinking, creative expression, and strong civic responsibility.',
     vision: 'To be a beacon of transformative education that empowers students with intellectual mastery, moral steadfastness, and global competence.',
     mission: 'To foster an inclusive, stimulating learning community where every student achieves academic excellence, develops exemplary character, and is prepared to thrive in higher education and society.',
     principalName: 'Br. Abdul Basith & Academic Council',
     principalTitle: 'Principal & Secretary, TMS',
-    principalMessage: 'Education is not merely the accumulation of facts, but the training of the mind to think critically and the heart to act ethically. At Thaiba Public School, every learner is seen, valued, and propelled toward their highest potential.',
+    principalMessage: 'Education is not merely the accumulation of facts, but the training of the mind to think critically and the heart to act ethically. At Thaiba College of Integrated Studies, every learner is seen, valued, and propelled toward their highest potential.',
     principalPhoto: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80',
     coreValues: [
       { title: 'Academic Rigor', desc: 'Comprehensive curriculum aligned with state and national benchmarks.' },
@@ -259,7 +259,7 @@ export const DEFAULT_WEBSITE_CONFIG = {
     badge: 'RESIDENTIAL CAMPUS & BOARDING',
     title: 'Student Hostel & Residential Dormitories',
     subtitle: 'A secure, disciplined and nurturing home away from home with round-the-clock pastoral care, guided evening study, and nutritious dining.',
-    overview: 'Thaiba Public School provides comfortable, safe, and hygienic hostel accommodations with separate wings for boys and girls. Students enjoy an enriching residential environment combining structured daily routines, mentored study halls, ethical character guidance, nutritious wholesome meals, and supervised recreational sports.',
+    overview: 'Thaiba College of Integrated Studies provides comfortable, safe, and hygienic hostel accommodations with separate wings for boys and girls. Students enjoy an enriching residential environment combining structured daily routines, mentored study halls, ethical character guidance, nutritious wholesome meals, and supervised recreational sports.',
     eligibility: 'Available for Boys & Girls (Grades 3 to 12)',
     totalCapacity: 150,
     occupiedBeds: 126,
@@ -426,7 +426,7 @@ export const DEFAULT_WEBSITE_CONFIG = {
       name: 'Mohammad Farooq Alam',
       role: 'Parent of Class 8 Student',
       rating: 5,
-      content: 'Enrolling my son at Thaiba Public School was the best decision. The dedicated faculty and moral atmosphere have brought extraordinary positive changes in his confidence and studies.',
+      content: 'Enrolling my son at Thaiba College of Integrated Studies was the best decision. The dedicated faculty and moral atmosphere have brought extraordinary positive changes in his confidence and studies.',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
     },
     {
@@ -465,8 +465,8 @@ export const DEFAULT_WEBSITE_CONFIG = {
 
   // 13. Footer
   footer: {
-    about: 'Thaiba Public School, operated by Thaiba Heritage Kolkata (Regd. IV 01894/2011), is committed to providing world-class holistic education rooted in academic rigor, integrity, and ethical leadership.',
-    copyright: '© 2026 THAIBA PUBLIC SCHOOL. All Rights Reserved. Run by Thaiba Heritage, Kolkata.',
+    about: 'Thaiba College of Integrated Studies, operated by Thaiba Heritage Kolkata (Regd. IV 01894/2011), is committed to providing world-class holistic education rooted in academic rigor, integrity, and ethical leadership.',
+    copyright: '© 2026 THAIBA COLLEGE OF INTEGRATED STUDIES. All Rights Reserved. Run by Thaiba Heritage, Kolkata.',
     emergencyHelpline: '+91 8653382851'
   }
 };
@@ -593,10 +593,10 @@ class WebsiteService {
       const theme = this.data?.theme || DEFAULT_WEBSITE_CONFIG.theme;
       const root = document.documentElement;
       if (!root) return;
-      root.style.setProperty('--brand-theme-primary', theme.primaryColor || '#BF9A33');
-      root.style.setProperty('--brand-theme-hover', theme.primaryHover || '#8C6E1E');
-      root.style.setProperty('--brand-theme-light', theme.primaryLight || '#FCF4D9');
-      root.style.setProperty('--brand-theme-dark', theme.primaryDark || '#7A611C');
+      root.style.setProperty('--brand-theme-primary', theme.primaryColor || '#1A659F');
+      root.style.setProperty('--brand-theme-hover', theme.primaryHover || '#134e7a');
+      root.style.setProperty('--brand-theme-light', theme.primaryLight || '#ddebf5');
+      root.style.setProperty('--brand-theme-dark', theme.primaryDark || '#0f3d61');
       root.style.setProperty('--brand-theme-accent', theme.accentColor || '#f59e0b');
       root.style.setProperty('--brand-theme-accent-light', theme.accentLight || '#fef3c7');
     } catch (e) { /* ignore */ }

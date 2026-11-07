@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Notification Center (Enhanced UI)
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Notification Center (Enhanced UI)
  * Dynamic interactive notification drawer/modal with filter tabs,
  * unread badges, instant mark-all-read, and quick campus broadcasts.
  */

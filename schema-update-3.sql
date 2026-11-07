@@ -1,5 +1,5 @@
 -- ============================================================================
--- THAIBA PUBLIC SCHOOL (TPS) ERP — Schema Migration Update 3
+-- THAIBA COLLEGE OF INTEGRATED STUDIES (TGCIS) ERP — Schema Migration Update 3
 -- Fixes:
 --   1. Role-Level Security (RLS) on `staff` table for Super Admin & Admin
 --   2. Missing `user_sessions` table (fixes 404 in schema cache)
@@ -134,6 +134,10 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS section TEXT;
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS punch_time TEXT;
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS source TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_attendance_records_date ON public.attendance_records(date);
 CREATE INDEX IF NOT EXISTS idx_attendance_records_student ON public.attendance_records(student_id);

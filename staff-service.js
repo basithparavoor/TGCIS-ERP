@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Staff Account & Credential Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Staff Account & Credential Service
  *
  * Every appointed staff member gets a real login (username + password):
  *   1. an authentication user is created for their official e-mail,

@@ -63,15 +63,15 @@ export class InstitutionModule {
 
         <!-- Tab Navigation Bar -->
         <div class="tms-tab-bar" style="margin-bottom: 20px; display: flex; gap: 8px; border-bottom: 2px solid var(--border-color); padding-bottom: 2px;">
-          <button class="tms-tab-pill ${this._currentTab === 'sub-managements' ? 'active' : ''}" data-tab="sub-managements" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'sub-managements' ? 'var(--primary, #BF9A33)' : 'transparent'}; color: ${this._currentTab === 'sub-managements' ? '#ffffff' : 'var(--text-main, #334155)'};">
+          <button class="tms-tab-pill ${this._currentTab === 'sub-managements' ? 'active' : ''}" data-tab="sub-managements" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'sub-managements' ? 'var(--primary, #1A659F)' : 'transparent'}; color: ${this._currentTab === 'sub-managements' ? '#ffffff' : 'var(--text-main, #334155)'};">
             <i data-lucide="building-2"></i>
             <span>Sub-Managements &amp; Schools (${schools.length})</span>
           </button>
-          <button class="tms-tab-pill ${this._currentTab === 'facilities' ? 'active' : ''}" data-tab="facilities" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'facilities' ? 'var(--primary, #BF9A33)' : 'transparent'}; color: ${this._currentTab === 'facilities' ? '#ffffff' : 'var(--text-main, #334155)'};">
+          <button class="tms-tab-pill ${this._currentTab === 'facilities' ? 'active' : ''}" data-tab="facilities" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'facilities' ? 'var(--primary, #1A659F)' : 'transparent'}; color: ${this._currentTab === 'facilities' ? '#ffffff' : 'var(--text-main, #334155)'};">
             <i data-lucide="door-open"></i>
             <span>Physical Facilities &amp; Rooms (${facilities.length})</span>
           </button>
-          <button class="tms-tab-pill ${this._currentTab === 'governance' ? 'active' : ''}" data-tab="governance" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'governance' ? 'var(--primary, #BF9A33)' : 'transparent'}; color: ${this._currentTab === 'governance' ? '#ffffff' : 'var(--text-main, #334155)'};">
+          <button class="tms-tab-pill ${this._currentTab === 'governance' ? 'active' : ''}" data-tab="governance" style="padding: 10px 18px; border-radius: 8px 8px 0 0; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: none; background: ${this._currentTab === 'governance' ? 'var(--primary, #1A659F)' : 'transparent'}; color: ${this._currentTab === 'governance' ? '#ffffff' : 'var(--text-main, #334155)'};">
             <i data-lucide="shield"></i>
             <span>Central Trust &amp; Group Governance</span>
           </button>
@@ -82,7 +82,7 @@ export class InstitutionModule {
           <div class="card" style="margin-bottom: 24px;">
             <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
               <div>
-                <h3 class="card-title">Controlled Sub-Managements (Member Schools)</h3>
+                <h3 class="card-title">Campuses (Member Campuses)</h3>
                 <p class="card-desc">Central Management directs, audits, and supervises all operating campus branches.</p>
               </div>
               <div style="display: flex; gap: 10px;">
@@ -104,9 +104,9 @@ export class InstitutionModule {
                 const branchFacilities = facilities.filter(f => (f.school_id || f.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
 
                 return `
-                  <div class="school-branch-card" style="background: #ffffff; border: 2px solid ${isActiveBranch ? 'var(--primary, #BF9A33)' : '#e2e8f0'}; border-radius: 16px; padding: 22px; position: relative; box-shadow: ${isActiveBranch ? '0 8px 24px rgba(191,154,51,0.14)' : '0 4px 14px rgba(15,23,42,0.03)'}; transition: all 0.2s ease;">
+                  <div class="school-branch-card" style="background: #ffffff; border: 2px solid ${isActiveBranch ? 'var(--primary, #1A659F)' : '#e2e8f0'}; border-radius: 16px; padding: 22px; position: relative; box-shadow: ${isActiveBranch ? '0 8px 24px rgba(26, 101, 159,0.14)' : '0 4px 14px rgba(15,23,42,0.03)'}; transition: all 0.2s ease;">
                     ${isActiveBranch ? `
-                      <span style="position: absolute; top: -11px; right: 20px; background: var(--primary, #BF9A33); color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 3px 12px; border-radius: 999px; letter-spacing: 0.04em;">
+                      <span style="position: absolute; top: -11px; right: 20px; background: var(--primary, #1A659F); color: #ffffff; font-size: 0.72rem; font-weight: 800; padding: 3px 12px; border-radius: 999px; letter-spacing: 0.04em;">
                         CURRENT ACTIVE CONSOLE
                       </span>
                     ` : ''}
@@ -137,7 +137,7 @@ export class InstitutionModule {
                     <!-- Campus Details List -->
                     <div style="background: #f8fafc; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #334155; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
                       <div style="display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="user-check" style="width: 15px; height: 15px; color: #BF9A33; flex-shrink: 0;"></i>
+                        <i data-lucide="user-check" style="width: 15px; height: 15px; color: #1A659F; flex-shrink: 0;"></i>
                         <span style="font-weight: 600;">Head / Principal:</span>
                         <span style="color: #0f172a; font-weight: 700;">${esc(sch.principal || 'Basith Sir')}</span>
                       </div>
@@ -260,7 +260,7 @@ export class InstitutionModule {
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
                   <div style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.04em;">Group Name</div>
                   <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-top: 2px;">${esc(groupProfile.name)}</div>
-                  <div style="font-size: 0.85rem; color: #BF9A33; font-weight: 700; margin-top: 2px;">${esc(groupProfile.tagline || 'Central Group Governance')}</div>
+                  <div style="font-size: 0.85rem; color: #1A659F; font-weight: 700; margin-top: 2px;">${esc(groupProfile.tagline || 'Central Group Governance')}</div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">

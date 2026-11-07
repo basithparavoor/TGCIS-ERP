@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — School Administration & Governance Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — School Administration & Governance Module
  * Admission form builder, fee & payment configuration, application review
  * workflow (approve / reject / resend), notifications and audit trail.
  */
@@ -139,7 +139,7 @@ export class AdminModule {
           <div style="flex-shrink: 0;">${TMS_LOGO.emblemSvg(64)}</div>
           <div style="flex: 1; min-width: 260px;">
             <h2 style="font-size: 1.3rem; letter-spacing: 0.02em;">${esc(TMS_CONFIG.institution.name)}</h2>
-            <div style="color: #BF9A33; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
+            <div style="color: #1A659F; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;">
               ${esc(TMS_CONFIG.institution.tagline)}
             </div>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
@@ -448,7 +448,7 @@ export class AdminModule {
         <i data-lucide="${st.icon}" style="width: 14px; height: 14px;"></i>
         <span>${st.label}</span>
         ${st.showPendingBadge && pendingCount > 0 ? `<span class="badge" style="background:#ef4444; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${pendingCount}</span>` : ''}
-        ${st.showInquiryBadge && (this._newInquiriesCount || 0) > 0 ? `<span class="badge" style="background:#BF9A33; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${this._newInquiriesCount} New</span>` : ''}
+        ${st.showInquiryBadge && (this._newInquiriesCount || 0) > 0 ? `<span class="badge" style="background:#1A659F; color:#fff; font-size:0.68rem; padding:1px 6px; border-radius:10px; margin-left:4px;">${this._newInquiriesCount} New</span>` : ''}
       </button>
     `).join('');
 
@@ -935,7 +935,7 @@ export class AdminModule {
         ? `<span class="badge badge-success" style="font-size:0.7rem; padding:3px 8px; font-weight:700;"><i data-lucide="shield-check" style="width:12px;height:12px;"></i> Verified &amp; Stamped</span>`
         : `<span class="badge badge-warning" style="font-size:0.7rem; padding:3px 8px;">Pending Verification</span>`;
       const stampBtn = (raw && !ver)
-        ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:2px 8px; font-size:0.72rem; color:#8C6E1E; border-color:#F2D88C; font-weight:600;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
+        ? `<button type="button" class="btn btn-secondary btn-sm btn-verify-doc" data-key="${esc(f.fieldKey)}" style="padding:2px 8px; font-size:0.72rem; color:#134e7a; border-color:#F2D88C; font-weight:600;"><i data-lucide="check"></i> Verify &amp; Stamp</button>`
         : '';
       
       return `
@@ -969,7 +969,7 @@ export class AdminModule {
           <td style="font-size:0.78rem;">${fmtDate(p.date)}</td>
           <td style="font-size:0.78rem;"><span class="badge badge-info" style="font-size:0.7rem;">${esc(p.mode)}</span></td>
           <td style="font-size:0.78rem;" class="font-mono">${esc(p.reference || '—')}</td>
-          <td style="text-align:right; font-weight:700; font-size:0.82rem; color:#BF9A33;">${fmtMoney(p.amount)}</td>
+          <td style="text-align:right; font-weight:700; font-size:0.82rem; color:#1A659F;">${fmtMoney(p.amount)}</td>
         </tr>`).join('')
       : '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:12px; font-size:0.8rem;">No payment transactions recorded.</td></tr>';
 
@@ -980,7 +980,7 @@ export class AdminModule {
 
     const bodyHtml = `
       <!-- Top Candidate Profile Banner -->
-      <div style="background:linear-gradient(135deg, rgba(191, 154, 51, 0.05), rgba(37, 99, 235, 0.06)); border:1.5px solid var(--border-color); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+      <div style="background:linear-gradient(135deg, rgba(26, 101, 159, 0.05), rgba(37, 99, 235, 0.06)); border:1.5px solid var(--border-color); border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
           ${photoPath
             ? `<img id="app-photo-img" alt="Applicant photo" style="width:72px; height:88px; object-fit:cover; border-radius:8px; border:2px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.06); background:#f1f5f9;">`
@@ -1015,7 +1015,7 @@ export class AdminModule {
           </div>
           <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
             <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Paid Amount</div>
-            <div style="font-size:1.15rem; font-weight:800; color:#BF9A33;">${fmtMoney(totalPaidCalc)}</div>
+            <div style="font-size:1.15rem; font-weight:800; color:#1A659F;">${fmtMoney(totalPaidCalc)}</div>
           </div>
           <div style="text-align:right; padding-right:14px; border-right:1px solid var(--border-color);">
             <div style="font-size:0.68rem; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Balance Due</div>
@@ -1035,7 +1035,7 @@ export class AdminModule {
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Profile Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div style="font-weight:800; font-size:0.92rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
               <span style="display:flex; align-items:center; gap:8px;"><i data-lucide="user-check" style="width:16px; height:16px;"></i> Applicant &amp; Family Dossier</span>
               <button type="button" class="btn btn-secondary btn-sm" id="btn-edit-dossier-card" style="font-size:0.75rem; padding:2px 8px; color:#0284c7; border-color:#bae6fd; font-weight:700;"><i data-lucide="edit-3"></i> Edit Data</button>
             </div>
@@ -1059,7 +1059,7 @@ export class AdminModule {
 
           <!-- Uploaded Documents Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+            <div style="font-weight:800; font-size:0.92rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
               <i data-lucide="files" style="width:16px; height:16px;"></i> Attached Documents &amp; Verification
             </div>
             <div style="display:flex; flex-direction:column; gap:8px;">
@@ -1072,7 +1072,7 @@ export class AdminModule {
         <div style="display:flex; flex-direction:column; gap:16px;">
           <!-- Fee Structure & Payment Ledger Card -->
           <div class="card" style="padding:16px 18px; border:1px solid var(--border-color); border-radius:10px; background:#fff; margin:0;">
-            <div style="font-weight:800; font-size:0.92rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-weight:800; font-size:0.92rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
               <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="receipt" style="width:16px;height:16px;"></i> Fee Assessment &amp; Ledger</span>
               <span style="font-size:0.85rem; font-weight:800; color:#1e293b;">Total: ${fmtMoney(app.feeTotal)}</span>
             </div>
@@ -1094,7 +1094,7 @@ export class AdminModule {
             <!-- Record a Payment Form (Spacious 2-row layout) -->
             <div style="background:var(--bg-subtle, #f8fafc); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
               <div style="font-weight:700; font-size:0.82rem; margin-bottom:8px; color:#1e293b; display:flex; align-items:center; gap:5px;">
-                <i data-lucide="plus-circle" style="width:14px; height:14px; color:#BF9A33;"></i> Record Payment Transaction
+                <i data-lucide="plus-circle" style="width:14px; height:14px; color:#1A659F;"></i> Record Payment Transaction
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
                 <div>
@@ -1165,7 +1165,7 @@ export class AdminModule {
               <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-save-credential"><i data-lucide="save"></i> Save</button>
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-parent-cred" style="color:#0284c7;"><i data-lucide="share-2"></i> Copy Login Message</button>
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-parent-cred" style="color:#BF9A33;"><i data-lucide="send"></i> WhatsApp</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-wa-parent-cred" style="color:#1A659F;"><i data-lucide="send"></i> WhatsApp</button>
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-resend-credential"><i data-lucide="send"></i> Resend</button>
                 ${(credential.userId || app.parentUserId) ? '' : '<button type="button" class="btn btn-primary btn-sm" id="btn-activate-credential"><i data-lucide="key-round"></i> Activate Login</button>'}
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-delete-credential" style="color:#ef4444; margin-left:auto;"><i data-lucide="trash-2"></i> Delete</button>
@@ -1204,8 +1204,8 @@ export class AdminModule {
             <i data-lucide="check-circle"></i> Approve
           </button>
           ${isEnrolled
-            ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-view-enrolled" style="color:#BF9A33; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
-            : `<button type="button" class="btn btn-success btn-sm" id="btn-app-enroll" style="background:#BF9A33; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
+            ? `<button type="button" class="btn btn-secondary btn-sm" id="btn-view-enrolled" style="color:#1A659F; font-weight:700;"><i data-lucide="graduation-cap"></i> Enrolled: ${esc(app.enrolledAdmissionNo || 'Student')}</button>`
+            : `<button type="button" class="btn btn-success btn-sm" id="btn-app-enroll" style="background:#1A659F; color:#fff;"><i data-lucide="graduation-cap"></i> Enroll as Official Student</button>`
           }
           <button type="button" class="btn btn-secondary btn-sm" id="btn-app-delete-modal" style="color:#ef4444;" title="Delete Application">
             <i data-lucide="trash-2"></i>
@@ -1523,8 +1523,8 @@ export class AdminModule {
     const suggestedRoll = (sameGradeStudents.length + 1).toString().padStart(2, '0');
 
     const bodyHtml = `
-      <div style="margin-bottom:14px; padding:12px; border-radius:8px; background:rgba(191, 154, 51,0.08); border:1px solid #BF9A33;">
-        <div style="font-size:0.95rem; font-weight:700; color:#8C6E1E; margin-bottom:4px;">
+      <div style="margin-bottom:14px; padding:12px; border-radius:8px; background:rgba(26, 101, 159,0.08); border:1px solid #1A659F;">
+        <div style="font-size:0.95rem; font-weight:700; color:#134e7a; margin-bottom:4px;">
           <i data-lucide="user-check"></i> Convert Application to Enrolled Student
         </div>
         <p style="font-size:0.8rem; color:var(--text-main); margin:0;">
@@ -1568,7 +1568,7 @@ export class AdminModule {
 
     const footerHtml = `
       <button class="btn btn-secondary" id="btn-enr-cancel">Cancel</button>
-      <button class="btn btn-primary" id="btn-enr-confirm" style="background:#BF9A33; border-color:#BF9A33;">
+      <button class="btn btn-primary" id="btn-enr-confirm" style="background:#1A659F; border-color:#1A659F;">
         <i data-lucide="check-circle-2"></i> Confirm Enrollment
       </button>
     `;
@@ -1607,14 +1607,14 @@ export class AdminModule {
         title: 'Enrollment Confirmed',
         bodyHtml: `
           <div style="text-align:center; padding:10px 0 16px;">
-            <div style="width:54px; height:54px; border-radius:50%; background:rgba(191, 154, 51,0.14); color:#BF9A33; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
+            <div style="width:54px; height:54px; border-radius:50%; background:rgba(26, 101, 159,0.14); color:#1A659F; display:inline-flex; align-items:center; justify-content:center; margin-bottom:12px;">
               <i data-lucide="graduation-cap" style="width:32px; height:32px;"></i>
             </div>
             <h3 style="font-size:1.25rem; font-weight:800; color:var(--text-main); margin:0 0 6px;">${esc(name)} is Now Officially Enrolled!</h3>
             <p style="font-size:0.85rem; color:var(--text-muted); margin:0 0 14px;">The student record has been added to the master directory.</p>
-            <div style="background:var(--bg-subtle); border:1.5px dashed #BF9A33; border-radius:10px; padding:12px; display:inline-block;">
+            <div style="background:var(--bg-subtle); border:1.5px dashed #1A659F; border-radius:10px; padding:12px; display:inline-block;">
               <span style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; display:block;">Permanent Admission Number</span>
-              <span class="font-mono" style="font-size:1.35rem; font-weight:800; color:#8C6E1E;">${esc(res.admissionNo)}</span>
+              <span class="font-mono" style="font-size:1.35rem; font-weight:800; color:#134e7a;">${esc(res.admissionNo)}</span>
             </div>
           </div>
         `,
@@ -1647,13 +1647,13 @@ export class AdminModule {
         const exam = a.entranceExam || {};
         return `
           <tr>
-            <td style="font-weight:800; color:#BF9A33; text-align:center;">#${i + 1}</td>
+            <td style="font-weight:800; color:#1A659F; text-align:center;">#${i + 1}</td>
             <td class="font-mono">${esc(a.appId || a.id)}</td>
             <td style="font-weight:700;">${esc(a.studentName || '—')}</td>
             <td>${esc(a.grade || '—')}</td>
             <td class="font-mono" style="text-align:center;">${exam.writtenScore ?? '—'}</td>
             <td class="font-mono" style="text-align:center;">${exam.interviewScore ?? '—'}</td>
-            <td class="font-mono" style="text-align:center; font-weight:800; color:#8C6E1E; font-size:1rem;">${exam.totalScore ?? '—'}</td>
+            <td class="font-mono" style="text-align:center; font-weight:800; color:#134e7a; font-size:1rem;">${exam.totalScore ?? '—'}</td>
             <td><span class="badge ${a.status === 'Enrolled' ? 'badge-success' : 'badge-info'}">${esc(a.status || '—')}</span></td>
           </tr>
         `;
@@ -1810,7 +1810,7 @@ export class AdminModule {
 
     let details = '';
     groups.forEach((sectionFields, section) => {
-      details += `<div style="font-size:11.5px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">${esc(section)}</div>`;
+      details += `<div style="font-size:11.5px; font-weight:800; color:#134e7a; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">${esc(section)}</div>`;
       details += '<table style="width:100%; border-collapse:collapse; font-size:10.5px; margin-bottom:8px;"><tbody>';
       sectionFields.forEach((f) => {
         const pld = app.payload || {};
@@ -1847,18 +1847,18 @@ export class AdminModule {
       : 'https://tps.clubad.space/parent';
 
     const credBlock = cred ? `
-      <div style="border:1.5px solid #BF9A33; background:#FDF8E8; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
+      <div style="border:1.5px solid #1A659F; background:#eef5fa; border-radius:6px; padding:10px 14px; margin:14px 0; page-break-inside:avoid;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F7E8B5; padding-bottom:4px; margin-bottom:6px;">
-          <div style="font-size:11px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px;">
+          <div style="font-size:11px; font-weight:800; color:#134e7a; text-transform:uppercase; letter-spacing:0.5px;">
             🔐 Parent &amp; Student Portal Login Credentials (Official)
           </div>
-          <span style="font-size:8.5px; font-weight:700; color:#8C6E1E; background:#FCF4D9; padding:2px 8px; border-radius:10px;">Status: Active</span>
+          <span style="font-size:8.5px; font-weight:700; color:#134e7a; background:#ddebf5; padding:2px 8px; border-radius:10px;">Status: Active</span>
         </div>
         <table style="width:100%; font-size:10.5px; border-collapse:collapse; margin-bottom:4px; border:none;">
           <tbody>
             <tr style="border:none;">
               <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Tracking Portal:</strong></td>
-              <td style="padding:3px 0; color:#8C6E1E; font-family:monospace; border:none;"><strong>${esc(portalUrl)}</strong></td>
+              <td style="padding:3px 0; color:#134e7a; font-family:monospace; border:none;"><strong>${esc(portalUrl)}</strong></td>
               <td style="width:18%; padding:3px 0; color:#374151; border:none;"><strong>Authorized Role:</strong></td>
               <td style="padding:3px 0; border:none;">Parent / Student Tracking</td>
             </tr>
@@ -1890,13 +1890,13 @@ export class AdminModule {
           ${TMS_LOGO.emblemSvg(70)}
         </div>
         <div style="text-align: center; flex: 1;">
-          <div style="font-size: 10px; font-weight: 700; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
+          <div style="font-size: 10px; font-weight: 700; color: #1A659F; text-transform: uppercase; letter-spacing: 0.8px;">${esc(TMS_CONFIG.institution.tagline || 'Run by : Thaiba Heritage, Kolkata')}</div>
           <h1 style="font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 900; color: #0f172a; margin: 1px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px;">${esc(TMS_CONFIG.institution.name)}</h1>
           <div style="font-size: 9px; color: #334155;">${esc(TMS_CONFIG.institution.address.campus)}, ${esc(TMS_CONFIG.institution.address.district)} - ${esc(TMS_CONFIG.institution.address.pin)} • Regd. No. : ${esc(TMS_CONFIG.institution.regNo)}</div>
           <div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">Helpline: ${esc(TMS_CONFIG.institution.contact.phone1)}, ${esc(TMS_CONFIG.institution.contact.phone2)} • Web: tps.clubad.space</div>
         </div>
         <div style="width: 105px; text-align: right; flex-shrink: 0;">
-          <div style="display: inline-block; padding: 3px 8px; background: #FDF8E8; border: 1.5px solid #BF9A33; color: #8C6E1E; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
+          <div style="display: inline-block; padding: 3px 8px; background: #eef5fa; border: 1.5px solid #1A659F; color: #134e7a; border-radius: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase;">ADMISSION FORM</div>
           <div style="font-size: 8.5px; color: #475569; margin-top: 3px;">Session: <strong>${esc(TMS_CONFIG.academic?.currentYear || '2027 - 2028')}</strong></div>
         </div>
       </div>
@@ -1907,7 +1907,7 @@ export class AdminModule {
           <tbody>
             <tr>
               <th style="width:28%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Form Number</th>
-              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong class="font-mono" style="font-size:12px; color:#8C6E1E;">${esc(app.appId || app.id)}</strong></td>
+              <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong class="font-mono" style="font-size:12px; color:#134e7a;">${esc(app.appId || app.id)}</strong></td>
               <th style="width:24%; padding:4px 6px; text-align:left; background:#f8fafc; border:1px solid #e2e8f0;">Class Applied</th>
               <td style="padding:4px 6px; border:1px solid #e2e8f0;"><strong>${esc(applyingGrade)}</strong></td>
             </tr>
@@ -1932,13 +1932,13 @@ export class AdminModule {
       ${details}
 
       <!-- Fees & Payment Details -->
-      <div style="font-size:11.5px; font-weight:800; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">Fees &amp; Payment Ledger</div>
+      <div style="font-size:11.5px; font-weight:800; color:#134e7a; text-transform:uppercase; letter-spacing:0.5px; margin:12px 0 4px; border-bottom:1px solid #F7E8B5; padding-bottom:2px;">Fees &amp; Payment Ledger</div>
       <table style="width:65%; font-size:10px; border-collapse:collapse; margin-bottom:8px;">
         <tbody>
           ${feeRows || '<tr><td style="padding:3px 6px; border:1px solid #e2e8f0;">Admission Registration Fee</td><td style="text-align:right; padding:3px 6px; border:1px solid #e2e8f0;">₹ 0</td></tr>'}
           <tr style="background:#f8fafc;">
             <td style="border:1px solid #cbd5e1; font-weight:800; padding:4px 6px;">Total Fee Amount</td>
-            <td style="border:1px solid #cbd5e1; text-align:right; font-weight:800; padding:4px 6px; color:#8C6E1E;">${fmtMoney(app.feeTotal)}</td>
+            <td style="border:1px solid #cbd5e1; text-align:right; font-weight:800; padding:4px 6px; color:#134e7a;">${fmtMoney(app.feeTotal)}</td>
           </tr>
           <tr>
             <td style="border:1px solid #e2e8f0; padding:3px 6px;">Payment Clearance Status</td>
@@ -1947,7 +1947,7 @@ export class AdminModule {
         </tbody>
       </table>
 
-      ${app.remarks ? `<div style="margin:8px 0; font-size:10px; background:#f8fafc; padding:6px 10px; border-left:3px solid #BF9A33; border-radius:3px;"><strong>Official Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
+      ${app.remarks ? `<div style="margin:8px 0; font-size:10px; background:#f8fafc; padding:6px 10px; border-left:3px solid #1A659F; border-radius:3px;"><strong>Official Remarks:</strong> ${esc(app.remarks)}</div>` : ''}
 
       <!-- User Credentials Block -->
       ${credBlock}
@@ -1955,7 +1955,7 @@ export class AdminModule {
       <!-- Declaration -->
       <div style="margin:14px 0 16px 0; font-size:9.5px; line-height:1.4; color:#374151;">
         <div style="font-weight:800; text-decoration:underline; margin-bottom:2px;">Declaration:</div>
-        I hereby solemnly declare that all particulars furnished in this application are true, complete, and authentic to the best of my knowledge. I agree to abide by the rules, code of discipline, and academic guidelines of THAIBA PUBLIC SCHOOL.
+        I hereby solemnly declare that all particulars furnished in this application are true, complete, and authentic to the best of my knowledge. I agree to abide by the rules, code of discipline, and academic guidelines of THAIBA COLLEGE OF INTEGRATED STUDIES.
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:flex-end; padding-top:20px; font-size:10px; margin-bottom:18px;">
@@ -1996,7 +1996,7 @@ export class AdminModule {
             <tbody>
               <tr>
                 <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Form No. :</strong></td>
-                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong class="font-mono" style="color:#8C6E1E;">${esc(app.appId || app.id)}</strong></td>
+                <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong class="font-mono" style="color:#134e7a;">${esc(app.appId || app.id)}</strong></td>
                 <td style="width:20%; padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Applying Class :</strong></td>
                 <td style="width:30%; padding:3px 4px; border:1px solid #cbd5e1;"><strong>${esc(applyingGrade)}</strong></td>
               </tr>
@@ -2012,17 +2012,17 @@ export class AdminModule {
                 <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Address :</strong></td>
                 <td style="padding:3px 4px; border:1px solid #cbd5e1;">${esc(addressStr)}</td>
               </tr>
-              <tr style="background:#FDF8E8;">
-                <td style="padding:3px 4px; border:1.5px solid #BF9A33; font-weight:800; color:#8C6E1E;"><strong>Portal Credentials :</strong></td>
-                <td colspan="3" style="padding:3px 4px; border:1.5px solid #BF9A33;">
+              <tr style="background:#eef5fa;">
+                <td style="padding:3px 4px; border:1.5px solid #1A659F; font-weight:800; color:#134e7a;"><strong>Portal Credentials :</strong></td>
+                <td colspan="3" style="padding:3px 4px; border:1.5px solid #1A659F;">
                   User: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #F2D88C; border-radius:3px;">${esc(cred ? cred.username : '—')}</strong> &nbsp;|&nbsp;
                   Password: <strong class="font-mono" style="color:#0f172a; background:#fff; padding:1px 6px; border:1px solid #F2D88C; border-radius:3px;">${esc(cred ? (cred.password || '******') : '—')}</strong> &nbsp;|&nbsp;
-                  Portal: <span class="font-mono" style="color:#8C6E1E; font-size:9px;">tps.clubad.space</span>
+                  Portal: <span class="font-mono" style="color:#134e7a; font-size:9px;">tps.clubad.space</span>
                 </td>
               </tr>
               <tr>
                 <td style="padding:3px 4px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>Exam Centre :</strong></td>
-                <td colspan="3" style="padding:3px 4px; border:1px solid #cbd5e1;">THAIBA PUBLIC SCHOOL, Baghait, Tapan, Dakshin Dinajpur</td>
+                <td colspan="3" style="padding:3px 4px; border:1px solid #cbd5e1;">THAIBA COLLEGE OF INTEGRATED STUDIES, Baghait, Tapan, Dakshin Dinajpur</td>
               </tr>
             </tbody>
           </table>
@@ -2165,7 +2165,7 @@ export class AdminModule {
         <div class="card section-customizer-card" style="margin-bottom:22px; border:1.5px solid var(--border-color); border-radius:14px; overflow:hidden; box-shadow:var(--shadow-sm);">
           <div class="card-header" style="background:#F8FAFC; border-bottom:1.5px solid var(--border-color); padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
             <div style="display:flex; align-items:center; gap:12px;">
-              <span style="width:34px; height:34px; border-radius:8px; background:#FCF4D9; color:#8C6E1E; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; font-family:var(--font-mono);">
+              <span style="width:34px; height:34px; border-radius:8px; background:#ddebf5; color:#134e7a; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem; font-family:var(--font-mono);">
                 ${String(secIdx).padStart(2, '0')}
               </span>
               <div>
@@ -2175,7 +2175,7 @@ export class AdminModule {
                 <div style="display:flex; gap:8px; align-items:center; font-size:0.75rem; color:var(--text-muted);">
                   <span>${secFields.length} question(s)</span>
                   <span>•</span>
-                  <span style="color:#8C6E1E; font-weight:600;">${secActiveCount} active</span>
+                  <span style="color:#134e7a; font-weight:600;">${secActiveCount} active</span>
                   ${secFields.length - secActiveCount > 0 ? `<span>•</span><span style="color:#b45309;">${secFields.length - secActiveCount} disabled</span>` : ''}
                 </div>
               </div>
@@ -2570,24 +2570,24 @@ export class AdminModule {
     const bodyHtml = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
         <!-- Quick Photo Templates Toolbar -->
-        <div style="grid-column:1/-1; background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
-          <div style="font-size:0.78rem; font-weight:700; color:#8C6E1E; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+        <div style="grid-column:1/-1; background:#eef5fa; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
+          <div style="font-size:0.78rem; font-weight:700; color:#134e7a; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="sparkles" style="width:14px;height:14px;color:#059669;"></i> Quick Photo Templates (Click to auto-fill):
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Candidate Passport Photograph" data-key="candidatePassportPhoto" data-help="Recent colour passport-size photograph (JPG or PNG up to 2 MB). Required for admit card." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:700;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Candidate Passport Photograph" data-key="candidatePassportPhoto" data-help="Recent colour passport-size photograph (JPG or PNG up to 2 MB). Required for admit card." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#134e7a; font-weight:700;">
               📸 Candidate Passport Photo
             </button>
-            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Student Profile Photo" data-key="studentProfilePhoto" data-help="Front-facing portrait profile picture (JPG or PNG up to 2 MB)." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:700;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Student Profile Photo" data-key="studentProfilePhoto" data-help="Front-facing portrait profile picture (JPG or PNG up to 2 MB)." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#134e7a; font-weight:700;">
               👤 Student Profile Photo
             </button>
-            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Father's Photograph" data-key="fatherPhoto" data-help="Recent passport-size photo of father / male guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Father's Photograph" data-key="fatherPhoto" data-help="Recent passport-size photo of father / male guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#134e7a; font-weight:600;">
               👨 Father's Photo
             </button>
-            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Mother's Photograph" data-key="motherPhoto" data-help="Recent passport-size photo of mother / female guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Mother's Photograph" data-key="motherPhoto" data-help="Recent passport-size photo of mother / female guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#134e7a; font-weight:600;">
               👩 Mother's Photo
             </button>
-            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Guardian's Photograph" data-key="guardianPhoto" data-help="Recent passport-size photo of legal guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#8C6E1E; font-weight:600;">
+            <button type="button" class="btn btn-secondary btn-sm btn-photo-preset" data-label="Guardian's Photograph" data-key="guardianPhoto" data-help="Recent passport-size photo of legal guardian." style="background:#fff; font-size:0.75rem; border-color:#F2D88C; color:#134e7a; font-weight:600;">
               👥 Guardian's Photo
             </button>
           </div>
@@ -2943,7 +2943,7 @@ export class AdminModule {
       }
       container.innerHTML = currentPopupInstructions.map((item, idx) => `
         <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px; background:var(--bg-subtle, #f8fafc); padding:8px 12px; border-radius:var(--radius-md); border:1px solid var(--border-color);">
-          <span style="font-weight:700; color:#BF9A33; font-size:0.85rem; min-width:22px;">${idx + 1}.</span>
+          <span style="font-weight:700; color:#1A659F; font-size:0.85rem; min-width:22px;">${idx + 1}.</span>
           <input type="text" class="form-input popup-item-input" data-index="${idx}" value="${esc(item)}" style="flex:1; font-size:0.88rem;">
           <button type="button" class="btn btn-secondary btn-sm btn-del-popup-item" data-index="${idx}" title="Delete Item" style="color:#ef4444; padding:4px 8px;">
             <i data-lucide="trash-2"></i>
@@ -2987,9 +2987,9 @@ export class AdminModule {
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:22px;">
         
         <!-- CARD 1: FORM HEADINGS & BRANDING CUSTOMIZER -->
-        <div class="card" style="border-left: 4px solid #BF9A33;">
+        <div class="card" style="border-left: 4px solid #1A659F;">
           <div class="card-header">
-            <h3 class="card-title"><i data-lucide="heading" style="color:#BF9A33;"></i> Form Headings &amp; Title Customization</h3>
+            <h3 class="card-title"><i data-lucide="heading" style="color:#1A659F;"></i> Form Headings &amp; Title Customization</h3>
           </div>
           <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:14px;">
             Configure the main titles, organization line, and session shown on the public admission form, A4 printout, and Admit Card.
@@ -3011,14 +3011,14 @@ export class AdminModule {
           </div>
 
           <div style="border-top:1px solid var(--border-color); padding-top:14px; margin-top:14px;">
-            <h4 style="font-size:0.92rem; color:#8C6E1E; margin-bottom:10px;">Admit Card Slip Titles</h4>
+            <h4 style="font-size:0.92rem; color:#134e7a; margin-bottom:10px;">Admit Card Slip Titles</h4>
             <div class="form-group" style="margin-bottom:10px;">
               <label class="form-label">Admit Card Title</label>
               <input class="form-input" id="set-admit-title" value="${esc(s.admitCardTitle || 'ADMIT CARD')}" placeholder="e.g. ADMIT CARD">
             </div>
             <div class="form-group" style="margin-bottom:10px;">
               <label class="form-label">School Name on Admit Card</label>
-              <input class="form-input" id="set-admit-subtitle" value="${esc(s.admitCardSubtitle || 'THAIBA PUBLIC SCHOOL')}" placeholder="e.g. THAIBA PUBLIC SCHOOL">
+              <input class="form-input" id="set-admit-subtitle" value="${esc(s.admitCardSubtitle || 'THAIBA COLLEGE OF INTEGRATED STUDIES')}" placeholder="e.g. THAIBA COLLEGE OF INTEGRATED STUDIES">
             </div>
             <div class="form-group" style="margin-bottom:10px;">
               <label class="form-label">Admit Card Address &amp; Contact</label>
@@ -3026,7 +3026,7 @@ export class AdminModule {
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Admission / Test Centre</label>
-              <input class="form-input" id="set-centre" value="${esc(s.testCentre || 'THAIBA PUBLIC SCHOOL, Baghait, Tapan, Dakshin Dinajpur')}">
+              <input class="form-input" id="set-centre" value="${esc(s.testCentre || 'THAIBA COLLEGE OF INTEGRATED STUDIES, Baghait, Tapan, Dakshin Dinajpur')}">
             </div>
           </div>
         </div>
@@ -3193,7 +3193,7 @@ export class AdminModule {
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-          .switch input:checked + .slider { background-color: #BF9A33 !important; }
+          .switch input:checked + .slider { background-color: #1A659F !important; }
           .switch input:checked + .slider:before { transform: translateX(24px); }
           .slider:before {
             position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px;
@@ -3383,9 +3383,9 @@ export class AdminModule {
         <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-              <i data-lucide="message-square" style="color:var(--brand-theme-primary, #BF9A33);"></i>
+              <i data-lucide="message-square" style="color:var(--brand-theme-primary, #1A659F);"></i>
               <span>Website Admission Inquiries</span>
-              ${newCount > 0 ? `<span class="badge" style="background:#BF9A33; color:#fff; font-size:0.75rem; padding:3px 9px; border-radius:999px;">${newCount} New</span>` : ''}
+              ${newCount > 0 ? `<span class="badge" style="background:#1A659F; color:#fff; font-size:0.75rem; padding:3px 9px; border-radius:999px;">${newCount} New</span>` : ''}
             </h3>
             <p class="card-desc">Review, follow up, and track prospective parents and students who submitted inquiries through the institutional website contact form.</p>
           </div>
@@ -3408,9 +3408,9 @@ export class AdminModule {
             <div style="font-size:0.74rem; color:#64748b; font-weight:700; text-transform:uppercase;">Total Inquiries</div>
             <div style="font-size:1.55rem; font-weight:800; color:#0f172a; margin-top:2px;">${this._inquiries.length}</div>
           </div>
-          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
-            <div style="font-size:0.74rem; color:#8C6E1E; font-weight:700; text-transform:uppercase;">New / Needs Call</div>
-            <div style="font-size:1.55rem; font-weight:800; color:#BF9A33; margin-top:2px;">${newCount}</div>
+          <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:10px; padding:12px 14px;">
+            <div style="font-size:0.74rem; color:#134e7a; font-weight:700; text-transform:uppercase;">New / Needs Call</div>
+            <div style="font-size:1.55rem; font-weight:800; color:#1A659F; margin-top:2px;">${newCount}</div>
           </div>
           <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px 14px;">
             <div style="font-size:0.74rem; color:#0369a1; font-weight:700; text-transform:uppercase;">Contacted / In Progress</div>
@@ -3554,14 +3554,14 @@ export class AdminModule {
 
       const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
       const waNumber = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-      const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba Public School Admissions Desk. We received your admission inquiry for ${inq.grade || 'our academic program'}. How may we assist you with admissions for 2026-27?`);
+      const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba College of Integrated Studies Admissions Desk. We received your admission inquiry for ${inq.grade || 'our academic program'}. How may we assist you with admissions for 2026-27?`);
       const waUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${waText}`;
 
       let statusBadge = '<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700; border:1px solid #fde68a;">✨ New</span>';
       if (inq.status === 'contacted') {
         statusBadge = '<span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700; border:1px solid #bae6fd;">📞 Contacted</span>';
       } else if (inq.status === 'admitted') {
-        statusBadge = '<span class="badge" style="background:#FCF4D9; color:#8C6E1E; font-weight:700; border:1px solid #F7E8B5;">🎓 Admitted</span>';
+        statusBadge = '<span class="badge" style="background:#ddebf5; color:#134e7a; font-weight:700; border:1px solid #F7E8B5;">🎓 Admitted</span>';
       } else if (inq.status === 'closed') {
         statusBadge = '<span class="badge" style="background:#f1f5f9; color:#475569; font-weight:700; border:1px solid #e2e8f0;">Closed</span>';
       }
@@ -3586,7 +3586,7 @@ export class AdminModule {
           <td style="white-space:nowrap;">
             <div style="display:flex; align-items:center; gap:6px;">
               <a href="tel:${esc(inq.phone)}" class="font-mono" style="font-weight:700; color:#0f172a; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                <i data-lucide="phone" style="width:13px; height:13px; color:#BF9A33;"></i>
+                <i data-lucide="phone" style="width:13px; height:13px; color:#1A659F;"></i>
                 <span>${esc(inq.phone)}</span>
               </a>
               ${cleanPhone ? `
@@ -3600,7 +3600,7 @@ export class AdminModule {
           </td>
           <td>
             <div style="max-width:240px; color:#334155; line-height:1.4;">${msgPreview}</div>
-            ${inq.notes ? `<div style="font-size:0.72rem; color:#BF9A33; margin-top:2px; font-weight:600;"><i data-lucide="bookmark" style="width:10px; height:10px;"></i> ${esc(inq.notes.slice(0, 35))}</div>` : ''}
+            ${inq.notes ? `<div style="font-size:0.72rem; color:#1A659F; margin-top:2px; font-weight:600;"><i data-lucide="bookmark" style="width:10px; height:10px;"></i> ${esc(inq.notes.slice(0, 35))}</div>` : ''}
           </td>
           <td>
             ${statusBadge}
@@ -3651,7 +3651,7 @@ export class AdminModule {
   static openInquiryDetailsModal(inq, tabContent) {
     const cleanPhone = (inq.phone || '').replace(/[^0-9]/g, '');
     const waNumber = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-    const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba Public School Admissions Desk regarding your admission inquiry for ${inq.grade || 'our academic program'}.`);
+    const waText = encodeURIComponent(`Assalamu Alaikum / Greetings from Thaiba College of Integrated Studies Admissions Desk regarding your admission inquiry for ${inq.grade || 'our academic program'}.`);
     const waUrl = `https://api.whatsapp.com/send?phone=${waNumber}&text=${waText}`;
 
     const dateStr = inq.createdAt ? new Date(inq.createdAt).toLocaleString('en-IN', {
@@ -3671,7 +3671,7 @@ export class AdminModule {
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
               <a href="tel:${esc(inq.phone)}" class="btn btn-secondary btn-sm" style="font-weight:700;">
-                <i data-lucide="phone" style="width:14px; height:14px; color:#BF9A33;"></i> Call
+                <i data-lucide="phone" style="width:14px; height:14px; color:#1A659F;"></i> Call
               </a>
               <a href="${waUrl}" target="_blank" class="btn btn-sm" style="background:#D4AF37; color:#fff; font-weight:700;">
                 <i data-lucide="message-circle" style="width:14px; height:14px;"></i> WhatsApp
@@ -3694,7 +3694,7 @@ export class AdminModule {
 
         <div class="form-group">
           <label class="form-label" style="font-size:0.78rem; font-weight:700;">Target Grade / Campus Wing</label>
-          <input class="form-input" value="${esc(inq.grade || '—')}" readonly style="background:#f8fafc; font-weight:700; color:#BF9A33;">
+          <input class="form-input" value="${esc(inq.grade || '—')}" readonly style="background:#f8fafc; font-weight:700; color:#1A659F;">
         </div>
 
         <!-- Message from Parent -->
@@ -3704,8 +3704,8 @@ export class AdminModule {
         </div>
 
         <!-- Follow-up Status & Admin Notes -->
-        <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:14px;">
-          <div style="font-size:0.85rem; font-weight:800; color:#8C6E1E; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+        <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:10px; padding:14px;">
+          <div style="font-size:0.85rem; font-weight:800; color:#134e7a; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="clipboard-edit" style="width:16px; height:16px;"></i>
             <span>Admission Desk Follow-up</span>
           </div>
@@ -4109,12 +4109,12 @@ export class AdminModule {
             <div style="font-size:0.75rem; font-weight:700; color:#b45309; text-transform:uppercase; letter-spacing:0.04em;">Pending Approvals</div>
             <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
               <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${pendingList.length}</span>
-              ${pendingList.length > 0 ? '<span class="badge badge-warning" style="font-size:0.72rem;">Requires Action</span>' : '<span style="font-size:0.72rem; color:#BF9A33;">All Approved</span>'}
+              ${pendingList.length > 0 ? '<span class="badge badge-warning" style="font-size:0.72rem;">Requires Action</span>' : '<span style="font-size:0.72rem; color:#1A659F;">All Approved</span>'}
             </div>
             <div style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">Waiting on approval screen</div>
           </div>
-          <div class="card" style="padding:16px; border-left:4px solid #BF9A33; background:linear-gradient(to right, rgba(191, 154, 51,0.06), var(--bg-surface));">
-            <div style="font-size:0.75rem; font-weight:700; color:#8C6E1E; text-transform:uppercase; letter-spacing:0.04em;">Active &amp; Approved</div>
+          <div class="card" style="padding:16px; border-left:4px solid #1A659F; background:linear-gradient(to right, rgba(26, 101, 159,0.06), var(--bg-surface));">
+            <div style="font-size:0.75rem; font-weight:700; color:#134e7a; text-transform:uppercase; letter-spacing:0.04em;">Active &amp; Approved</div>
             <div style="display:flex; align-items:baseline; gap:8px; margin-top:4px;">
               <span style="font-size:1.8rem; font-weight:800; color:var(--text-main);">${approvedList.length}</span>
               <span style="font-size:0.72rem; color:var(--text-muted);">Active Staff &amp; Users</span>
@@ -4323,7 +4323,7 @@ export class AdminModule {
                               <i data-lucide="user-x"></i> Reject
                             </button>
                           ` : isRejected ? `
-                            <button class="btn btn-secondary btn-sm btn-action-approve" style="padding:5px 12px; color:#BF9A33; font-weight:700;" title="Re-approve and activate">
+                            <button class="btn btn-secondary btn-sm btn-action-approve" style="padding:5px 12px; color:#1A659F; font-weight:700;" title="Re-approve and activate">
                               <i data-lucide="rotate-ccw"></i> Re-Approve
                             </button>
                           ` : `
@@ -4953,7 +4953,7 @@ export class AdminModule {
                               <i data-lucide="share-2" style="width:10px;height:10px;"></i> Copy
                             </button>
                             ${p.phone ? `
-                              <button class="btn btn-secondary btn-sm btn-wa-user-cred" data-user="${esc(p.id)}" title="WhatsApp" style="padding:1px 6px; font-size:0.7rem; color:#BF9A33; border-color:#F7E8B5;">
+                              <button class="btn btn-secondary btn-sm btn-wa-user-cred" data-user="${esc(p.id)}" title="WhatsApp" style="padding:1px 6px; font-size:0.7rem; color:#1A659F; border-color:#F7E8B5;">
                                 <i data-lucide="send" style="width:10px;height:10px;"></i> WA
                               </button>
                             ` : ''}
@@ -4977,7 +4977,7 @@ export class AdminModule {
                     </td>
                     <td style="font-size:0.78rem;">
                       <span style="display:inline-flex; align-items:center; gap:5px; font-weight:600; color:#334155;">
-                        <i data-lucide="${p.assignedClass ? 'graduation-cap' : 'building-2'}" style="width:13px; height:13px; color:#BF9A33;"></i>
+                        <i data-lucide="${p.assignedClass ? 'graduation-cap' : 'building-2'}" style="width:13px; height:13px; color:#1A659F;"></i>
                         ${esc([p.assignedClass, p.assignedSection].filter(Boolean).join(' / ') || p.department || p.title || (isTargetSuper ? 'Executive Governance & Leadership' : 'Campus Operations'))}
                       </span>
                     </td>
@@ -4998,7 +4998,7 @@ export class AdminModule {
                       ` : `
                         <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
                           <!-- Permissions button: exact modal from screenshot -->
-                          <button class="btn btn-secondary btn-sm btn-perm" data-id="${esc(p.id)}" title="Customize Window Permissions" style="color:#059669; border-color:#a7f3d0; background:#FDF8E8;">
+                          <button class="btn btn-secondary btn-sm btn-perm" data-id="${esc(p.id)}" title="Customize Window Permissions" style="color:#059669; border-color:#a7f3d0; background:#eef5fa;">
                             <i data-lucide="sliders" style="width:12px;height:12px;"></i> Permissions
                           </button>
                           <button class="btn btn-secondary btn-sm btn-change-role" data-id="${esc(p.id)}" title="Assign Role & Details">
@@ -5061,7 +5061,7 @@ export class AdminModule {
 
                 <div class="user-card-actions">
                   ${canModify ? `
-                    <button class="btn btn-sm btn-secondary btn-perm" data-id="${esc(p.id)}" style="color:#059669; border-color:#a7f3d0; background:#FDF8E8;">
+                    <button class="btn btn-sm btn-secondary btn-perm" data-id="${esc(p.id)}" style="color:#059669; border-color:#a7f3d0; background:#eef5fa;">
                       Permissions
                     </button>
                     <button class="btn btn-sm btn-secondary btn-change-role" data-id="${esc(p.id)}">Role</button>
@@ -6048,8 +6048,8 @@ export class AdminModule {
             <div style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">Total Staff Accounts</div>
             <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin-top:4px;">${staffProfiles.length}</div>
           </div>
-          <div style="background:#FDF8E8; border:1px solid #F7E8B5; border-radius:10px; padding:12px 16px;">
-            <div style="font-size:0.75rem; color:#8C6E1E; font-weight:600; text-transform:uppercase;">Active Edit Windows</div>
+          <div style="background:#eef5fa; border:1px solid #F7E8B5; border-radius:10px; padding:12px 16px;">
+            <div style="font-size:0.75rem; color:#134e7a; font-weight:600; text-transform:uppercase;">Active Edit Windows</div>
             <div style="font-size:1.5rem; font-weight:800; color:#059669; margin-top:4px;">${activeWindowCount}</div>
           </div>
           <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px;">
@@ -6202,7 +6202,7 @@ export class AdminModule {
               ${staffData.map(st => {
                 const tgiRaw = st.meta.tgiId || '';
                 const tgiBadge = tgiRaw ? `<span class="badge font-mono" style="background:#f1f5f9; color:#1e293b; font-weight:700; border:1px solid #cbd5e1;">TGI-${esc(tgiRaw)}</span>` : '<span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a;">Not Allocated</span>';
-                const bloodBadge = st.meta.bloodGroup ? `<span class="badge" style="background:#FDF8E8; color:#8C6E1E; font-weight:700;">${esc(st.meta.bloodGroup)}</span>` : '<span style="color:#94a3b8;">—</span>';
+                const bloodBadge = st.meta.bloodGroup ? `<span class="badge" style="background:#eef5fa; color:#134e7a; font-weight:700;">${esc(st.meta.bloodGroup)}</span>` : '<span style="color:#94a3b8;">—</span>';
 
                 return `
                   <tr class="staff-row" data-id="${esc(st.id)}" data-name="${esc(st.name || '').toLowerCase()}" data-email="${esc(st.email || '').toLowerCase()}" data-tgi="${esc(tgiRaw).toLowerCase()}" data-status="${st.daysLeft > 0 ? 'active' : (st.meta.firstLoginAt ? 'expired' : '')}">
@@ -6233,7 +6233,7 @@ export class AdminModule {
                       ${st.isTargetSuper ? `
                         <span style="font-size:0.75rem; color:#b45309; font-weight:700;">Protected</span>
                       ` : `
-                        <button class="btn btn-secondary btn-sm btn-extend-grace" data-id="${esc(st.id)}" data-name="${esc(st.name || '')}" title="Grant +7 Days Extension" style="padding:4px 8px; color:#8C6E1E;">
+                        <button class="btn btn-secondary btn-sm btn-extend-grace" data-id="${esc(st.id)}" data-name="${esc(st.name || '')}" title="Grant +7 Days Extension" style="padding:4px 8px; color:#134e7a;">
                           <i data-lucide="plus-circle" style="width:13px;height:13px;"></i> +7d
                         </button>
                         ${st.daysLeft > 0 ? `
@@ -6563,10 +6563,10 @@ export class AdminModule {
       this._schoolsActiveTab = 'all';
     }
     const currentTab = this._schoolsActiveTab;
-    if (!this._subSchoolSection) {
-      this._subSchoolSection = 'essentials';
+    if (!this._campusSection) {
+      this._campusSection = 'essentials';
     }
-    const currentSection = this._subSchoolSection;
+    const currentSection = this._campusSection;
 
     const [students, staff, classes, facilities, sessions] = await Promise.all([
       dbService.select('students').catch(() => []),
@@ -6592,14 +6592,14 @@ export class AdminModule {
             <div>
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-                  <i data-lucide="building-2" style="color: #BF9A33;"></i> Schools, Campuses &amp; Sub-Managements Console
+                  <i data-lucide="building-2" style="color: #1A659F;"></i> Schools, Campuses &amp; Sub-Managements Console
                 </h3>
                 <span class="badge ${isCentral ? 'badge-info' : 'badge-success'}" style="font-weight: 800;">
                   ${isCentral ? 'Central Group HQ Overview' : `Active Console: ${esc(institutionService.getActiveSchool()?.shortName || 'Branch')}`}
                 </span>
               </div>
               <p class="card-desc" style="margin-top: 6px;">
-                Complete single-window governance over all sub-schools, branch principals, staff, students, syllabus, facilities and website showcases.
+                Complete single-window governance over all campuses, branch principals, staff, students, syllabus, facilities and website showcases.
               </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -6642,8 +6642,8 @@ export class AdminModule {
               <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${schools.length}</div>
               <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Autonomous Operating Campuses</div>
             </div>
-            <div class="card" style="padding: 16px; border-left: 4px solid #BF9A33;">
-              <div style="font-size: 0.75rem; font-weight: 700; color: #8C6E1E; text-transform: uppercase;">Total Group Students</div>
+            <div class="card" style="padding: 16px; border-left: 4px solid #1A659F;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #134e7a; text-transform: uppercase;">Total Group Students</div>
               <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStudents}</div>
               <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Enrolled across all campuses</div>
             </div>
@@ -6664,10 +6664,10 @@ export class AdminModule {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
               <div>
                 <h4 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                  <i data-lucide="git-branch" style="color:#BF9A33;"></i> Institutional Governance &amp; Multi-School Authority Hierarchy
+                  <i data-lucide="git-branch" style="color:#1A659F;"></i> Institutional Governance &amp; Multi-School Authority Hierarchy
                 </h4>
                 <p style="margin:4px 0 0 0; font-size:0.8rem; color:#64748b;">
-                  Visual authority tiers: Trust Board, Central Sovereignty, Academic Council, and Autonomous Sub-School Principals.
+                  Visual authority tiers: Trust Board, Central Sovereignty, Academic Council, and AUTONOMOUS CAMPUS Principals.
                 </p>
               </div>
             </div>
@@ -6711,7 +6711,7 @@ export class AdminModule {
               <!-- Connecting Line -->
               <div style="width:2px; height:18px; background:#cbd5e1; margin-left:36px;"></div>
 
-              <!-- Level 3: Autonomous Sub-Schools -->
+              <!-- Level 3: AUTONOMOUS CAMPUSs -->
               <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-left:24px;">
                 ${schools.map(sch => {
                   const bStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
@@ -6719,11 +6719,11 @@ export class AdminModule {
                   const bClasses = classes.filter(c => (c.school_id || c.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
 
                   return `
-                    <div style="background:#ffffff; border:2px solid ${sch.themeColor || '#BF9A33'}; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                    <div style="background:#ffffff; border:2px solid ${sch.themeColor || '#1A659F'}; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
                       <div>
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                           <div>
-                            <div style="font-size:0.72rem; color:#BF9A33; font-weight:800; text-transform:uppercase;">AUTONOMOUS SUB-SCHOOL</div>
+                            <div style="font-size:0.72rem; color:#1A659F; font-weight:800; text-transform:uppercase;">AUTONOMOUS CAMPUS</div>
                             <h4 style="margin:2px 0 0 0; font-size:1.05rem; font-weight:800; color:#0f172a;">${esc(sch.name)}</h4>
                             <div style="font-size:0.75rem; color:#64748b;">Code: <strong>${esc(sch.code)}</strong> &bull; ${esc(sch.board || 'Affiliated')}</div>
                           </div>
@@ -6753,7 +6753,7 @@ export class AdminModule {
 
                       <div style="display:flex; gap:8px; border-top:1px solid #f1f5f9; padding-top:10px;">
                         <button class="btn btn-primary btn-sm btn-open-school-management" data-id="${esc(sch.id)}" style="flex:1; justify-content:center;">
-                          <i data-lucide="sliders"></i> Manage this Sub-School
+                          <i data-lucide="sliders"></i> Manage this Campus
                         </button>
                         <button class="btn btn-secondary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" title="Switch active operating context">
                           ${activeSchoolId === sch.id ? 'Active' : 'Switch'}
@@ -6767,7 +6767,7 @@ export class AdminModule {
           </div>
         ` : `
           <!-- ============================================================== -->
-          <!-- VIEW 2: SINGLE-SUB-SCHOOL ALL-IN-ONE COMMAND TAB               -->
+          <!-- VIEW 2: Single-Campus ALL-IN-ONE COMMAND TAB               -->
           <!-- ============================================================== -->
           ${(() => {
             const sch = selectedSchool || schools[0];
@@ -6777,11 +6777,11 @@ export class AdminModule {
             const facilitiesList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena'];
 
             return `
-              <!-- Sub-School Hero Banner Card -->
-              <div class="card" style="border: 2px solid ${sch.themeColor || '#BF9A33'}; border-radius: 16px; padding: 20px; background: #ffffff;">
+              <!-- campus Hero Banner Card -->
+              <div class="card" style="border: 2px solid ${sch.themeColor || '#1A659F'}; border-radius: 16px; padding: 20px; background: #ffffff;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
                   <div style="display:flex; align-items:center; gap:16px;">
-                    <div style="width: 56px; height: 56px; border-radius: 14px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#BF9A33'}; border: 2px solid ${sch.themeColor ? sch.themeColor + '40' : '#bfdbfe'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; flex-shrink: 0;">
+                    <div style="width: 56px; height: 56px; border-radius: 14px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#1A659F'}; border: 2px solid ${sch.themeColor ? sch.themeColor + '40' : '#bfdbfe'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; flex-shrink: 0;">
                       ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
                     </div>
                     <div>
@@ -6811,7 +6811,7 @@ export class AdminModule {
                   </div>
                 </div>
 
-                <!-- Sub-School Quick Numbers Bar -->
+                <!-- campus Quick Numbers Bar -->
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9;">
                   <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
                     <div style="font-size:1.3rem; font-weight:800; color:#0f172a;">${schStudents.length}</div>
@@ -7063,7 +7063,7 @@ export class AdminModule {
                             <img src="${esc(sch.bannerImage)}" alt="Banner" style="width:100%; height:100%; object-fit:cover;">
                           </div>
                         ` : ''}
-                        <div style="font-weight:700; color:#BF9A33; font-style:italic; margin-bottom:6px;">&ldquo;${esc(sch.tagline || 'Modern Education with Morality')}&rdquo;</div>
+                        <div style="font-weight:700; color:#1A659F; font-style:italic; margin-bottom:6px;">&ldquo;${esc(sch.tagline || 'Modern Education with Morality')}&rdquo;</div>
                         <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin:0 0 14px 0;">${esc(sch.description || 'Welcome to this campus of Thaiba Heritage Group. We offer state-of-the-art facilities, supportive faculty, and value-based education.')}</p>
                         <a href="/index.html#campuses" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
                           <i data-lucide="external-link"></i> View on Live Website
@@ -7098,14 +7098,14 @@ export class AdminModule {
     tabContent.querySelectorAll('.btn-open-school-management').forEach(btn => {
       btn.addEventListener('click', (e) => {
         this._schoolsActiveTab = e.currentTarget.dataset.id;
-        this._subSchoolSection = 'essentials';
+        this._campusSection = 'essentials';
         this.renderSchoolsManagementTab(tabContent);
       });
     });
 
     tabContent.querySelectorAll('.school-sec-tab').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        this._subSchoolSection = e.currentTarget.dataset.sec;
+        this._campusSection = e.currentTarget.dataset.sec;
         this.renderSchoolsManagementTab(tabContent);
       });
     });
@@ -7175,19 +7175,19 @@ export class AdminModule {
       : (s.facilitiesList || s.facilities_list || 'Smart Classrooms, Science Lab, Computer Lab, Library, Sports Arena');
 
     UIComponents.openModal({
-      title: isEdit ? `<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="building-2" style="color:#BF9A33;"></i><span>Configure School / Campus — ${esc(s.name || '')}</span></div>` : '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="plus-circle" style="color:#BF9A33;"></i><span>Register New School Branch</span></div>',
+      title: isEdit ? `<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="building-2" style="color:#1A659F;"></i><span>Configure School / Campus — ${esc(s.name || '')}</span></div>` : '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="plus-circle" style="color:#1A659F;"></i><span>Register New School Branch</span></div>',
       bodyHtml: `
         <form id="form-school-modal" style="display: flex; flex-direction: column; gap: 14px; max-height:72vh; overflow-y:auto; padding-right:4px;">
           <!-- Section 1: Identification -->
-          <div style="font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">1. School Identification &amp; Credentials</div>
+          <div style="font-weight: 800; font-size: 0.82rem; color: #1A659F; text-transform: uppercase; letter-spacing: 0.04em;">1. School Identification &amp; Credentials</div>
           <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
             <div class="form-group">
               <label class="form-label">School / Campus Full Name <span class="req-star">*</span></label>
-              <input class="form-input" id="sch-name" required value="${esc(s.name || '')}" placeholder="e.g. THAIBA PUBLIC SCHOOL">
+              <input class="form-input" id="sch-name" required value="${esc(s.name || '')}" placeholder="e.g. THAIBA COLLEGE OF INTEGRATED STUDIES">
             </div>
             <div class="form-group">
               <label class="form-label">Short Code <span class="req-star">*</span></label>
-              <input class="form-input font-mono" id="sch-code" required ${isEdit ? 'readonly' : ''} value="${esc(s.code || '')}" placeholder="e.g. TPS-TAPAN">
+              <input class="form-input font-mono" id="sch-code" required ${isEdit ? 'readonly' : ''} value="${esc(s.code || '')}" placeholder="e.g. TGCIS-TAPAN">
             </div>
           </div>
 
@@ -7207,7 +7207,7 @@ export class AdminModule {
           </div>
 
           <!-- Section 2: Leadership & Contacts -->
-          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">2. Campus Leadership &amp; Contact Desk</div>
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #1A659F; text-transform: uppercase; letter-spacing: 0.04em;">2. Campus Leadership &amp; Contact Desk</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group">
               <label class="form-label">Campus Principal / Head <span class="req-star">*</span></label>
@@ -7235,7 +7235,7 @@ export class AdminModule {
           </div>
 
           <!-- Section 3: Campus Location -->
-          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">3. Location &amp; Physical Address</div>
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #1A659F; text-transform: uppercase; letter-spacing: 0.04em;">3. Location &amp; Physical Address</div>
           <div class="form-group">
             <label class="form-label">Campus Address &amp; Locality</label>
             <input class="form-input" id="sch-address" value="${esc(s.address?.campus || s.campusLocation || 'Baghait, Tapan, Dakshin Dinajpur')}" placeholder="Campus location">
@@ -7280,7 +7280,7 @@ export class AdminModule {
           <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
             <div class="form-group">
               <label class="form-label">Theme Color</label>
-              <input type="color" class="form-input" id="sch-color" value="${esc(s.themeColor || '#BF9A33')}" style="height: 38px; padding: 2px;">
+              <input type="color" class="form-input" id="sch-color" value="${esc(s.themeColor || '#1A659F')}" style="height: 38px; padding: 2px;">
             </div>
             <div class="form-group">
               <label class="form-label">Logo Badge</label>
@@ -7384,7 +7384,7 @@ export class AdminModule {
         <div class="card-header" style="flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;">
           <div>
             <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
-              <i data-lucide="building-2" style="color: #BF9A33;"></i> Institution Profile &amp; Campus Status
+              <i data-lucide="building-2" style="color: #1A659F;"></i> Institution Profile &amp; Campus Status
             </h3>
             <p class="card-desc">
               Manage official campus registration, trust authority, physical location, institutional support contacts, and Head of Institution. Values saved here are applied everywhere across all school portals, website CMS, documents, admission forms, and fee receipts.
@@ -7458,14 +7458,14 @@ export class AdminModule {
               <!-- 4. Head of Institution -->
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
                 <div class="form-group" style="margin: 0;">
-                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #BF9A33; display: flex; align-items: center; gap: 6px;">
+                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #1A659F; display: flex; align-items: center; gap: 6px;">
                     <i data-lucide="crown" style="width: 14px; height: 14px;"></i> Head of Institution (Full Name) *
                   </label>
                   <input type="text" class="form-input inst-inp" id="inst-head-name" value="${esc(details.headOfInstitutionName || '')}" placeholder="e.g. C. M. Basith" style="border-radius: 8px; font-weight: 700;">
                   <div style="font-size: 0.72rem; color: #64748b; margin-top: 2px;">Authorized Executive Head</div>
                 </div>
                 <div class="form-group" style="margin: 0;">
-                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #BF9A33; display: flex; align-items: center; gap: 6px;">
+                  <label class="form-label" style="font-weight: 700; font-size: 0.82rem; color: #1A659F; display: flex; align-items: center; gap: 6px;">
                     <i data-lucide="mail" style="width: 14px; height: 14px;"></i> Head of Institution Email *
                   </label>
                   <input type="email" class="form-input inst-inp font-mono" id="inst-head-email" value="${esc(details.headOfInstitutionEmail || '')}" placeholder="e.g. cmbasith786@gmail.com" style="border-radius: 8px;">
@@ -7476,7 +7476,7 @@ export class AdminModule {
               <!-- 5. Name, Website & Tagline -->
               <div class="form-group" style="margin: 0;">
                 <label class="form-label" style="font-weight: 600; font-size: 0.82rem;">Legal Institution Name *</label>
-                <input type="text" class="form-input inst-inp" id="inst-name" value="${esc(details.name || '')}" placeholder="THAIBA PUBLIC SCHOOL" style="border-radius: 8px; font-weight: 700;">
+                <input type="text" class="form-input inst-inp" id="inst-name" value="${esc(details.name || '')}" placeholder="THAIBA COLLEGE OF INTEGRATED STUDIES" style="border-radius: 8px; font-weight: 700;">
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                 <div class="form-group" style="margin: 0;">
@@ -7491,7 +7491,7 @@ export class AdminModule {
 
               <!-- Save Action -->
               <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button class="btn btn-primary" id="btn-save-inst-details" style="background: #BF9A33; border-color: #BF9A33; padding: 10px 22px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <button class="btn btn-primary" id="btn-save-inst-details" style="background: #1A659F; border-color: #1A659F; padding: 10px 22px; border-radius: 10px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                   <i data-lucide="save"></i> Save Institutional Details
                 </button>
               </div>
@@ -7983,9 +7983,9 @@ export class AdminModule {
         </div>
 
         <div class="kpi-grid" style="margin:16px 0 20px;">
-          <div class="card" style="padding:14px; text-align:center; border-left:3px solid #BF9A33;">
+          <div class="card" style="padding:14px; text-align:center; border-left:3px solid #1A659F;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Active Online Now</div>
-            <div style="font-size:1.8rem; font-weight:800; color:#BF9A33;" id="kpi-online-count">—</div>
+            <div style="font-size:1.8rem; font-weight:800; color:#1A659F;" id="kpi-online-count">—</div>
           </div>
           <div class="card" style="padding:14px; text-align:center; border-left:3px solid #2563eb;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Total Sessions Logged</div>
@@ -8145,7 +8145,7 @@ export class AdminModule {
             <tr data-session-id="${esc(s.id)}">
               <td>
                 <div style="font-weight:700; font-size:0.86rem; display:flex; align-items:center; gap:6px;">
-                  ${isOnline ? '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#BF9A33; box-shadow:0 0 8px #BF9A33;"></span>' : ''}
+                  ${isOnline ? '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#1A659F; box-shadow:0 0 8px #1A659F;"></span>' : ''}
                   ${esc(s.userName || 'TMS User')}
                 </div>
                 <div class="font-mono" style="font-size:0.75rem; color:var(--text-muted);">${esc(s.userEmail || '—')}</div>
@@ -8252,7 +8252,7 @@ export class AdminModule {
         <div class="card-header" style="flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;">
           <div>
             <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
-              <span style="color:#BF9A33;"><i data-lucide="wrench"></i></span>
+              <span style="color:#1A659F;"><i data-lucide="wrench"></i></span>
               System Doctor — Automated Error Diagnosis &amp; Self-Repair
             </h3>
             <p class="card-desc">Deep diagnostic scanner that identifies database inconsistencies, orphaned student records, missing IDs, corrupted finance items, and offline queue drift, with 1-click automatic fixes.</p>
@@ -8272,7 +8272,7 @@ export class AdminModule {
             <div id="doctor-status-badge" class="badge badge-info" style="font-size:0.82rem; padding:4px 10px;">Ready for Diagnosis</div>
             <span id="doctor-status-text" style="font-size:0.85rem; color:var(--text-muted);">Click "Run Deep System Scan" to analyze database health.</span>
           </div>
-          <div id="doctor-issue-count" style="font-weight:700; font-size:0.9rem; color:#BF9A33;">0 Issues Detected</div>
+          <div id="doctor-issue-count" style="font-weight:700; font-size:0.9rem; color:#1A659F;">0 Issues Detected</div>
         </div>
 
         <div style="font-weight:700; font-size:0.92rem; margin:16px 0 10px; display:flex; align-items:center; gap:6px;">
@@ -8498,13 +8498,13 @@ export class AdminModule {
         statusText.innerText = 'All database collections, schemas, and accounts verified intact.';
         if (issueCountEl) {
           issueCountEl.innerText = '0 Issues Detected';
-          issueCountEl.style.color = '#BF9A33';
+          issueCountEl.style.color = '#1A659F';
         }
         repairBtn.disabled = true;
 
         container.innerHTML = `
-          <div style="padding:24px; text-align:center; background:rgba(191, 154, 51,0.06); border:1.5px solid #F2D88C; border-radius:10px; color:#8C6E1E;">
-            <i data-lucide="check-circle-2" style="width:36px;height:36px;display:block;margin:0 auto 8px;color:#BF9A33;"></i>
+          <div style="padding:24px; text-align:center; background:rgba(26, 101, 159,0.06); border:1.5px solid #F2D88C; border-radius:10px; color:#134e7a;">
+            <i data-lucide="check-circle-2" style="width:36px;height:36px;display:block;margin:0 auto 8px;color:#1A659F;"></i>
             <div style="font-weight:700; font-size:1.05rem;">All Core Subsystems Operating Correctly</div>
             <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">No data corruption, schema drift, or broken relationships detected across any campus table.</div>
           </div>
@@ -8636,7 +8636,7 @@ export class AdminModule {
         <div class="kpi-grid" style="margin:16px 0 20px;">
           <div class="card" style="padding:14px; text-align:center;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Supabase Status</div>
-            <div style="font-size:1.1rem; font-weight:800; color:#BF9A33; margin-top:4px;" id="dev-kpi-status">Connected</div>
+            <div style="font-size:1.1rem; font-weight:800; color:#1A659F; margin-top:4px;" id="dev-kpi-status">Connected</div>
           </div>
           <div class="card" style="padding:14px; text-align:center;">
             <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Roundtrip Ping</div>
@@ -8715,7 +8715,7 @@ export class AdminModule {
         const elapsed = Math.round(performance.now() - start);
         if (pingEl) {
           pingEl.innerText = `${elapsed} ms`;
-          pingEl.style.color = elapsed < 300 ? '#BF9A33' : '#f59e0b';
+          pingEl.style.color = elapsed < 300 ? '#1A659F' : '#f59e0b';
         }
       } catch (err) {
         if (pingEl) {
@@ -8885,11 +8885,11 @@ const safeOn = (id, event, fn) => {
     ];
 
     tabContent.innerHTML = `
-      <div class="card" style="border-left: 4px solid #BF9A33; margin-bottom: 24px;">
+      <div class="card" style="border-left: 4px solid #1A659F; margin-bottom: 24px;">
         <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
           <div>
             <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0 0 4px; display: flex; align-items: center; gap: 8px;">
-              <span style="color: #BF9A33;"><i data-lucide="database"></i></span>
+              <span style="color: #1A659F;"><i data-lucide="database"></i></span>
               Institutional Data Snapshot &amp; Disaster Recovery
             </h2>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
@@ -8904,7 +8904,7 @@ const safeOn = (id, event, fn) => {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0;">
           ${stats.map(s => `
             <div style="background: var(--bg-subtle, #f8fafc); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 12px;">
-              <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(191, 154, 51, 0.1); color: #BF9A33; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(26, 101, 159, 0.1); color: #1A659F; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <i data-lucide="${s.icon}"></i>
               </div>
               <div>
@@ -9241,9 +9241,9 @@ const safeOn = (id, event, fn) => {
     const bodyHtml = `
       <form id="edit-app-form" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Status & Meta Bar -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; background:#FDF8E8; border:1px solid #F7E8B5; padding:12px 16px; border-radius:8px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; background:#eef5fa; border:1px solid #F7E8B5; padding:12px 16px; border-radius:8px;">
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Application Status</label>
+            <label class="form-label" style="font-size:0.75rem; color:#134e7a; font-weight:700;">Application Status</label>
             <select class="form-select form-select-sm" id="ea-status">
               <option value="Submitted" ${app.status === 'Submitted' ? 'selected' : ''}>Submitted</option>
               <option value="Under Verification" ${app.status === 'Under Verification' ? 'selected' : ''}>Under Verification</option>
@@ -9253,7 +9253,7 @@ const safeOn = (id, event, fn) => {
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Payment Status</label>
+            <label class="form-label" style="font-size:0.75rem; color:#134e7a; font-weight:700;">Payment Status</label>
             <select class="form-select form-select-sm" id="ea-pay-status">
               <option value="Not Required" ${app.paymentStatus === 'Not Required' ? 'selected' : ''}>Not Required</option>
               <option value="Pending" ${app.paymentStatus === 'Pending' ? 'selected' : ''}>Pending</option>
@@ -9263,14 +9263,14 @@ const safeOn = (id, event, fn) => {
             </select>
           </div>
           <div>
-            <label class="form-label" style="font-size:0.75rem; color:#8C6E1E; font-weight:700;">Total Fees (₹)</label>
+            <label class="form-label" style="font-size:0.75rem; color:#134e7a; font-weight:700;">Total Fees (₹)</label>
             <input type="number" class="form-input form-input-sm" id="ea-fee-total" value="${esc(app.feeTotal != null ? app.feeTotal : 0)}">
           </div>
         </div>
 
         <!-- Section 1: Candidate Identity -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="user" style="width:16px;height:16px;"></i> 1. Candidate Details
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -9320,7 +9320,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 2: Guardian Details -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="users" style="width:16px;height:16px;"></i> 2. Guardian &amp; Contact Details
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -9357,7 +9357,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 3: Address & School -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="map-pin" style="width:16px;height:16px;"></i> 3. Address &amp; Academic History
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
@@ -9398,7 +9398,7 @@ const safeOn = (id, event, fn) => {
 
         <!-- Section 4: Attached Files -->
         <div class="card" style="margin:0; padding:14px; border:1px solid var(--border-color); border-radius:8px;">
-          <div style="font-weight:700; font-size:0.85rem; color:#8C6E1E; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+          <div style="font-weight:700; font-size:0.85rem; color:#134e7a; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
             <i data-lucide="paperclip" style="width:16px;height:16px;"></i> 4. Attached Files &amp; Uploads
           </div>
           <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
@@ -9590,7 +9590,7 @@ Please keep your login details safe and confidential.`;
   static compileCredentialMessage({ name, role, username, password, customUrl }) {
     const cfg = this.getCredentialShareConfig();
     const portalUrl = customUrl || `${cfg.domain}/login.html`;
-    const schoolName = TMS_CONFIG.schoolName || 'Thaiba Public School';
+    const schoolName = TMS_CONFIG.schoolName || 'Thaiba College of Integrated Studies';
 
     let msg = cfg.template;
     msg = msg.replace(/{name}/g, name || 'User');
@@ -9663,7 +9663,7 @@ Please keep your login details safe and confidential.`;
         </div>
 
         <div>
-          <label class="form-label" style="font-size:0.78rem; font-weight:700; color:#8C6E1E; display:flex; align-items:center; gap:6px;">
+          <label class="form-label" style="font-size:0.78rem; font-weight:700; color:#134e7a; display:flex; align-items:center; gap:6px;">
             <i data-lucide="eye" style="width:14px;height:14px;"></i> Live Preview
           </label>
           <pre id="cst-preview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:0.8rem; white-space:pre-wrap; color:#1e293b; margin:0; max-height:160px; overflow-y:auto;">${esc(previewMsg)}</pre>
@@ -9689,7 +9689,7 @@ Please keep your login details safe and confidential.`;
       const template = document.getElementById('cst-template')?.value || '';
       const domain = document.getElementById('cst-domain')?.value.trim() || window.location.origin;
       const portalUrl = `${domain}/login.html`;
-      const schoolName = TMS_CONFIG.schoolName || 'Thaiba Public School';
+      const schoolName = TMS_CONFIG.schoolName || 'Thaiba College of Integrated Studies';
 
       let out = template;
       out = out.replace(/{name}/g, sampleProfile.name);

@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Role-Based Access Control (RBAC) & Permission Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Role-Based Access Control (RBAC) & Permission Engine
  *
  * Authorisation derives EXCLUSIVELY from the server-verified profile
  * (role + scope) held by authService. No email or client value can elevate

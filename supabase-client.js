@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Supabase Data Layer
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Supabase Data Layer
  * Strict Production Mode: No Hardcoded Demo Seed Data
  *
  * Converts between the database's snake_case columns and the application's

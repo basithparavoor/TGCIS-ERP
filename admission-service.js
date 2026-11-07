@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Admission Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Admission Service
  * Drives the customizable admission form, fee selection, UPI payment reference,
  * the application lifecycle (submit -> verify -> approve/reject), parent
  * credential generation and payment ledger.
@@ -18,7 +18,7 @@ const STATUS = TMS_CONFIG.admissionStatuses;
 /* ------------------------------------------------------------------ */
 
 export const DEFAULT_FIELDS = [
-  { key: 'schoolId', label: 'Select Campus / School Branch', type: 'select', section: 'Candidate Details', required: true, order: 0, options: ['THAIBA PUBLIC SCHOOL (TPS-TAPAN)', 'THAIBA MODEL SCHOOL (TMS-TAPAN)'], placeholder: 'Choose campus branch' },
+  { key: 'schoolId', label: 'Select Campus / School Branch', type: 'select', section: 'Candidate Details', required: true, order: 0, options: ['THAIBA COLLEGE OF INTEGRATED STUDIES (TGCIS-TAPAN)', 'THAIBA MODEL SCHOOL (TMS-TAPAN)'], placeholder: 'Choose campus branch' },
   { key: 'candidateName', label: "Candidate's Name", type: 'text', section: 'Candidate Details', required: true, order: 1, placeholder: 'Full name as per birth certificate' },
   { key: 'dob', label: 'Date of Birth', type: 'date', section: 'Candidate Details', required: true, order: 2 },
   { key: 'gender', label: 'Gender', type: 'select', section: 'Candidate Details', required: true, order: 3, options: ['Male', 'Female', 'Other'] },
@@ -195,7 +195,7 @@ class AdmissionService {
       formTitle: existing.formTitle || 'Admission Application Form',
       formSubtitle: existing.formSubtitle || 'Run by : Thaiba Heritage, Kolkata',
       admitCardTitle: existing.admitCardTitle || 'ADMIT CARD',
-      admitCardSubtitle: existing.admitCardSubtitle || 'THAIBA PUBLIC SCHOOL',
+      admitCardSubtitle: existing.admitCardSubtitle || 'THAIBA COLLEGE OF INTEGRATED STUDIES',
       admitCardAddress: existing.admitCardAddress || 'Baghait, Tapan, Dakshin Dinajpur • Contact : +91 8653382851, +91 8167782851',
       formFee: Number(existing.formFee || 0),
       showFeeStructure: existing.showFeeStructure === true,

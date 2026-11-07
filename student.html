@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Learner Portal — THAIBA PUBLIC SCHOOL</title>
+  <title>Student Learner Portal — THAIBA COLLEGE OF INTEGRATED STUDIES</title>
   <link rel="icon" type="image/png" href="./tps-logo.png">
   <link rel="apple-touch-icon" href="./tps-logo.png">
   <link rel="stylesheet" href="app.css">
@@ -220,7 +220,7 @@
             if (!myLeaves.length) {
               leaveRows.innerHTML = `
                 <div style="text-align: center; color: var(--text-muted); padding: 24px; background: var(--bg-subtle, #F8FAFC); border-radius: 10px;">
-                  <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #BF9A33;"></i>
+                  <i data-lucide="calendar-check" style="width:36px; height:36px; display:block; margin:0 auto 8px; color: #1A659F;"></i>
                   <div style="font-weight: 600;">No Leave Applications on Record</div>
                   <div style="font-size: 0.8rem; margin-top: 2px;">Need time off? Click "Apply for Leave" above.</div>
                 </div>
@@ -263,7 +263,7 @@
                           </td>
                           <td>
                             <div style="font-weight: 600;">${esc(l.fromDate)} – ${esc(l.toDate)}</div>
-                            <div style="font-size: 0.74rem; color: #BF9A33; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
+                            <div style="font-size: 0.74rem; color: #1A659F; font-weight: 700;">${esc(l.totalDays)} Day(s)</div>
                           </td>
                           <td>
                             ${l.gatePassNo ? `
@@ -330,7 +330,7 @@
             tbRows.innerHTML = classSlots.slice(0, 7).map((slot, i) => `
               <tr>
                 <td><strong>Period ${slot.period || (i + 1)}</strong></td>
-                <td style="color: #BF9A33; font-weight: 700;">${esc(slot.subject || 'General')}</td>
+                <td style="color: #1A659F; font-weight: 700;">${esc(slot.subject || 'General')}</td>
                 <td>${esc(slot.teacherName || 'Faculty')}</td>
                 <td>${esc(slot.room || 'Room ' + (slot.section || 'A'))}</td>
               </tr>
@@ -359,7 +359,7 @@
           } else {
             hwEl.innerHTML = `
               <div style="text-align: center; color: var(--text-muted); padding: 24px;">
-                <i data-lucide="check-circle" style="width:36px;height:36px;display:block;margin:0 auto 10px; color: #BF9A33;"></i>
+                <i data-lucide="check-circle" style="width:36px;height:36px;display:block;margin:0 auto 10px; color: #1A659F;"></i>
                 All assignments completed!
               </div>
             `;

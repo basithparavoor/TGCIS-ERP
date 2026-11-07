@@ -3,7 +3,7 @@ import { institutionService } from './institution-service.js';
 export const SAMPLE_STUDENTS = [];
 
 /**
- * THAIBA PUBLIC SCHOOL — Student Lifecycle, Admissions & Identity Module
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Student Lifecycle, Admissions & Identity Module
  */
 
 import { TMS_CONFIG } from './config.js';
@@ -156,7 +156,7 @@ export class StudentModule {
                 <div class="tms-data-card-row">
                   <span class="tms-data-card-label">Contact</span>
                   <span class="tms-data-card-value">
-                    ${s.guardianPhone ? `<a href="tel:${esc(s.guardianPhone)}" style="color: #BF9A33; text-decoration: none; font-family: var(--font-mono);">${esc(s.guardianPhone)}</a>` : '—'}
+                    ${s.guardianPhone ? `<a href="tel:${esc(s.guardianPhone)}" style="color: #1A659F; text-decoration: none; font-family: var(--font-mono);">${esc(s.guardianPhone)}</a>` : '—'}
                   </span>
                 </div>
                 ${(s.allergies || s.medical_conditions) ? `
@@ -169,7 +169,7 @@ export class StudentModule {
               </div>
               <div class="tms-data-card-actions">
                 <button class="btn btn-secondary btn-sm btn-print-id" data-id="${esc(s.id)}" title="Print ID Card"><i data-lucide="id-card"></i> ID</button>
-                <button class="btn btn-secondary btn-sm btn-merit-log" data-id="${esc(s.id)}" title="Merits &amp; Conduct" style="color: #BF9A33;"><i data-lucide="shield-check"></i> Merit</button>
+                <button class="btn btn-secondary btn-sm btn-merit-log" data-id="${esc(s.id)}" title="Merits &amp; Conduct" style="color: #1A659F;"><i data-lucide="shield-check"></i> Merit</button>
                 <button class="btn btn-secondary btn-sm btn-view-profile" data-id="${esc(s.id)}" title="View Details"><i data-lucide="eye"></i> View</button>
                 ${canManage ? `
                   <button class="btn btn-secondary btn-sm btn-edit-student" data-id="${esc(s.id)}" title="Edit student"><i data-lucide="pencil"></i></button>
@@ -234,7 +234,7 @@ export class StudentModule {
                     <div style="font-weight:700; font-size:0.86rem; color:#1E293B;">${esc(s.guardianName || s.parentName || 'Parent')}</div>
                     <div style="font-size:0.78rem; color:#64748B; display:flex; align-items:center; gap:5px; margin-top:2px; font-family:var(--font-mono);">
                       <span>${esc(s.guardianPhone || '—')}</span>
-                      ${s.guardianPhone ? `<a href="https://wa.me/91${esc(s.guardianPhone).replace(/[^0-9]/g, '')}" target="_blank" title="WhatsApp Message" style="color:#BF9A33; display:inline-flex; align-items:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg></a>` : ''}
+                      ${s.guardianPhone ? `<a href="https://wa.me/91${esc(s.guardianPhone).replace(/[^0-9]/g, '')}" target="_blank" title="WhatsApp Message" style="color:#1A659F; display:inline-flex; align-items:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/></svg></a>` : ''}
                     </div>
                   </td>
                   <td style="padding:14px 16px;">
@@ -887,8 +887,8 @@ export class StudentModule {
         </div>
 
         <!-- Add Award / Demerit Form -->
-        <div style="background: #ffffff; border: 1.5px solid #BF9A33; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
-          <div style="font-size: 0.88rem; font-weight: 700; color: #8C6E1E; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+        <div style="background: #ffffff; border: 1.5px solid #1A659F; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+          <div style="font-size: 0.88rem; font-weight: 700; color: #134e7a; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
             <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i> Award Merit Badge or Record Disciplinary Notice
           </div>
           <div style="display: grid; grid-template-columns: 140px 1fr 100px; gap: 10px; margin-bottom: 10px;">
@@ -956,7 +956,7 @@ export class StudentModule {
                       </td>
                       <td><strong>${esc(m.category)}</strong></td>
                       <td style="color: #64748b;">${esc(m.reason || '—')}</td>
-                      <td style="text-align: center; font-weight: 700; color: ${m.type === 'merit' ? '#BF9A33' : '#dc2626'};" class="font-mono">
+                      <td style="text-align: center; font-weight: 700; color: ${m.type === 'merit' ? '#1A659F' : '#dc2626'};" class="font-mono">
                         ${m.type === 'merit' ? '+' : '-'}${Math.abs(m.points)}
                       </td>
                       <td style="font-size: 0.75rem; color: #64748b;">${esc(m.date || (m.createdAt || '').slice(0, 10))}</td>
@@ -1162,7 +1162,7 @@ export class StudentModule {
     return `
       <div class="pvc-id-card-pair" style="display:inline-flex; gap:16px; margin:10px; font-family:'Plus Jakarta Sans', sans-serif; text-align:left;">
         <!-- FRONT SIDE -->
-        <div class="pvc-card-side" style="width:336px; height:212px; border-radius:12px; background:linear-gradient(135deg, #064e3b 0%, #0f172a 100%); color:#fff; position:relative; overflow:hidden; border:2px solid #BF9A33; box-shadow:0 6px 20px rgba(0,0,0,0.25); display:flex; flex-direction:column; justify-content:space-between; padding:12px; box-sizing:border-box;">
+        <div class="pvc-card-side" style="width:336px; height:212px; border-radius:12px; background:linear-gradient(135deg, #0d324d 0%, #1A659F 100%); color:#fff; position:relative; overflow:hidden; border:2px solid #1A659F; box-shadow:0 6px 20px rgba(0,0,0,0.25); display:flex; flex-direction:column; justify-content:space-between; padding:12px; box-sizing:border-box;">
           <div style="position:absolute; top:-35px; right:-35px; width:110px; height:110px; border-radius:50%; background:radial-gradient(circle, rgba(34,197,94,0.22) 0%, transparent 70%); pointer-events:none;"></div>
           
           <!-- Header -->
@@ -1176,7 +1176,7 @@ export class StudentModule {
                 Run by : Thaiba Heritage, Kolkata
               </div>
             </div>
-            <span style="font-size:7px; background:#BF9A33; color:#fff; padding:2px 6px; border-radius:4px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;">Student</span>
+            <span style="font-size:7px; background:#1A659F; color:#fff; padding:2px 6px; border-radius:4px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em;">Student</span>
           </div>
 
           <!-- Body -->
@@ -1215,7 +1215,7 @@ export class StudentModule {
 
           <ul style="list-style:disc; margin:4px 0 4px 14px; padding:0; font-size:7.5px; color:#94a3b8;">
             <li>This card is institutional property and must be worn inside campus.</li>
-            <li>If found, please return to THAIBA PUBLIC SCHOOL, Baghait, Tapan.</li>
+            <li>If found, please return to THAIBA COLLEGE OF INTEGRATED STUDIES, Baghait, Tapan.</li>
             <li>Lost cards must be reported to the school office immediately.</li>
           </ul>
 
@@ -1983,7 +1983,7 @@ export class StudentModule {
             Fill your data in the downloaded CSV template and upload it here. You can drag and drop the file.
           </div>
           <input type="file" id="bulk-import-file-input" accept=".csv,text/csv" class="form-input" style="padding:10px; border-radius:8px;">
-          <div id="detected-columns-strip" style="display:none; margin-top:8px; font-size:0.78rem; color:#8C6E1E; font-weight:600; background:#FDF8E8; border:1px solid #F7E8B5; border-radius:6px; padding:6px 12px;"></div>
+          <div id="detected-columns-strip" style="display:none; margin-top:8px; font-size:0.78rem; color:#134e7a; font-weight:600; background:#eef5fa; border:1px solid #F7E8B5; border-radius:6px; padding:6px 12px;"></div>
         </div>
 
         <!-- Step 3: Preview Area -->

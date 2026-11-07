@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Notification Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Notification Service
  * Admin-created notices, audience-targeted, with per-user read state.
  *
  * The database enforces visibility (RLS); this service mirrors the same

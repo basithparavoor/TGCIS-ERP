@@ -1,5 +1,5 @@
 ﻿/**
- * THAIBA PUBLIC SCHOOL — Immutable Audit Trail & Activity Logging Service
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Immutable Audit Trail & Activity Logging Service
  */
 
 import { authService } from './auth-service.js';

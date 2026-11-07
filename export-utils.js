@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Enterprise Export Utilities & PDF Engine
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Enterprise Export Utilities & PDF Engine
  * Professional High-DPI Print-to-PDF, Standardized Filenames,
  * Institutional Header/Footer Branding, and UTF-8 CSV Exporter.
  */
@@ -79,7 +79,7 @@ export function downloadCsv(filename, rows) {
  */
 export function renderDocumentHeader(opts = {}) {
   const inst = TMS_CONFIG?.institution || {};
-  const instName = opts.institutionName || inst.name || 'THAIBA PUBLIC SCHOOL';
+  const instName = opts.institutionName || inst.name || 'THAIBA COLLEGE OF INTEGRATED STUDIES';
   const tagline = opts.tagline || inst.tagline || 'Run by : Thaiba Heritage, Kolkata';
   const regNo = opts.regNo || inst.regNo || 'IV 01894/2011';
   const address = opts.address || `${inst.address?.campus || 'Baghait, Tapan'}, ${inst.address?.district || 'Dakshin Dinajpur'} - ${inst.address?.pin || '733127'} (W.B.)`;
@@ -168,7 +168,7 @@ export function renderDocumentFooter(opts = {}) {
       <div class="tms-footer-meta-row">
         <div class="tms-footer-left">
           <span style="color:#16a34a; font-weight:800;">●</span>
-          <strong>Thaiba Public School ERP</strong>
+          <strong>Thaiba College of Integrated Studies ERP</strong>
           <span class="tms-footer-dim">• Computer Generated Official Record • Tamper Evident</span>
         </div>
         <div class="tms-footer-center">
@@ -759,7 +759,7 @@ export async function shareContent({ title, text, url }) {
   if (typeof navigator !== 'undefined' && navigator.share) {
     try {
       await navigator.share({
-        title: title || 'Thaiba Public School',
+        title: title || 'Thaiba College of Integrated Studies',
         text: text || '',
         url: url || window.location.href
       });

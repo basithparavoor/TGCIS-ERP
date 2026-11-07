@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Institutional Event & Academic Calendar Planner
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Institutional Event & Academic Calendar Planner
  * Comprehensive Executive Academic Calendar Suite
  * Features:
  * - Structural: Unified executive layout, generous full-width grid, zero header clipping
@@ -1723,10 +1723,10 @@ export class CalendarModule {
     let ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//Thaiba Public School//Academic Calendar//EN',
+      'PRODID:-//Thaiba College of Integrated Studies//Academic Calendar//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
-      'X-WR-CALNAME:Thaiba Public School Academic Calendar',
+      'X-WR-CALNAME:Thaiba College of Integrated Studies Academic Calendar',
       'X-WR-TIMEZONE:Asia/Kolkata'
     ];
 
@@ -1742,7 +1742,7 @@ export class CalendarModule {
         `DTEND;VALUE=DATE:${dt}`,
         `SUMMARY:${ev.name || 'School Event'}`,
         `DESCRIPTION:${(ev.description || ev.name || '').replace(/\n/g, '\\n')}`,
-        'LOCATION:Thaiba Public School, Kolkata, West Bengal',
+        'LOCATION:Thaiba College of Integrated Studies, Kolkata, West Bengal',
         'STATUS:CONFIRMED',
         'END:VEVENT'
       );
@@ -1779,10 +1779,10 @@ export class CalendarModule {
       </style>
 
       <div id="annual-cal-print" style="background:#fff; color:#0f172a; padding:20px; font-family:'Plus Jakarta Sans', sans-serif;">
-        <div style="text-align:center; border-bottom:2px solid #BF9A33; padding-bottom:12px; margin-bottom:16px;">
+        <div style="text-align:center; border-bottom:2px solid #1A659F; padding-bottom:12px; margin-bottom:16px;">
           <div style="display:flex; justify-content:center; margin-bottom:4px;">${emblem}</div>
-          <h2 style="font-size:1.35rem; font-weight:800; color:#8C6E1E; text-transform:uppercase; margin:0;">${esc(TMS_CONFIG?.institution?.name || 'Thaiba Public School')}</h2>
-          <div style="font-size:0.8rem; font-weight:600; color:#8C6E1E;">Run by : Thaiba Heritage, Kolkata</div>
+          <h2 style="font-size:1.35rem; font-weight:800; color:#134e7a; text-transform:uppercase; margin:0;">${esc(TMS_CONFIG?.institution?.name || 'Thaiba College of Integrated Studies')}</h2>
+          <div style="font-size:0.8rem; font-weight:600; color:#134e7a;">Run by : Thaiba Heritage, Kolkata</div>
           <div style="font-size:0.75rem; color:#64748b;">ANNUAL INSTITUTIONAL ACADEMIC &amp; EVENT CALENDAR • SESSION ${esc(this._calendarStore.academic_year || '2026-2027')}</div>
         </div>
 

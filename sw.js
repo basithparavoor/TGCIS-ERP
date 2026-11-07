@@ -1,5 +1,5 @@
 /**
- * THAIBA PUBLIC SCHOOL — Service Worker (v2)
+ * THAIBA COLLEGE OF INTEGRATED STUDIES — Service Worker (v2)
  * Robust Network-First Offline Caching
  */
 
