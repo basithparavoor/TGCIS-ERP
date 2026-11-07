@@ -3617,39 +3617,41 @@
   </script>
 
   <!-- Campus Showcase Modal -->
-  <div id="campus-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:99999; backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
-    <div style="background:#ffffff; border-radius:20px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.25); position:relative; overflow:hidden;">
-      <button id="btn-close-campus-modal" onclick="document.getElementById('campus-detail-modal').style.display='none'" style="position:absolute; top:16px; right:16px; z-index:10; background:rgba(0,0,0,0.5); border:none; color:#ffffff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+  <div id="campus-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:99999; backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; overflow-y:auto;">
+    <div style="background:#ffffff; border-radius:20px; max-width:720px; width:100%; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 40px rgba(0,0,0,0.25); position:relative; overflow:hidden; margin:auto;">
+      <button id="btn-close-campus-modal" onclick="document.getElementById('campus-detail-modal').style.display='none'" style="position:absolute; top:16px; right:16px; z-index:10; background:rgba(0,0,0,0.6); border:none; color:#ffffff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 0.15s ease;">
         <i data-lucide="x" style="width:18px; height:18px;"></i>
       </button>
 
-      <div style="height:220px; position:relative; overflow:hidden; background:#0f172a;">
+      <div style="height:200px; position:relative; overflow:hidden; background:#0f172a; flex-shrink:0;">
         <img id="modal-camp-banner" src="" alt="Campus Banner" style="width:100%; height:100%; object-fit:cover; opacity:0.85;">
-        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 60%);"></div>
-        <div style="position:absolute; bottom:18px; left:22px; right:22px;">
-          <div style="display:flex; gap:8px; margin-bottom:6px;">
+        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,0.92) 0%, transparent 60%);"></div>
+        <div style="position:absolute; bottom:16px; left:22px; right:22px;">
+          <div style="display:flex; gap:8px; margin-bottom:6px; flex-wrap:wrap;">
             <span id="modal-camp-code" style="background:#BF9A33; color:#fff; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:6px;"></span>
             <span id="modal-camp-board" style="background:rgba(255,255,255,0.25); color:#fff; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px;"></span>
           </div>
-          <h2 id="modal-camp-name" style="margin:0; font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:#ffffff; line-height:1.2;"></h2>
+          <h2 id="modal-camp-name" style="margin:0; font-family:var(--font-display); font-size:1.5rem; font-weight:800; color:#ffffff; line-height:1.2;"></h2>
         </div>
       </div>
 
-      <div style="padding:24px;">
-        <p id="modal-camp-tagline" style="font-size:0.95rem; font-style:italic; color:#BF9A33; font-weight:700; margin:0 0 14px 0;"></p>
-        <p id="modal-camp-desc" style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0 0 20px 0;"></p>
+      <div style="padding:22px 24px; overflow-y:auto; -webkit-overflow-scrolling:touch; flex:1; display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <p id="modal-camp-tagline" style="font-size:0.95rem; font-style:italic; color:#BF9A33; font-weight:700; margin:0 0 8px 0;"></p>
+          <p id="modal-camp-desc" style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0;"></p>
+        </div>
 
-        <div style="margin-bottom:20px;">
-          <h4 style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 10px 0;">Offered Classes &amp; Programs</h4>
+        <div>
+          <h4 style="font-size:0.82rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 8px 0;">Offered Classes &amp; Programs</h4>
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; font-weight:700; color:#1e293b; font-size:0.9rem;" id="modal-camp-grades"></div>
         </div>
 
-        <div style="margin-bottom:20px;">
-          <h4 style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 10px 0;">Campus Facilities &amp; Amenities</h4>
-          <div id="modal-camp-facilities" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;"></div>
+        <div>
+          <h4 style="font-size:0.82rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 8px 0;">Campus Facilities &amp; Amenities</h4>
+          <div id="modal-camp-facilities" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:8px;"></div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
           <div>
             <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase;">Principal / Head</div>
             <div id="modal-camp-principal" style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:2px;"></div>
@@ -3664,9 +3666,9 @@
           </div>
         </div>
 
-        <div style="display:flex; gap:12px; justify-content:flex-end;">
+        <div style="display:flex; gap:12px; justify-content:flex-end; padding-top:8px; border-top:1px solid #f1f5f9; position:sticky; bottom:0; background:#ffffff; margin-top:auto;">
           <button class="btn btn-secondary" onclick="document.getElementById('campus-detail-modal').style.display='none'">Close</button>
-          <a href="/admission" id="modal-camp-apply-btn" class="btn btn-primary" style="text-decoration:none; padding:10px 20px; font-weight:700;">
+          <a href="/admission" id="modal-camp-apply-btn" class="btn btn-primary" style="text-decoration:none; padding:10px 20px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
             <i data-lucide="pen-tool" style="width:16px; height:16px;"></i> Apply for Admission at this Campus
           </a>
         </div>

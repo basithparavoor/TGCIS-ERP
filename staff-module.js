@@ -138,6 +138,7 @@ export class StaffModule {
                   <td>
                     <strong>${esc(emp.name)}</strong>
                     <div style="font-size: 0.75rem; color: var(--text-muted);">${esc(emp.email)}</div>
+                    ${emp.school_id || emp.schoolId ? `<span class="badge staff-campus-badge" style="font-size:0.65rem; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; font-weight:700; text-transform:uppercase; margin-top:2px; display:inline-block;">🏫 ${esc(institutionService.getSchool(emp.school_id || emp.schoolId)?.shortName || emp.school_id || emp.schoolId)}</span>` : ''}
                   </td>
                   <td>${esc(emp.department)}</td>
                   <td><strong>${esc(emp.designation)}</strong></td>
@@ -282,6 +283,12 @@ export class StaffModule {
     const bodyHtml = `
       <form id="form-new-staff">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label">Campus / School Branch *</label>
+            <select class="form-select" id="stf-school" style="font-weight:700;">
+              ${institutionService.getSchools().map(sc => `<option value="${sc.id}" ${(e.school_id === sc.id || e.schoolId === sc.id || (!e.school_id && institutionService.getActiveSchoolId() === sc.id)) ? 'selected' : ''}>🏫 ${esc(sc.name)} (${esc(sc.code || sc.shortName || sc.id)})</option>`).join('')}
+            </select>
+          </div>
           <div class="form-group">
             <label class="form-label">Full Name *</label>
             <input class="form-input" id="stf-name" required value="${esc(e.name || '')}" placeholder="e.g. Mrs. Khadija Beevi">
@@ -382,7 +389,9 @@ export class StaffModule {
       joiningDate: document.getElementById('stf-joining').value,
       assignedClass: document.getElementById('stf-class').value,
       assignedSection: document.getElementById('stf-section').value,
-      status: document.getElementById('stf-status').value
+      status: document.getElementById('stf-status').value,
+      school_id: document.getElementById('stf-school')?.value || (institutionService.getActiveSchoolId() === 'all' ? 'tps' : institutionService.getActiveSchoolId()),
+      schoolId: document.getElementById('stf-school')?.value || (institutionService.getActiveSchoolId() === 'all' ? 'tps' : institutionService.getActiveSchoolId())
     };
   }
 

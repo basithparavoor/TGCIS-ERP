@@ -20,32 +20,7 @@ export const LEAVE_TYPES = [
   { id: 'other', label: 'Other Permitted Absence', icon: 'file-text' }
 ];
 
-export const INITIAL_STUDENT_LEAVES = [
-  {
-    id: 'LV-2026-001',
-    studentId: 'std-5',
-    studentName: 'Sultana Sarkar',
-    admissionNo: 'TPS-2026-005',
-    grade: 'STD-III',
-    section: 'A',
-    leaveType: 'Medical / Health Leave',
-    fromDate: '2026-11-05',
-    toDate: '2026-11-08',
-    totalDays: 4,
-    reason: 'Severe seasonal fever and dental treatment in Malda clinic.',
-    emergencyPhone: '9800880620',
-    appliedBy: 'parent',
-    appliedByName: 'Golam Kibria (Guardian)',
-    status: 'APPROVED_ON_LEAVE',
-    issuedBy: 'Br. Abdul Basith (Academic Council)',
-    issuedAt: '2026-11-05 08:30 AM',
-    gatePassNo: 'GP-2026-042',
-    expectedReturn: '2026-11-08 06:00 PM',
-    actualReturn: null,
-    returnedMarkedBy: null,
-    createdAt: '2026-11-04T18:20:00Z'
-  }
-];
+export const INITIAL_STUDENT_LEAVES = [];
 
 export class StudentLeaveService {
   /* ------------------------------------------------------------------ */
@@ -53,18 +28,11 @@ export class StudentLeaveService {
   /* ------------------------------------------------------------------ */
   static async getLeaves() {
     let records = await dbService.select('student_leaves');
-    if (!records || !records.length) {
-      // Seed default leave record so there is an active on-leave student for demo
-      for (const item of INITIAL_STUDENT_LEAVES) {
-        await dbService.insert('student_leaves', item);
-      }
-      records = [...INITIAL_STUDENT_LEAVES];
-    }
+    if (!records) records = [];
     if (window.institutionService) {
       return window.institutionService.filterByActiveSchool(records);
     }
     return records;
-  }
 
   /* ------------------------------------------------------------------ */
   /* Check if student is actively ON LEAVE for a specific date          */

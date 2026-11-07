@@ -17,7 +17,7 @@ import { TMS_LOGO } from './logo.js';
 import { QRCodeGenerator } from './qr-generator.js';
 import { exportPdf, formatPdfFilename } from './export-utils.js';
 import { BiometricCredentialModal } from './biometric-credential-modal.js';
-import { SAMPLE_STUDENTS } from './student-module.js';
+import { [] } from './student-module.js';
 
 export const CARD_TEMPLATES = {
   Gold: {
@@ -81,7 +81,7 @@ export class IdCardsModule {
       dbService.select('staff_directory')
     ]);
 
-    this._students = (allStudents && allStudents.length) ? allStudents : SAMPLE_STUDENTS;
+    this._students = (allStudents && allStudents.length) ? allStudents : [];
     this._staff = (allStaff && allStaff.length) ? allStaff : [
       { id: 'st-1', name: 'muhammad mubashir', staffId: 'FAC-2026-001', designation: 'Senior Faculty', department: 'Arabic & Moral Studies', phone: '9847123456', avatar: '/assets/avatars/std-1.png' },
       { id: 'st-2', name: 'Hafiz Tariq', staffId: 'FAC-2026-002', designation: 'Hifz Instructor', department: 'Hifz Academy', phone: '9847654321', avatar: '/assets/avatars/std-2.png' },

@@ -6559,183 +6559,527 @@ export class AdminModule {
     const isCentral = institutionService.isCentralManagementMode();
     const groupProfile = institutionService.getGroupProfile();
 
-    const [students, staff, facilities] = await Promise.all([
+    if (!this._schoolsActiveTab) {
+      this._schoolsActiveTab = 'all';
+    }
+    const currentTab = this._schoolsActiveTab;
+    if (!this._subSchoolSection) {
+      this._subSchoolSection = 'essentials';
+    }
+    const currentSection = this._subSchoolSection;
+
+    const [students, staff, classes, facilities, sessions] = await Promise.all([
       dbService.select('students').catch(() => []),
-      dbService.select('staff_directory').catch(() => []),
-      dbService.select('facilities').catch(() => [])
+      dbService.select('staff').catch(() => []),
+      dbService.select('academic_classes').catch(() => []),
+      dbService.select('facilities').catch(() => []),
+      dbService.select('academic_sessions').catch(() => [])
     ]);
 
     const totalStudents = students.length;
     const totalStaff = staff.length;
+    const totalClasses = classes.length;
     const totalFacilities = facilities.length;
 
+    // Active selected school object if a specific school is chosen
+    const selectedSchool = schools.find(s => s.id === currentTab);
+
     tabContent.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 18px;">
         <!-- Header Card -->
         <div class="card" style="margin-bottom: 0;">
           <div class="card-header" style="flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: flex-start;">
             <div>
               <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin: 0;">
-                  <i data-lucide="building-2" style="color: #BF9A33;"></i> Schools, Campuses &amp; Sub-Managements
+                  <i data-lucide="building-2" style="color: #BF9A33;"></i> Schools, Campuses &amp; Sub-Managements Console
                 </h3>
                 <span class="badge ${isCentral ? 'badge-info' : 'badge-success'}" style="font-weight: 800;">
-                  ${isCentral ? 'Central Group HQ Overview' : `Active: ${esc(institutionService.getActiveSchool()?.shortName || 'Branch')}`}
+                  ${isCentral ? 'Central Group HQ Overview' : `Active Console: ${esc(institutionService.getActiveSchool()?.shortName || 'Branch')}`}
                 </span>
               </div>
               <p class="card-desc" style="margin-top: 6px;">
-                Super Admin centralized governance over all member schools, branch principals, admissions, and website campus pages.
+                Complete single-window governance over all sub-schools, branch principals, staff, students, syllabus, facilities and website showcases.
               </p>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="btn btn-secondary btn-sm" id="btn-edit-group-trust-profile">
-                <i data-lucide="shield-check"></i> Group Trust Profile
+                <i data-lucide="shield-check"></i> Group Trust Hierarchy
               </button>
               <button class="btn btn-primary btn-sm" id="btn-add-school-top">
                 <i data-lucide="plus-circle"></i> Register New School
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- KPI Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
-          <div class="card" style="padding: 16px; border-left: 4px solid #3b82f6;">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase;">Member Schools</div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${schools.length}</div>
-            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Operating Campuses</div>
-          </div>
-          <div class="card" style="padding: 16px; border-left: 4px solid #BF9A33;">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #8C6E1E; text-transform: uppercase;">Total Group Students</div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStudents.toLocaleString()}</div>
-            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Enrolled across all branches</div>
-          </div>
-          <div class="card" style="padding: 16px; border-left: 4px solid #10b981;">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">Faculty &amp; Staff</div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStaff.toLocaleString()}</div>
-            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Teachers, Mentors &amp; Admin</div>
-          </div>
-          <div class="card" style="padding: 16px; border-left: 4px solid #8b5cf6;">
-            <div style="font-size: 0.75rem; font-weight: 700; color: #6d28d9; text-transform: uppercase;">Campus Spaces / Labs</div>
-            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalFacilities.toLocaleString()}</div>
-            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Classrooms, labs &amp; wings</div>
+          <!-- School / Campus Navigation Tab Bar -->
+          <div style="border-top: 1px solid var(--border-color); padding: 10px 16px; background: var(--bg-surface); display: flex; gap: 8px; align-items: center; overflow-x: auto;">
+            <button class="btn ${currentTab === 'all' ? 'btn-primary' : 'btn-secondary'} btn-sm school-nav-tab" data-tab="all" style="font-weight: 700; white-space: nowrap;">
+              <i data-lucide="network"></i> Group Hierarchy &amp; All Campuses (${schools.length})
+            </button>
+            ${schools.map(sch => {
+              const isActiveTab = currentTab === sch.id;
+              const isCurrentOperating = activeSchoolId === sch.id;
+              return `
+                <button class="btn ${isActiveTab ? 'btn-primary' : 'btn-secondary'} btn-sm school-nav-tab" data-tab="${esc(sch.id)}" style="font-weight: 700; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;">
+                  <span>🏫 ${esc(sch.shortName || sch.code || sch.name)}</span>
+                  ${isCurrentOperating ? '<span style="font-size:0.6rem; background:#10b981; color:#fff; padding:1px 5px; border-radius:999px;">ACTIVE</span>' : ''}
+                </button>
+              `;
+            }).join('')}
           </div>
         </div>
 
-        <!-- Schools Cards Grid -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px;">
-          ${schools.map((sch) => {
-            const isCurrentActive = activeSchoolId === sch.id;
-            const branchStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
-            const branchStaff = staff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
-            const branchFacilities = facilities.filter(f => (f.school_id || f.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
-            const facilitiesList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library'];
+        ${currentTab === 'all' ? `
+          <!-- ============================================================== -->
+          <!-- VIEW 1: GROUP OVERVIEW & STRUCTURAL HIERARCHY TREE             -->
+          <!-- ============================================================== -->
 
-            return `
-              <div class="card" style="border: 2px solid ${isCurrentActive ? '#BF9A33' : '#e2e8f0'}; border-radius: 16px; position: relative; padding: 20px; box-shadow: ${isCurrentActive ? '0 8px 24px rgba(191,154,51,0.14)' : '0 4px 12px rgba(15,23,42,0.03)'}; display:flex; flex-direction:column; justify-content:space-between; gap:16px;">
-                ${isCurrentActive ? `
-                  <span style="position: absolute; top: -10px; right: 16px; background: #BF9A33; color: #ffffff; font-size: 0.7rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; letter-spacing: 0.04em;">
-                    ACTIVE CONSOLE
-                  </span>
-                ` : ''}
+          <!-- KPI Summary -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+            <div class="card" style="padding: 16px; border-left: 4px solid #3b82f6;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase;">Member Schools</div>
+              <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${schools.length}</div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Autonomous Operating Campuses</div>
+            </div>
+            <div class="card" style="padding: 16px; border-left: 4px solid #BF9A33;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #8C6E1E; text-transform: uppercase;">Total Group Students</div>
+              <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStudents}</div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Enrolled across all campuses</div>
+            </div>
+            <div class="card" style="padding: 16px; border-left: 4px solid #10b981;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">Teaching &amp; Staff</div>
+              <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStaff}</div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Principals, faculty &amp; admin</div>
+            </div>
+            <div class="card" style="padding: 16px; border-left: 4px solid #8b5cf6;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #6d28d9; text-transform: uppercase;">Academic Classes</div>
+              <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalClasses}</div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Active classroom divisions</div>
+            </div>
+          </div>
 
-                <div>
-                  <!-- Header -->
-                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                      <div style="width: 46px; height: 46px; border-radius: 12px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#BF9A33'}; border: 1.5px solid ${sch.themeColor ? sch.themeColor + '40' : '#bfdbfe'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.05rem; flex-shrink: 0;">
-                        ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
-                      </div>
+          <!-- Structural Hierarchy & Governance Tree Card -->
+          <div class="card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+              <div>
+                <h4 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                  <i data-lucide="git-branch" style="color:#BF9A33;"></i> Institutional Governance &amp; Multi-School Authority Hierarchy
+                </h4>
+                <p style="margin:4px 0 0 0; font-size:0.8rem; color:#64748b;">
+                  Visual authority tiers: Trust Board, Central Sovereignty, Academic Council, and Autonomous Sub-School Principals.
+                </p>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+              <!-- Level 1: Trust Board & Super Admin -->
+              <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:1.6rem;">🏛️</span>
+                  <div>
+                    <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">THAIBA GROUP EXECUTIVE TRUST BOARD &amp; SUPER ADMIN</div>
+                    <div style="font-size:0.75rem; color:#64748b;">Supreme Institutional Governance &bull; Root Sovereign: cmbasith786@gmail.com</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <span class="badge" style="background:#0f172a; color:#fff; font-weight:700;">Super Administrator</span>
+                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">Chairman</span>
+                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">MD</span>
+                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">DMD</span>
+                </div>
+              </div>
+
+              <!-- Connecting Line -->
+              <div style="width:2px; height:18px; background:#cbd5e1; margin-left:36px;"></div>
+
+              <!-- Level 2: Central Academic & Operations -->
+              <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-left:24px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:1.6rem;">🎓</span>
+                  <div>
+                    <div style="font-weight:800; color:#1e40af; font-size:0.95rem;">CENTRAL ACADEMIC &amp; OPERATIONAL COUNCIL</div>
+                    <div style="font-size:0.75rem; color:#3b82f6;">Group-Wide Academic Autonomy over ALL Campuses &bull; Curriculum, Examinations &amp; Standards</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <span class="badge" style="background:#1d4ed8; color:#fff; font-weight:700;">Academic Director (Autonomy of All Schools)</span>
+                  <span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700;">Deputy Director</span>
+                </div>
+              </div>
+
+              <!-- Connecting Line -->
+              <div style="width:2px; height:18px; background:#cbd5e1; margin-left:36px;"></div>
+
+              <!-- Level 3: Autonomous Sub-Schools -->
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-left:24px;">
+                ${schools.map(sch => {
+                  const bStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+                  const bStaff = staff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+                  const bClasses = classes.filter(c => (c.school_id || c.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+
+                  return `
+                    <div style="background:#ffffff; border:2px solid ${sch.themeColor || '#BF9A33'}; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
                       <div>
-                        <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1.25;">
-                          ${esc(sch.name)}
-                        </h4>
-                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 2px;">
-                          Code: <span class="font-mono" style="color: #0f172a; font-weight: 700;">${esc(sch.code)}</span> &bull; ${esc(sch.board || 'Affiliated')}
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                          <div>
+                            <div style="font-size:0.72rem; color:#BF9A33; font-weight:800; text-transform:uppercase;">AUTONOMOUS SUB-SCHOOL</div>
+                            <h4 style="margin:2px 0 0 0; font-size:1.05rem; font-weight:800; color:#0f172a;">${esc(sch.name)}</h4>
+                            <div style="font-size:0.75rem; color:#64748b;">Code: <strong>${esc(sch.code)}</strong> &bull; ${esc(sch.board || 'Affiliated')}</div>
+                          </div>
+                          <span class="badge badge-success" style="font-size:0.65rem;">ACTIVE BRANCH</span>
+                        </div>
+
+                        <div style="margin-top:10px; background:#f8fafc; border-radius:8px; padding:8px 10px; font-size:0.78rem;">
+                          <div>👨‍💼 <strong>Principal:</strong> ${esc(sch.principal || 'Basith Sir')} (Full Branch Autonomy)</div>
+                          <div style="color:#64748b; margin-top:2px;">📍 ${esc(sch.address?.campus || sch.campusLocation || 'Campus Address')}</div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-top:10px; text-align:center;">
+                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
+                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bStudents}</div>
+                            <div style="font-size:0.65rem; color:#64748b;">Students</div>
+                          </div>
+                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
+                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bStaff}</div>
+                            <div style="font-size:0.65rem; color:#64748b;">Staff</div>
+                          </div>
+                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
+                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bClasses}</div>
+                            <div style="font-size:0.65rem; color:#64748b;">Classes</div>
+                          </div>
                         </div>
                       </div>
+
+                      <div style="display:flex; gap:8px; border-top:1px solid #f1f5f9; padding-top:10px;">
+                        <button class="btn btn-primary btn-sm btn-open-school-management" data-id="${esc(sch.id)}" style="flex:1; justify-content:center;">
+                          <i data-lucide="sliders"></i> Manage this Sub-School
+                        </button>
+                        <button class="btn btn-secondary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" title="Switch active operating context">
+                          ${activeSchoolId === sch.id ? 'Active' : 'Switch'}
+                        </button>
+                      </div>
                     </div>
-                    <span class="badge ${sch.status === 'Active' ? 'badge-success' : 'badge-warning'}">
-                      ${esc(sch.status || 'Active')}
-                    </span>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        ` : `
+          <!-- ============================================================== -->
+          <!-- VIEW 2: SINGLE-SUB-SCHOOL ALL-IN-ONE COMMAND TAB               -->
+          <!-- ============================================================== -->
+          ${(() => {
+            const sch = selectedSchool || schools[0];
+            const schStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+            const schStaff = staff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+            const schClasses = classes.filter(c => (c.school_id || c.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase());
+            const facilitiesList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena'];
+
+            return `
+              <!-- Sub-School Hero Banner Card -->
+              <div class="card" style="border: 2px solid ${sch.themeColor || '#BF9A33'}; border-radius: 16px; padding: 20px; background: #ffffff;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
+                  <div style="display:flex; align-items:center; gap:16px;">
+                    <div style="width: 56px; height: 56px; border-radius: 14px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#BF9A33'}; border: 2px solid ${sch.themeColor ? sch.themeColor + '40' : '#bfdbfe'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3rem; flex-shrink: 0;">
+                      ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
+                    </div>
+                    <div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <h3 style="margin:0; font-size:1.35rem; font-weight:800; color:#0f172a;">${esc(sch.name)}</h3>
+                        <span class="badge badge-success">${esc(sch.status || 'Active')}</span>
+                        ${activeSchoolId === sch.id ? '<span class="badge badge-info" style="font-weight:800;">ACTIVE CONSOLE</span>' : ''}
+                      </div>
+                      <div style="font-size:0.82rem; color:#64748b; margin-top:3px;">
+                        Code: <strong style="color:#0f172a;">${esc(sch.code)}</strong> &bull; Board: <strong>${esc(sch.board || 'State / Central')}</strong> &bull; &ldquo;${esc(sch.tagline || 'Excellence in Education')}&rdquo;
+                      </div>
+                    </div>
                   </div>
 
-                  <!-- Tagline -->
-                  <div style="font-size: 0.8rem; color: #64748b; font-style: italic; margin-bottom: 12px;">
-                    &ldquo;${esc(sch.tagline || 'Excellence in Education')}&rdquo;
-                  </div>
-
-                  <!-- Key Info Box -->
-                  <div style="background: #f8fafc; border-radius: 10px; padding: 12px; font-size: 0.8rem; color: #334155; display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="user-check" style="width: 14px; height: 14px; color: #BF9A33; flex-shrink: 0;"></i>
-                      <span style="font-weight: 600;">Principal / Head:</span>
-                      <strong style="color: #0f172a;">${esc(sch.principal || 'Basith Sir')}</strong>
-                      ${sch.principalEmail ? `<span style="font-size: 0.72rem; color: #64748b;">(${esc(sch.principalEmail)})</span>` : ''}
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="map-pin" style="width: 14px; height: 14px; color: #2563eb; flex-shrink: 0;"></i>
-                      <span>${esc(sch.address?.campus || sch.campusLocation || 'Campus Address')}, ${esc(sch.address?.district || 'District')}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <i data-lucide="phone" style="width: 14px; height: 14px; color: #16a34a; flex-shrink: 0;"></i>
-                      <span>${esc(sch.contact?.phone1 || sch.contactPhone || '+91 8653382851')}</span>
-                      ${sch.contact?.email ? `&bull; <span style="font-size: 0.74rem;">${esc(sch.contact.email)}</span>` : ''}
-                    </div>
-                  </div>
-
-                  <!-- Live Stats Row -->
-                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; text-align: center;">
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchStudents}</div>
-                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Students</div>
-                    </div>
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchStaff}</div>
-                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Staff</div>
-                    </div>
-                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
-                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchFacilities}</div>
-                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Rooms</div>
-                    </div>
-                  </div>
-
-                  <!-- Website Highlights Preview -->
-                  <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; font-size: 0.75rem; color: #64748b;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                      <span style="font-weight:700; color:#475569;">Website Showcase:</span>
-                      <span style="color:#059669; font-weight:600;">${esc(sch.gradesOffered || sch.grades_offered || 'Nursery - Grade 12')}</span>
-                    </div>
-                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                      ${(Array.isArray(facilitiesList) ? facilitiesList.slice(0, 3) : String(facilitiesList).split(',').slice(0, 3)).map(f => `
-                        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:0.68rem; padding:1px 6px;">${esc(String(f).trim())}</span>
-                      `).join('')}
-                    </div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary btn-sm btn-edit-school-action" data-id="${esc(sch.id)}">
+                      <i data-lucide="settings"></i> Configure Details
+                    </button>
+                    <button class="btn btn-primary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}">
+                      <i data-lucide="arrow-right-circle"></i> ${activeSchoolId === sch.id ? 'Currently Active' : 'Switch Operating Context'}
+                    </button>
+                    ${schools.length > 1 ? `
+                      <button class="btn btn-secondary btn-sm btn-del-school-action" data-id="${esc(sch.id)}" style="color:#ef4444;" title="Delete this campus">
+                        <i data-lucide="trash-2"></i>
+                      </button>
+                    ` : ''}
                   </div>
                 </div>
 
-                <!-- Actions -->
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; pt-2; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                  <button class="btn btn-primary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" style="flex: 1; min-width: 120px; justify-content: center;">
-                    <i data-lucide="arrow-right-circle"></i> ${isCurrentActive ? 'Active' : 'Switch Branch'}
+                <!-- Sub-School Quick Numbers Bar -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9;">
+                  <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
+                    <div style="font-size:1.3rem; font-weight:800; color:#0f172a;">${schStudents.length}</div>
+                    <div style="font-size:0.72rem; color:#64748b; font-weight:600;">Enrolled Students</div>
+                  </div>
+                  <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
+                    <div style="font-size:1.3rem; font-weight:800; color:#0f172a;">${schStaff.length}</div>
+                    <div style="font-size:0.72rem; color:#64748b; font-weight:600;">Faculty &amp; Staff</div>
+                  </div>
+                  <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
+                    <div style="font-size:1.3rem; font-weight:800; color:#0f172a;">${schClasses.length}</div>
+                    <div style="font-size:0.72rem; color:#64748b; font-weight:600;">Classes &amp; Sections</div>
+                  </div>
+                  <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
+                    <div style="font-size:1.3rem; font-weight:800; color:#0f172a;">${facilitiesList.length}</div>
+                    <div style="font-size:0.72rem; color:#64748b; font-weight:600;">Facilities / Amenities</div>
+                  </div>
+                  <div style="background:#f8fafc; border-radius:10px; padding:10px; text-align:center;">
+                    <div style="font-size:0.95rem; font-weight:800; color:#059669; padding-top:4px;">${esc(sch.principal || 'Assigned')}</div>
+                    <div style="font-size:0.72rem; color:#64748b; font-weight:600;">Principal in Charge</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Single Tab Sub-Navigation Menu -->
+              <div class="card" style="padding:0; overflow:hidden;">
+                <div style="display:flex; gap:6px; padding:10px 14px; background:#f8fafc; border-bottom:1px solid var(--border-color); overflow-x:auto;">
+                  <button class="btn ${currentSection === 'essentials' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="essentials" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="info"></i> 1. Essentials &amp; Identity
                   </button>
-                  <button class="btn btn-secondary btn-sm btn-edit-school-action" data-id="${esc(sch.id)}" title="Configure school settings">
-                    <i data-lucide="settings"></i> Configure
+                  <button class="btn ${currentSection === 'staff' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="staff" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="users"></i> 2. Staff &amp; Faculty (${schStaff.length})
                   </button>
-                  ${schools.length > 1 ? `
-                    <button class="btn btn-secondary btn-sm btn-del-school-action" data-id="${esc(sch.id)}" title="Delete School" style="color: #ef4444;">
-                      <i data-lucide="trash-2"></i>
-                    </button>
-                  ` : ''}
+                  <button class="btn ${currentSection === 'students' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="students" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="graduation-cap"></i> 3. Students (${schStudents.length})
+                  </button>
+                  <button class="btn ${currentSection === 'classes' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="classes" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="layout-grid"></i> 4. Classes &amp; Timetable (${schClasses.length})
+                  </button>
+                  <button class="btn ${currentSection === 'syllabus' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="syllabus" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="book-open"></i> 5. Syllabus &amp; Curriculum
+                  </button>
+                  <button class="btn ${currentSection === 'facilities' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="facilities" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="building"></i> 6. Facilities &amp; Hostels (${facilitiesList.length})
+                  </button>
+                  <button class="btn ${currentSection === 'website' ? 'btn-primary' : 'btn-secondary'} btn-sm school-sec-tab" data-sec="website" style="white-space:nowrap; font-weight:700;">
+                    <i data-lucide="globe"></i> 7. Website Showcase
+                  </button>
+                </div>
+
+                <!-- Sub-Section Content Area -->
+                <div style="padding: 20px;">
+                  ${currentSection === 'essentials' ? `
+                    <!-- SECTION 1: ESSENTIALS -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                      <div class="card" style="padding:16px; margin:0; border:1px solid #e2e8f0;">
+                        <h4 style="margin:0 0 12px 0; font-size:0.95rem; font-weight:800; color:#0f172a;">Campus Identity &amp; Affiliation</h4>
+                        <table style="width:100%; font-size:0.82rem; border-collapse:collapse;">
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Campus Name:</td><td style="font-weight:800; color:#0f172a;">${esc(sch.name)}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Branch Code:</td><td class="font-mono" style="font-weight:700;">${esc(sch.code)}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Short Label:</td><td>${esc(sch.shortName || sch.code)}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Affiliation Board:</td><td>${esc(sch.board || 'State / Central Board')}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Status:</td><td><span class="badge badge-success">${esc(sch.status || 'Active')}</span></td></tr>
+                        </table>
+                      </div>
+
+                      <div class="card" style="padding:16px; margin:0; border:1px solid #e2e8f0;">
+                        <h4 style="margin:0 0 12px 0; font-size:0.95rem; font-weight:800; color:#0f172a;">Leadership &amp; Communication</h4>
+                        <table style="width:100%; font-size:0.82rem; border-collapse:collapse;">
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Principal:</td><td style="font-weight:800; color:#0f172a;">${esc(sch.principal || 'Basith Sir')}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Principal Email:</td><td>${esc(sch.principalEmail || '—')}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Helpline Phone:</td><td class="font-mono">${esc(sch.contact?.phone1 || sch.contactPhone || '+91 8653382851')}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Campus Email:</td><td>${esc(sch.contact?.email || '—')}</td></tr>
+                          <tr><td style="padding:6px 0; color:#64748b; font-weight:600;">Location / PIN:</td><td>${esc(sch.address?.campus || sch.campusLocation || 'Campus')}, ${esc(sch.address?.district || 'District')} - ${esc(sch.address?.pin || '733127')}</td></tr>
+                        </table>
+                      </div>
+                    </div>
+                  ` : currentSection === 'staff' ? `
+                    <!-- SECTION 2: STAFF & FACULTY -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <div>
+                          <h4 style="margin:0; font-size:1rem; font-weight:800; color:#0f172a;">Assigned Faculty &amp; Staff (${schStaff.length})</h4>
+                          <p style="margin:2px 0 0 0; font-size:0.78rem; color:#64748b;">Teachers, administrators, and coordinators assigned to this school.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-quick-add-staff" data-school="${esc(sch.id)}">
+                          <i data-lucide="user-plus"></i> Add Staff to this Campus
+                        </button>
+                      </div>
+
+                      ${schStaff.length === 0 ? `
+                        <div class="empty-state" style="padding:2.5rem 1rem; text-align:center;">
+                          <p style="color:var(--text-muted); font-size:0.88rem;">No staff members assigned to this campus yet.</p>
+                        </div>
+                      ` : `
+                        <div class="table-responsive">
+                          <table class="tms-table" style="font-size:0.82rem;">
+                            <thead>
+                              <tr>
+                                <th>Staff Member</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Designation</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${schStaff.map(emp => `
+                                <tr>
+                                  <td><strong>${esc(emp.name)}</strong><div style="font-size:0.72rem; color:#64748b;">${esc(emp.email)}</div></td>
+                                  <td><span class="badge badge-info">${esc(emp.role || 'Teacher')}</span></td>
+                                  <td>${esc(emp.department || 'General')}</td>
+                                  <td><strong>${esc(emp.designation || 'Faculty')}</strong></td>
+                                  <td class="font-mono">${esc(emp.phone || '—')}</td>
+                                  <td><span class="badge badge-success">${esc(emp.status || 'Active')}</span></td>
+                                </tr>
+                              `).join('')}
+                            </tbody>
+                          </table>
+                        </div>
+                      `}
+                    </div>
+                  ` : currentSection === 'students' ? `
+                    <!-- SECTION 3: STUDENTS -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <div>
+                          <h4 style="margin:0; font-size:1rem; font-weight:800; color:#0f172a;">Enrolled Students (${schStudents.length})</h4>
+                          <p style="margin:2px 0 0 0; font-size:0.78rem; color:#64748b;">Active students enrolled in this school branch.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-quick-add-student" data-school="${esc(sch.id)}">
+                          <i data-lucide="user-plus"></i> Enroll Student in this Campus
+                        </button>
+                      </div>
+
+                      ${schStudents.length === 0 ? `
+                        <div class="empty-state" style="padding:2.5rem 1rem; text-align:center;">
+                          <p style="color:var(--text-muted); font-size:0.88rem;">No students enrolled in this campus yet.</p>
+                        </div>
+                      ` : `
+                        <div class="table-responsive">
+                          <table class="tms-table" style="font-size:0.82rem;">
+                            <thead>
+                              <tr>
+                                <th>Admission No</th>
+                                <th>Student Name</th>
+                                <th>Grade / Class</th>
+                                <th>Section</th>
+                                <th>Guardian Phone</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${schStudents.map(st => `
+                                <tr>
+                                  <td class="font-mono" style="font-weight:700;">${esc(st.admissionNo || st.admission_number || '—')}</td>
+                                  <td><strong>${esc(st.fullName || st.name)}</strong></td>
+                                  <td><span class="badge badge-info">${esc(st.grade || st.class || '—')}</span></td>
+                                  <td>${esc(st.section || 'A')}</td>
+                                  <td class="font-mono">${esc(st.guardianPhone || st.phone || '—')}</td>
+                                  <td><span class="badge badge-success">${esc(st.status || 'Active')}</span></td>
+                                </tr>
+                              `).join('')}
+                            </tbody>
+                          </table>
+                        </div>
+                      `}
+                    </div>
+                  ` : currentSection === 'classes' ? `
+                    <!-- SECTION 4: CLASSES & TIMETABLE -->
+                    <div>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                        <div>
+                          <h4 style="margin:0; font-size:1rem; font-weight:800; color:#0f172a;">Classrooms &amp; Divisions (${schClasses.length})</h4>
+                          <p style="margin:2px 0 0 0; font-size:0.78rem; color:#64748b;">Classroom divisions, assigned faculty, and room allocations.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" id="btn-quick-add-class" data-school="${esc(sch.id)}">
+                          <i data-lucide="plus-circle"></i> Add Class to this Campus
+                        </button>
+                      </div>
+
+                      ${schClasses.length === 0 ? `
+                        <div class="empty-state" style="padding:2.5rem 1rem; text-align:center;">
+                          <p style="color:var(--text-muted); font-size:0.88rem;">No classes configured for this campus yet.</p>
+                        </div>
+                      ` : `
+                        <div class="table-responsive">
+                          <table class="tms-table" style="font-size:0.82rem;">
+                            <thead>
+                              <tr>
+                                <th>Class / Grade</th>
+                                <th>Section</th>
+                                <th>Room No</th>
+                                <th>Capacity</th>
+                                <th>Class Teacher</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${schClasses.map(c => `
+                                <tr>
+                                  <td><strong>${esc(c.grade || c.name)}</strong></td>
+                                  <td>${esc(c.section || 'A')}</td>
+                                  <td class="font-mono">${esc(c.roomNo || c.room_no || '—')}</td>
+                                  <td>${esc(c.capacity || 35)} Students</td>
+                                  <td>${esc(c.teacher || 'Assigned Faculty')}</td>
+                                  <td><span class="badge badge-success">${esc(c.status || 'Active')}</span></td>
+                                </tr>
+                              `).join('')}
+                            </tbody>
+                          </table>
+                        </div>
+                      `}
+                    </div>
+                  ` : currentSection === 'syllabus' ? `
+                    <!-- SECTION 5: SYLLABUS -->
+                    <div>
+                      <h4 style="margin:0 0 6px 0; font-size:1rem; font-weight:800; color:#0f172a;">Syllabus &amp; Curriculum Standards</h4>
+                      <p style="font-size:0.8rem; color:#64748b; margin-bottom:16px;">Offered academic board curriculum and subjects for this campus.</p>
+                      <div class="card" style="padding:16px; border:1px solid #e2e8f0; background:#f8fafc;">
+                        <div style="font-weight:700; color:#0f172a; margin-bottom:6px;">Affiliated Board: ${esc(sch.board || 'State / Central Affiliated')}</div>
+                        <p style="font-size:0.82rem; color:#475569; margin:0 0 10px 0;">Offered Grade Range: <strong>${esc(sch.gradesOffered || sch.grades_offered || 'Nursery to Grade 12')}</strong></p>
+                        <div style="font-size:0.8rem; color:#64748b;">Under the academic authority of the <strong>Academic Director</strong>, this campus follows standard Thaiba Heritage Group curriculum guidelines with integrated moral &amp; value education.</div>
+                      </div>
+                    </div>
+                  ` : currentSection === 'facilities' ? `
+                    <!-- SECTION 6: FACILITIES -->
+                    <div>
+                      <h4 style="margin:0 0 6px 0; font-size:1rem; font-weight:800; color:#0f172a;">Campus Facilities &amp; Amenities (${facilitiesList.length})</h4>
+                      <p style="font-size:0.8rem; color:#64748b; margin-bottom:16px;">Campus amenities highlighted on the public website and brochures.</p>
+                      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;">
+                        ${facilitiesList.map(f => `
+                          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; align-items:center; gap:8px;">
+                            <span style="color:#059669; font-weight:800;">✓</span>
+                            <span style="font-size:0.85rem; font-weight:700; color:#0f172a;">${esc(String(f).trim())}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : `
+                    <!-- SECTION 7: WEBSITE SHOWCASE -->
+                    <div>
+                      <h4 style="margin:0 0 6px 0; font-size:1rem; font-weight:800; color:#0f172a;">Public Website Campus Showcase</h4>
+                      <p style="font-size:0.8rem; color:#64748b; margin-bottom:16px;">Content displayed to visitors on the public website at /#campuses.</p>
+                      <div class="card" style="padding:16px; border:1px solid #e2e8f0; background:#f8fafc;">
+                        ${sch.bannerImage ? `
+                          <div style="height:140px; border-radius:10px; overflow:hidden; margin-bottom:12px; background:#0f172a;">
+                            <img src="${esc(sch.bannerImage)}" alt="Banner" style="width:100%; height:100%; object-fit:cover;">
+                          </div>
+                        ` : ''}
+                        <div style="font-weight:700; color:#BF9A33; font-style:italic; margin-bottom:6px;">&ldquo;${esc(sch.tagline || 'Modern Education with Morality')}&rdquo;</div>
+                        <p style="font-size:0.85rem; color:#475569; line-height:1.5; margin:0 0 14px 0;">${esc(sch.description || 'Welcome to this campus of Thaiba Heritage Group. We offer state-of-the-art facilities, supportive faculty, and value-based education.')}</p>
+                        <a href="/index.html#campuses" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                          <i data-lucide="external-link"></i> View on Live Website
+                        </a>
+                      </div>
+                    </div>
+                  `}
                 </div>
               </div>
             `;
-          }).join('')}
-        </div>
+          })()}
+        `}
       </div>
     `;
 
-    // Wire events
+    // Wire up events
     tabContent.querySelector('#btn-add-school-top')?.addEventListener('click', () => {
       this.openSchoolModal(null, tabContent);
     });
@@ -6744,7 +7088,29 @@ export class AdminModule {
       this.openGroupTrustModal(tabContent);
     });
 
-    tabContent.querySelectorAll('.btn-switch-school-action').forEach((btn) => {
+    tabContent.querySelectorAll('.school-nav-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this._schoolsActiveTab = btn.dataset.tab;
+        this.renderSchoolsManagementTab(tabContent);
+      });
+    });
+
+    tabContent.querySelectorAll('.btn-open-school-management').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        this._schoolsActiveTab = e.currentTarget.dataset.id;
+        this._subSchoolSection = 'essentials';
+        this.renderSchoolsManagementTab(tabContent);
+      });
+    });
+
+    tabContent.querySelectorAll('.school-sec-tab').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        this._subSchoolSection = e.currentTarget.dataset.sec;
+        this.renderSchoolsManagementTab(tabContent);
+      });
+    });
+
+    tabContent.querySelectorAll('.btn-switch-school-action').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.id;
         const switched = institutionService.setActiveSchoolId(id);
@@ -6753,7 +7119,7 @@ export class AdminModule {
       });
     });
 
-    tabContent.querySelectorAll('.btn-edit-school-action').forEach((btn) => {
+    tabContent.querySelectorAll('.btn-edit-school-action').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.id;
         const sch = institutionService.getSchool(id);
@@ -6761,7 +7127,7 @@ export class AdminModule {
       });
     });
 
-    tabContent.querySelectorAll('.btn-del-school-action').forEach((btn) => {
+    tabContent.querySelectorAll('.btn-del-school-action').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.dataset.id;
         const sch = institutionService.getSchool(id);
@@ -6769,6 +7135,7 @@ export class AdminModule {
         const res = await institutionService.deleteSchool(id);
         if (res.success) {
           UIComponents.showToast(`School removed successfully.`, 'success');
+          this._schoolsActiveTab = 'all';
           this.renderSchoolsManagementTab(tabContent);
         } else {
           UIComponents.showToast(res.error || 'Could not delete school.', 'error');
@@ -6776,78 +7143,28 @@ export class AdminModule {
       });
     });
 
-    UIComponents.refreshIcons();
-  }
-
-  static openGroupTrustModal(container) {
-    const esc = (v) => UIComponents.escapeHtml(v);
-    const p = institutionService.getGroupProfile();
-
-    UIComponents.openModal({
-      title: '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="shield-check" style="color:#BF9A33;"></i><span>Central Trust &amp; Group Governance Profile</span></div>',
-      bodyHtml: `
-        <form id="form-group-trust" style="display: flex; flex-direction: column; gap: 14px;">
-          <div class="form-group">
-            <label class="form-label">Central Educational Group Name <span class="req-star">*</span></label>
-            <input class="form-input" id="grp-name" required value="${esc(p.name || '')}">
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Controlling Educational Trust <span class="req-star">*</span></label>
-              <input class="form-input" id="grp-trust" required value="${esc(p.trust || '')}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trust Registration No <span class="req-star">*</span></label>
-              <input class="form-input font-mono" id="grp-regno" required value="${esc(p.regNo || '')}">
-            </div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Executive Director Name</label>
-              <input class="form-input" id="grp-director" value="${esc(p.executiveDirector || '')}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Executive Director Email</label>
-              <input type="email" class="form-input" id="grp-director-email" value="${esc(p.directorEmail || '')}">
-            </div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Central Headquarters</label>
-              <input class="form-input" id="grp-hq" value="${esc(p.headquarters || 'Kolkata, West Bengal')}">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Central Contact Helpline</label>
-              <input class="form-input" id="grp-phone" value="${esc(p.contactPhone || '')}">
-            </div>
-          </div>
-        </form>
-      `,
-      footerHtml: `
-        <button class="btn btn-secondary" id="grp-cancel">Cancel</button>
-        <button class="btn btn-primary" id="btn-save-group-trust"><i data-lucide="save"></i> Save Group Profile</button>
-      `
+    // Quick Action shortcuts
+    tabContent.querySelector('#btn-quick-add-staff')?.addEventListener('click', (e) => {
+      const schId = e.currentTarget.dataset.school;
+      institutionService.setActiveSchoolId(schId);
+      this.renderTab('staff');
     });
 
-    document.getElementById('grp-cancel')?.addEventListener('click', () => UIComponents.closeModal());
-    document.getElementById('btn-save-group-trust')?.addEventListener('click', async () => {
-      const updates = {
-        name: document.getElementById('grp-name').value.trim(),
-        trust: document.getElementById('grp-trust').value.trim(),
-        regNo: document.getElementById('grp-regno').value.trim(),
-        executiveDirector: document.getElementById('grp-director').value.trim(),
-        directorEmail: document.getElementById('grp-director-email').value.trim(),
-        headquarters: document.getElementById('grp-hq').value.trim(),
-        contactPhone: document.getElementById('grp-phone').value.trim()
-      };
-      await institutionService.updateGroupProfile(updates);
-      UIComponents.showToast('Group trust profile updated successfully!', 'success');
-      UIComponents.closeModal();
-      this.renderSchoolsManagementTab(container);
+    tabContent.querySelector('#btn-quick-add-student')?.addEventListener('click', (e) => {
+      const schId = e.currentTarget.dataset.school;
+      institutionService.setActiveSchoolId(schId);
+      this.renderTab('students');
+    });
+
+    tabContent.querySelector('#btn-quick-add-class')?.addEventListener('click', (e) => {
+      const schId = e.currentTarget.dataset.school;
+      institutionService.setActiveSchoolId(schId);
+      this.renderTab('academic');
     });
 
     UIComponents.refreshIcons();
   }
+
 
   static openSchoolModal(school, container) {
     const esc = (v) => UIComponents.escapeHtml(v);

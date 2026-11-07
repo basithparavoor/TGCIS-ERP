@@ -1,145 +1,6 @@
 import { institutionService } from './institution-service.js';
 
-export const SAMPLE_STUDENTS = [
-  {
-    id: 'std-1',
-    fullName: 'MD Aamir',
-    admissionNo: 'TPS-2026-001',
-    rollNo: '01',
-    gender: 'Boy',
-    dob: '2020-08-01',
-    grade: 'STD-I',
-    section: 'A',
-    category: 'ORPHAN',
-    hostelBlock: 'Thaiba Boys Hostel Block A',
-    hostelRoom: 'Room 101',
-    hostelBed: 'Bed 1',
-    guardianName: 'MD Golam Mostafa',
-    guardianPhone: '8104998120',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-1.png'
-  },
-  {
-    id: 'std-2',
-    fullName: 'Rehan Islam',
-    admissionNo: 'TPS-2026-002',
-    rollNo: '02',
-    gender: 'Boy',
-    dob: '2018-07-12',
-    grade: 'STD-II',
-    section: 'A',
-    category: 'GENERAL',
-    hostelBlock: 'Thaiba Boys Hostel Block A',
-    hostelRoom: 'Room 104',
-    hostelBed: 'Bed 2',
-    guardianName: 'Anarul Islam',
-    guardianPhone: '8145024720',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-2.png'
-  },
-  {
-    id: 'std-3',
-    fullName: 'Jakir Sarkar',
-    admissionNo: 'TPS-2026-003',
-    rollNo: '03',
-    gender: 'Boy',
-    dob: '2016-09-18',
-    grade: 'STD-III',
-    section: 'A',
-    category: 'GENERAL',
-    hostelBlock: 'Thaiba Boys Hostel Block A',
-    hostelRoom: 'Room 101',
-    hostelBed: 'Bed 1',
-    guardianName: 'Latifar Sarkar',
-    guardianPhone: '7365084206',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-3.png'
-  },
-  {
-    id: 'std-4',
-    fullName: 'Rijuwan Mondal',
-    admissionNo: 'TPS-2026-004',
-    rollNo: '04',
-    gender: 'Boy',
-    dob: '2017-12-22',
-    grade: 'STD-III',
-    section: 'B',
-    category: 'GENERAL',
-    hostelBlock: 'Thaiba Boys Hostel Block A',
-    hostelRoom: 'Room 101',
-    hostelBed: 'Bed 1',
-    guardianName: 'Alamgir Mondal',
-    guardianPhone: '8944944003',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-4.png'
-  },
-  {
-    id: 'std-5',
-    fullName: 'Sultana Sarkar',
-    admissionNo: 'TPS-2026-005',
-    rollNo: '05',
-    gender: 'Girl',
-    dob: '2016-12-12',
-    grade: 'STD-III',
-    section: 'A',
-    category: 'ORPHAN',
-    hostelBlock: 'Thaiba Girls Hostel Campus',
-    hostelRoom: 'Room 101',
-    hostelBed: 'Bed 1',
-    guardianName: 'Saidul Sarkar',
-    guardianPhone: '9800880620',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-5.png'
-  },
-  {
-    id: 'std-6',
-    fullName: 'Awan Ikbal',
-    admissionNo: 'TPS-2026-006',
-    rollNo: '06',
-    gender: 'Boy',
-    dob: '2014-05-07',
-    grade: 'STD-IV',
-    section: 'A',
-    category: 'GENERAL',
-    hostelBlock: 'Thaiba Boys Hostel Block A',
-    hostelRoom: 'Room 101',
-    hostelBed: 'Bed 1',
-    guardianName: 'Anarul Islam',
-    guardianPhone: '8145024720',
-    motherName: '—',
-    village: '—',
-    district: 'Malappuram',
-    state: 'Kerala',
-    pin: '676541',
-    status: 'Active',
-    photo: '/assets/avatars/std-6.png'
-  }
-];
+export const SAMPLE_STUDENTS = [];
 
 /**
  * THAIBA PUBLIC SCHOOL — Student Lifecycle, Admissions & Identity Module
@@ -176,7 +37,7 @@ export const STUDENT_IMPORT_FIELDS = [
 export class StudentModule {
   static async render(container) {
     const rawStudents = (await dbService.select('students')) || [];
-    const allStudents = rawStudents.length ? rawStudents : SAMPLE_STUDENTS;
+    const allStudents = rawStudents || [];
     const students = institutionService.filterByActiveSchool(allStudents);
     const esc = (v) => UIComponents.escapeHtml(v);
     const canManage = PermissionEngine.can(CAPABILITIES.MANAGE_STUDENTS);
@@ -443,6 +304,12 @@ export class StudentModule {
 
         <form id="form-edit-student">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div class="form-group" style="grid-column:1/-1;">
+              <label class="form-label">Campus / School Branch <span style="color:#EF4444;">*</span></label>
+              <select class="form-select" id="ed-school" style="font-weight:700;">
+                ${institutionService.getSchools().map(sc => `<option value="${sc.id}" ${(s.school_id === sc.id || s.schoolId === sc.id || (!s.school_id && institutionService.getActiveSchoolId() === sc.id)) ? 'selected' : ''}>🏫 ${esc(sc.name)} (${esc(sc.code || sc.shortName || sc.id)})</option>`).join('')}
+              </select>
+            </div>
             <div class="form-group">
               <label class="form-label">Full Name <span style="color:#EF4444;">*</span></label>
               <input class="form-input" id="ed-name" value="${esc(s.fullName || '')}" required style="border-radius:9999px;">
@@ -570,7 +437,9 @@ export class StudentModule {
         guardianName: document.getElementById('ed-guardian').value.trim(),
         guardianPhone: document.getElementById('ed-phone').value.trim(),
         status: document.getElementById('ed-status').value,
-        photo: uploadedPhotoUrl
+        photo: uploadedPhotoUrl,
+        school_id: document.getElementById('ed-school')?.value || s.school_id || 'tps',
+        schoolId: document.getElementById('ed-school')?.value || s.schoolId || 'tps'
       };
 
       try {
@@ -841,7 +710,13 @@ export class StudentModule {
                   <input class="form-input" id="adm-phone" placeholder="+91 98300 00000">
                 </div>
               </div>
-              <div class="form-group" style="margin-top:10px;">
+              <div class="form-group" style="grid-column:1/-1;">
+                  <label class="form-label">Campus / School Branch *</label>
+                  <select class="form-select" id="adm-school" style="font-weight:700;">
+                    ${institutionService.getSchools().map(sc => `<option value="${sc.id}" ${(institutionService.getActiveSchoolId() === sc.id) ? 'selected' : ''}>🏫 ${esc(sc.name)} (${esc(sc.code || sc.shortName || sc.id)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group" style="margin-top:10px;">
                 <label class="form-label">Residential Address / Village</label>
                 <textarea class="form-textarea" id="adm-address" rows="2" placeholder="Full residential address"></textarea>
               </div>
@@ -899,8 +774,7 @@ export class StudentModule {
             rollNo = nextSeq.toString().padStart(2, '0');
           }
 
-          const activeSchool = institutionService.getActiveSchoolId();
-          const targetSchoolId = activeSchool === 'all' ? 'tps' : activeSchool;
+          const targetSchoolId = document.getElementById('adm-school')?.value || (institutionService.getActiveSchoolId() === 'all' ? 'tps' : institutionService.getActiveSchoolId());
 
           const newStudent = await dbService.insert('students', {
             admissionNo,
@@ -972,7 +846,7 @@ export class StudentModule {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.dataset.id;
         const students = (this._students && this._students.length) ? this._students : ((await dbService.select('students')) || []);
-        const allStudents = students.length ? students : SAMPLE_STUDENTS;
+        const allStudents = students || [];
         const s = allStudents.find(item => item.id === id);
         if (!s) return;
         await StudentModule.openStudentProfileModal(s, container);

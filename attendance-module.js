@@ -20,98 +20,7 @@ import { BiometricCredentialModal } from './biometric-credential-modal.js';
 import { StudentLeaveService } from './student-leave-service.js';
 import { authService } from './auth-service.js';
 
-export const DEFAULT_CLASSROOMS = [
-  {
-    id: 'cls-1',
-    name: 'Arabic Reding Class',
-    section: 'Hostel Moral Class',
-    teacher: 'muhammad mubashir',
-    startTime: '05:30 AM',
-    endTime: '06:20 AM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    gender: 'Boys',
-    room: 'R1',
-    capacity: 40,
-    status: 'Active'
-  },
-  {
-    id: 'cls-2',
-    name: 'Hifz & Tajweed Morning Session',
-    section: 'Hostel Moral Class',
-    teacher: 'Hafiz Tariq',
-    startTime: '06:30 AM',
-    endTime: '08:00 AM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    gender: 'Boys',
-    room: 'Hall A',
-    capacity: 45,
-    status: 'Active'
-  },
-  {
-    id: 'cls-3',
-    name: 'STD-I English & Phonics',
-    section: 'Primary Section',
-    teacher: 'Rehana Parveen',
-    startTime: '09:00 AM',
-    endTime: '09:45 AM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    gender: 'Mixed / Co-Ed',
-    room: 'Room 101',
-    capacity: 35,
-    status: 'Active'
-  },
-  {
-    id: 'cls-4',
-    name: 'STD-II Mathematics',
-    section: 'Primary Section',
-    teacher: 'Irfan Zahra',
-    startTime: '10:00 AM',
-    endTime: '10:45 AM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    gender: 'Mixed / Co-Ed',
-    room: 'Room 102',
-    capacity: 35,
-    status: 'Active'
-  },
-  {
-    id: 'cls-5',
-    name: 'STD-III Science & Discovery',
-    section: 'Primary Section',
-    teacher: 'MD Aamir',
-    startTime: '11:00 AM',
-    endTime: '11:45 AM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    gender: 'Mixed / Co-Ed',
-    room: 'Room 103',
-    capacity: 35,
-    status: 'Active'
-  },
-  {
-    id: 'cls-6',
-    name: 'Evening Moral & Tarbiyah Assembly',
-    section: 'Hostel Moral Class',
-    teacher: 'Br. Abdul Basith',
-    startTime: '06:30 PM',
-    endTime: '07:30 PM',
-    startDate: '2026-11-01',
-    endDate: '',
-    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    gender: 'Boys',
-    room: 'Auditorium',
-    capacity: 120,
-    status: 'Active'
-  }
-];
+export const DEFAULT_CLASSROOMS = [];
 
 /* ------------------------------------------------------------------ */
 /* Web Audio Synthesizer: Zero-Dependency Chimes & Audio Signals       */
@@ -285,7 +194,7 @@ export class AttendanceModule {
     const activeSchoolId = window.institutionService ? window.institutionService.getActiveSchoolId() : 'all';
     const scopedStudents = window.institutionService ? window.institutionService.filterByActiveSchool(allStudents || []) : (allStudents || []);
 
-    this._students = (scopedStudents && scopedStudents.length) ? scopedStudents : ((allStudents && allStudents.length) ? allStudents : SAMPLE_STUDENTS);
+    this._students = scopedStudents || [];
     
     // Filter attendance records to active campus
     const studentIdSet = new Set(this._students.map(s => s.id));
@@ -295,7 +204,7 @@ export class AttendanceModule {
       return studentIdSet.has(r.student_id || r.studentId);
     });
 
-    this._classrooms = (allClassrooms && allClassrooms.length) ? allClassrooms : DEFAULT_CLASSROOMS;
+    this._classrooms = allClassrooms || [];
     this._leaves = allLeaves || [];
 
     // Recalculate stats for selected date

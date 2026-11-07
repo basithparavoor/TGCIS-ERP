@@ -81,37 +81,11 @@ export class AcademicModule {
     ]);
 
     this._staff = staff || [];
-    this._subjects = (dbSubjects && dbSubjects.length) ? dbSubjects : DEFAULT_SUBJECTS;
-    const isClassesInitialized = localStorage.getItem('tms_classes_initialized') === 'true';
-    if (!dbClasses || dbClasses.length === 0) {
-      if (!isClassesInitialized) {
-        // First-time load: build and persist standard classes so they are real DB records
-        const defaultClasses = TMS_CONFIG.academic.classes.map((cls, idx) => ({
-          id: `cls-${idx + 1}`,
-          grade: cls,
-          name: cls,
-          section: 'A',
-          roomNo: `Room ${101 + idx}`,
-          capacity: 35,
-          teacher: (this._staff[idx % (this._staff.length || 1)]?.fullName) || 'Assigned Faculty',
-          periods: 35,
-          status: 'Active'
-        }));
-        this._classes = defaultClasses;
-        localStorage.setItem('tms_classes_initialized', 'true');
-        for (const c of defaultClasses) {
-          dbService.upsert('academic_classes', c).catch(() => {});
-        }
-      } else {
-        // User intentionally deleted classes
-        this._classes = [];
-      }
-    } else {
-      this._classes = dbClasses;
-    }
-    this._periods = (dbPeriods && dbPeriods.length) ? dbPeriods.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)) : DEFAULT_PERIODS;
-    this._sessions = (dbSessions && dbSessions.length) ? dbSessions : DEFAULT_SESSIONS;
-    this._syllabus = (dbSyllabus && dbSyllabus.length) ? dbSyllabus : DEFAULT_SYLLABUS;
+    this._subjects = dbSubjects || [];
+    this._classes = dbClasses || [];
+    this._periods = (dbPeriods && dbPeriods.length) ? dbPeriods.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)) : [];
+    this._sessions = (dbSessions && dbSessions.length) ? dbSessions : [];
+    this._syllabus = (dbSyllabus && dbSyllabus.length) ? dbSyllabus : [];
 
     this._currentTab = this._currentTab || 'classes';
     this._classViewMode = localStorage.getItem('tms_acad_class_view') || (window.innerWidth <= 768 ? 'cards' : 'cards');
@@ -242,7 +216,7 @@ export class AcademicModule {
                 <i data-lucide="table"></i> Table
               </button>
             </div>
-            <button class="btn btn-secondary btn-sm" id="btn-restore-classes-default" title="Restore standard classes"><i data-lucide="rotate-ccw"></i> Restore Classes</button>
+            <button class="btn btn-secondary btn-sm" id="btn-restore-classes-default" title="Restore standard classes"><i data-lucide="rotate-ccw"></i> Restore Classes</button>
             <button class="btn btn-primary btn-sm" id="btn-add-class-inner"><i data-lucide="plus"></i> New Class</button>
           </div>
         </div>

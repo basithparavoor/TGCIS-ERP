@@ -27,53 +27,7 @@ export const EVENT_CATEGORIES = [
   { id: 'fee', name: 'Fee Collection Deadline', color: '#d97706', trackColor: '#fef3c7', badgeClass: 'is-fee', icon: 'credit-card' }
 ];
 
-export const DEFAULT_CALENDAR_STORE = {
-  academic_year: '2026-2027',
-  weekly_working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  events: [
-    { id: 'cal-1', date: '2026-10-02', name: 'Gandhi Jayanti Observance', type: 'holiday', is_all_day: true },
-    { id: 'cal-2a', date: '2026-10-12', name: 'Puja Vacation / Dussehra Recess', type: 'holiday', range_id: 'range-puja-26', is_all_day: true },
-    { id: 'cal-2b', date: '2026-10-13', name: 'Puja Vacation / Dussehra Recess', type: 'holiday', range_id: 'range-puja-26', is_all_day: true },
-    { id: 'cal-2c', date: '2026-10-14', name: 'Puja Vacation / Dussehra Recess', type: 'holiday', range_id: 'range-puja-26', is_all_day: true },
-    { id: 'cal-2d', date: '2026-10-15', name: 'Puja Vacation / Dussehra Recess', type: 'holiday', range_id: 'range-puja-26', is_all_day: true },
-    { id: 'cal-3a', date: '2026-10-19', name: 'Deepavali Institutional Break', type: 'hostel_leave', range_id: 'range-diwali-26', is_all_day: true },
-    { id: 'cal-3b', date: '2026-10-20', name: 'Deepavali Institutional Break', type: 'hostel_leave', range_id: 'range-diwali-26', is_all_day: true },
-    { id: 'cal-3c', date: '2026-10-21', name: 'Deepavali Institutional Break', type: 'hostel_leave', range_id: 'range-diwali-26', is_all_day: true },
-    { id: 'cal-4a', date: '2026-11-16', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-4b', date: '2026-11-17', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-4c', date: '2026-11-18', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-4d', date: '2026-11-19', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-4e', date: '2026-11-20', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-4f', date: '2026-11-21', name: 'Term-1 Mid-Term Assessments', type: 'exam', range_id: 'range-exam-t1', is_all_day: true },
-    { id: 'cal-5', date: '2026-11-28', name: 'Parent-Teacher Meeting & Progress Report Meet', type: 'ptm', is_all_day: true },
-    { id: 'cal-6a', date: '2026-12-24', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6b', date: '2026-12-25', name: 'Christmas Day', type: 'holiday', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6c', date: '2026-12-26', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6d', date: '2026-12-27', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6e', date: '2026-12-28', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6f', date: '2026-12-29', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6g', date: '2026-12-30', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6h', date: '2026-12-31', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6i', date: '2027-01-01', name: 'New Year Day', type: 'holiday', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-6j', date: '2027-01-02', name: 'Winter Vacation & Hostel Exit Window', type: 'hostel_leave', range_id: 'range-winter-26', is_all_day: true },
-    { id: 'cal-7', date: '2027-01-26', name: 'Republic Day Institutional Celebration', type: 'holiday', is_all_day: true },
-    { id: 'cal-8a', date: '2027-02-12', name: 'Annual Sports & Athletics Meet', type: 'sports', range_id: 'range-sports-27', is_all_day: true },
-    { id: 'cal-8b', date: '2027-02-13', name: 'Annual Sports & Athletics Meet', type: 'sports', range_id: 'range-sports-27', is_all_day: true },
-    { id: 'cal-8c', date: '2027-02-14', name: 'Annual Sports Prize Distribution & Cultural Meet', type: 'sports', range_id: 'range-sports-27', is_all_day: true },
-    { id: 'cal-9a', date: '2027-03-20', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9b', date: '2027-03-21', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9c', date: '2027-03-22', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9d', date: '2027-03-23', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9e', date: '2027-03-24', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9f', date: '2027-03-25', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9g', date: '2027-03-26', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9h', date: '2027-03-27', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9i', date: '2027-03-28', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9j', date: '2027-03-29', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9k', date: '2027-03-30', name: 'Ramadan & Eid-ul-Fitr Vacation Break', type: 'hostel_leave', range_id: 'range-eid-27', is_all_day: true },
-    { id: 'cal-9l', date: '2027-03-31', name: 'Eid-ul-Fitr Observance', type: 'holiday', range_id: 'range-eid-27', is_all_day: true }
-  ]
-};
+export const DEFAULT_CALENDAR_STORE = { events: [] };
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
