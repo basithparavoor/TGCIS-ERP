@@ -86,7 +86,8 @@ export class AdmissionsEntryModule {
 
     const launchForm = async () => {
       await auditService.log('ADMISSION_ENTRY_OPENED', 'ADMISSIONS', { by: user.name });
-      window.open('/admission', '_blank');
+      const schoolParam = user.school_id || user.schoolId ? `?school=${encodeURIComponent(user.school_id || user.schoolId)}` : '';
+      window.open('/admission' + schoolParam, '_blank');
     };
 
     const btn = document.getElementById('btn-open-admission-form');

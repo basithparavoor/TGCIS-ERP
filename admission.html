@@ -387,6 +387,7 @@
     import { TMS_LOGO } from './logo.js';
     import { authService } from './auth-service.js';
     import { admissionService, DEFAULT_INSTRUCTIONS, DEFAULT_POPUP_INSTRUCTIONS, renderVideoPlayerHtml, getEmbedVideoUrl } from './admission-service.js';
+    import { institutionService } from './institution-service.js';
     import { brandingService } from './branding-service.js';
     import { checkMigration } from './migration-check.js';
 
@@ -433,6 +434,17 @@
 
       if (type === 'textarea') {
         control = `<textarea class="form-input" id="${id}" rows="2" placeholder="${ph}" ${req}></textarea>`;
+      } else if (f.fieldKey === 'schoolId' || f.key === 'schoolId') {
+        const schools = institutionService.getSchools();
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselectedSchool = (urlParams.get('school') || '').toLowerCase();
+
+        const opts = schools.map((s) => {
+          const isSel = preselectedSchool && (s.id.toLowerCase() === preselectedSchool || s.code.toLowerCase() === preselectedSchool);
+          return `<option value="${esc(s.id)}" ${isSel ? 'selected' : ''}>${esc(s.name)} (${esc(s.code)})</option>`;
+        }).join('');
+
+        control = `<select class="form-select" id="${id}" ${req} style="font-weight:700;"><option value="">— Select Campus / School Branch —</option>${opts}</select>`;
       } else if (type === 'select') {
         const opts = (f.options || []).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
         control = `<select class="form-select" id="${id}" ${req}><option value="">— Select ${esc(f.label)} —</option>${opts}</select>`;
@@ -1338,6 +1350,15 @@
       if (result.credentials) {
         document.getElementById('admit-username').innerText = result.credentials.username;
         document.getElementById('admit-password').innerText = result.credentials.password;
+      }
+
+      const rawSchool = pick(values, ['schoolId', 'school_id', 'school']);
+      const selectedSchool = institutionService.getSchool(rawSchool) || institutionService.getActiveSchool();
+      const schoolSlipEl = document.getElementById('admit-slip-school');
+      if (schoolSlipEl && selectedSchool) schoolSlipEl.innerText = selectedSchool.name;
+      const centreSlipEl = document.getElementById('admit-slip-centre');
+      if (centreSlipEl && selectedSchool) {
+        centreSlipEl.innerText = `${selectedSchool.name}, ${selectedSchool.address?.campus || selectedSchool.campusLocation || 'Campus'}, ${selectedSchool.address?.district || 'Dakshin Dinajpur'}`;
       }
     }
 

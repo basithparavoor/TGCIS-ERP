@@ -899,6 +899,9 @@ export class StudentModule {
             rollNo = nextSeq.toString().padStart(2, '0');
           }
 
+          const activeSchool = institutionService.getActiveSchoolId();
+          const targetSchoolId = activeSchool === 'all' ? 'tps' : activeSchool;
+
           const newStudent = await dbService.insert('students', {
             admissionNo,
             rollNo,
@@ -911,6 +914,8 @@ export class StudentModule {
             guardianName,
             guardianPhone,
             address,
+            school_id: targetSchoolId,
+            schoolId: targetSchoolId,
             status: 'Active',
             leaveStatus: null
           });
@@ -2381,6 +2386,7 @@ export class StudentModule {
           allergies: p.allergies
         };
         // eslint-disable-next-line no-await-in-loop
+        institutionService.stampSchoolId(record);
         await dbService.insert('students', record);
         successCount++;
       }

@@ -282,8 +282,19 @@ export class AttendanceModule {
       StudentLeaveService.getLeaves()
     ]);
 
-    this._students = (allStudents && allStudents.length) ? allStudents : SAMPLE_STUDENTS;
-    this._records = allRecords || [];
+    const activeSchoolId = window.institutionService ? window.institutionService.getActiveSchoolId() : 'all';
+    const scopedStudents = window.institutionService ? window.institutionService.filterByActiveSchool(allStudents || []) : (allStudents || []);
+
+    this._students = (scopedStudents && scopedStudents.length) ? scopedStudents : ((allStudents && allStudents.length) ? allStudents : SAMPLE_STUDENTS);
+    
+    // Filter attendance records to active campus
+    const studentIdSet = new Set(this._students.map(s => s.id));
+    this._records = (allRecords || []).filter(r => {
+      if (activeSchoolId === 'all') return true;
+      if (r.school_id || r.schoolId) return (r.school_id || r.schoolId) === activeSchoolId;
+      return studentIdSet.has(r.student_id || r.studentId);
+    });
+
     this._classrooms = (allClassrooms && allClassrooms.length) ? allClassrooms : DEFAULT_CLASSROOMS;
     this._leaves = allLeaves || [];
 
@@ -447,10 +458,14 @@ export class AttendanceModule {
       ? `att_${classId}_${student.id}_${date}` 
       : `att_daily_${student.id}_${date}`;
 
+    const currentSchoolId = student.school_id || student.schoolId || (window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps');
+
     const newRecord = {
       id: recordId,
       student_id: student.id,
       studentId: student.id,
+      school_id: currentSchoolId,
+      schoolId: currentSchoolId,
       admission_no: student.admissionNo,
       admissionNo: student.admissionNo,
       student_name: student.fullName,

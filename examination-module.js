@@ -43,8 +43,14 @@ export class ExaminationModule {
       dbService.select('exam_assessments')
     ]);
 
-    this._students = allStudents || [];
-    this._assessments = allAssessments || [];
+    const activeSchoolId = window.institutionService ? window.institutionService.getActiveSchoolId() : 'all';
+    this._students = window.institutionService ? window.institutionService.filterByActiveSchool(allStudents || []) : (allStudents || []);
+    const studentIdSet = new Set(this._students.map(s => s.id));
+    this._assessments = (allAssessments || []).filter(a => {
+      if (activeSchoolId === 'all') return true;
+      if (a.school_id || a.schoolId) return (a.school_id || a.schoolId) === activeSchoolId;
+      return studentIdSet.has(a.studentId || a.student_id);
+    });
     this._selectedGrade = this._selectedGrade || (TMS_CONFIG.academic.classes[0] || 'Grade 1');
     this._selectedSection = this._selectedSection || 'all';
     this._selectedTerm = this._selectedTerm || 'Term 1 Exam';
@@ -888,6 +894,8 @@ export class ExaminationModule {
         const recordId = existing ? existing.id : `exam_${student.id}_${Date.now()}`;
         const recordData = {
           id: recordId,
+          school_id: student.school_id || student.schoolId || (window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps'),
+          schoolId: student.school_id || student.schoolId || (window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps'),
           studentId: student.id,
           studentName: student.fullName,
           admissionNo: student.admissionNo,
@@ -1098,6 +1106,8 @@ export class ExaminationModule {
 
             const recordData = {
               id: existing ? existing.id : `exam_${studentId}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              school_id: existing?.school_id || existing?.schoolId || (window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps'),
+              schoolId: existing?.school_id || existing?.schoolId || (window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps'),
               studentId,
               studentName: name,
               admissionNo: adm,

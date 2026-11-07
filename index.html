@@ -1955,6 +1955,7 @@
       <!-- Desktop Nav Links -->
       <nav class="inst-nav-links">
         <a href="#about" id="nav-about-link">About</a>
+        <a href="#campuses" id="nav-campuses-link">Campuses</a>
         <a href="#academics" id="nav-academics-link">Academics</a>
         <a href="#facilities" id="nav-facilities-link">Facilities</a>
         <a href="#hostel" id="nav-hostel-link" style="display:none; font-weight:700; color:var(--brand-theme-primary);">Hostel</a>
@@ -1983,6 +1984,11 @@
         <a href="#about" class="mobile-nav-link" id="mobile-nav-about-link">
           <span class="mobile-nav-icon"><i data-lucide="info"></i></span>
           <span class="mobile-nav-text">About Institution</span>
+          <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
+        </a>
+        <a href="#campuses" class="mobile-nav-link" id="mobile-nav-campuses-link">
+          <span class="mobile-nav-icon"><i data-lucide="building-2"></i></span>
+          <span class="mobile-nav-text">Campuses &amp; Branches</span>
           <i data-lucide="chevron-right" class="mobile-nav-arr"></i>
         </a>
         <a href="#academics" class="mobile-nav-link" id="mobile-nav-academics-link">
@@ -2166,6 +2172,21 @@
             <!-- Populated dynamically via JS -->
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Campuses & Branches Showcase Section -->
+  <section class="inst-section" id="campuses" style="background:#f8fafc; border-top:1px solid #e2e8f0;">
+    <div class="inst-container">
+      <div class="section-header-center">
+        <span class="section-tag" style="background:rgba(191,154,51,0.12); color:#BF9A33;">CAMPUS LOCATIONS &amp; MEMBER SCHOOLS</span>
+        <h2 class="section-title">Our Institutional Campuses</h2>
+        <p class="section-subtitle">Thaiba Heritage operates specialized, affiliated academic campuses tailored for excellence, moral nurture, and modern facilities.</p>
+      </div>
+
+      <div class="campuses-grid" id="campuses-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:24px; margin-top:36px;">
+        <!-- Populated dynamically via JS from institutionService -->
       </div>
     </div>
   </section>
@@ -2510,6 +2531,13 @@
           <p style="font-size:0.86rem; color:#64748b; margin-bottom:20px;">Fill out this quick form and our admissions desk will call you back within 24 hours.</p>
 
           <form id="inquiry-form">
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="form-label" style="font-size:0.82rem; font-weight:700;">Select Campus / School Branch *</label>
+              <select id="inq-school" class="form-input" required>
+                <option value="">— Select School Branch —</option>
+              </select>
+            </div>
+
             <div class="contact-form-grid">
               <div class="form-group">
                 <label class="form-label" style="font-size:0.82rem; font-weight:700;">Guardian Name *</label>
@@ -3350,11 +3378,149 @@
         });
       }
 
+      // Render Campuses Showcase & Inquiry School Options
+      function renderCampuses() {
+        const grid = document.getElementById('campuses-grid');
+        const inqSelect = document.getElementById('inq-school');
+        const schools = institutionService.getSchools();
+
+        if (inqSelect) {
+          inqSelect.innerHTML = `<option value="">— Select School Branch —</option>` +
+            schools.map(s => `<option value="${esc(s.id)}">${esc(s.name)} (${esc(s.code)})</option>`).join('');
+        }
+
+        if (!grid) return;
+
+        grid.innerHTML = schools.map(sch => {
+          const facList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena'];
+          const facArr = Array.isArray(facList) ? facList : String(facList).split(',').map(f => f.trim());
+          const banner = sch.bannerImage || sch.banner_image || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=800&q=80';
+
+          return `
+            <div class="campus-card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:18px; overflow:hidden; box-shadow:0 6px 20px rgba(15,23,42,0.04); display:flex; flex-direction:column; justify-content:space-between; transition:transform 0.2s ease, box-shadow 0.2s ease;">
+              <div style="height:190px; position:relative; overflow:hidden; background:#0f172a;">
+                <img src="${esc(banner)}" alt="${esc(sch.name)}" style="width:100%; height:100%; object-fit:cover; opacity:0.88; transition:transform 0.3s ease;">
+                <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.1) 60%);"></div>
+                
+                <div style="position:absolute; top:14px; left:14px; display:flex; gap:8px;">
+                  <span style="background:${sch.themeColor || '#BF9A33'}; color:#ffffff; font-size:0.72rem; font-weight:800; padding:4px 10px; border-radius:999px; letter-spacing:0.04em;">
+                    ${esc(sch.code)}
+                  </span>
+                  <span style="background:rgba(255,255,255,0.22); backdrop-filter:blur(6px); color:#ffffff; font-size:0.72rem; font-weight:700; padding:4px 10px; border-radius:999px;">
+                    ${esc(sch.board || 'Affiliated')}
+                  </span>
+                </div>
+
+                <div style="position:absolute; bottom:14px; left:16px; right:16px;">
+                  <h3 style="margin:0; font-family:var(--font-display); font-size:1.2rem; font-weight:800; color:#ffffff; line-height:1.25; text-shadow:0 2px 4px rgba(0,0,0,0.4);">
+                    ${esc(sch.name)}
+                  </h3>
+                  <div style="font-size:0.78rem; color:#cbd5e1; margin-top:3px; display:flex; align-items:center; gap:5px;">
+                    <i data-lucide="map-pin" style="width:13px; height:13px; color:#60a5fa;"></i>
+                    <span>${esc(sch.address?.district || sch.district || 'West Bengal')} &bull; ${esc(sch.address?.campus || sch.campusLocation || 'Campus')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding:20px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <p style="font-size:0.86rem; color:#475569; line-height:1.55; margin:0 0 14px 0;">
+                    ${esc(sch.description || sch.tagline || 'Modern campus fostering high academic performance, moral nurturing, and student-centered growth.')}
+                  </p>
+
+                  <div style="background:#f8fafc; border:1px solid #f1f5f9; border-radius:10px; padding:10px 12px; margin-bottom:14px; font-size:0.8rem; color:#334155; display:flex; flex-direction:column; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <i data-lucide="user-check" style="width:14px; height:14px; color:#BF9A33;"></i>
+                      <span style="font-weight:700;">Campus Principal:</span>
+                      <span style="color:#0f172a;">${esc(sch.principal || 'Basith Sir')}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <i data-lucide="graduation-cap" style="width:14px; height:14px; color:#2563eb;"></i>
+                      <span style="font-weight:700;">Offered:</span>
+                      <span>${esc(sch.gradesOffered || sch.grades_offered || 'Nursery - Grade 12')}</span>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px;">
+                    ${facArr.slice(0, 4).map(f => `
+                      <span style="display:inline-flex; align-items:center; gap:4px; font-size:0.72rem; font-weight:700; background:#f1f5f9; color:#475569; padding:3px 9px; border-radius:999px;">
+                        <span style="width:5px; height:5px; border-radius:50%; background:#BF9A33;"></span>
+                        ${esc(f)}
+                      </span>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div style="display:flex; gap:10px; border-top:1px solid #f1f5f9; padding-top:14px;">
+                  <button class="btn btn-secondary btn-sm btn-view-campus-details" data-id="${esc(sch.id)}" style="flex:1; justify-content:center; font-weight:700;">
+                    <i data-lucide="info" style="width:14px; height:14px;"></i> View Details
+                  </button>
+                  <a href="/admission?school=${esc(sch.id)}" class="btn btn-primary btn-sm" style="flex:1; justify-content:center; text-decoration:none; font-weight:700;">
+                    <i data-lucide="pen-tool" style="width:14px; height:14px;"></i> Apply Online
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        grid.querySelectorAll('.btn-view-campus-details').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            const sch = institutionService.getSchool(id);
+            if (sch) openCampusModal(sch);
+          });
+        });
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      function openCampusModal(sch) {
+        const modal = document.getElementById('campus-detail-modal');
+        if (!modal) return;
+        const facList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena'];
+        const facArr = Array.isArray(facList) ? facList : String(facList).split(',').map(f => f.trim());
+        const banner = sch.bannerImage || sch.banner_image || 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1200&q=80';
+
+        document.getElementById('modal-camp-banner').src = banner;
+        document.getElementById('modal-camp-name').innerText = sch.name || 'Campus';
+        document.getElementById('modal-camp-code').innerText = sch.code || '';
+        document.getElementById('modal-camp-board').innerText = sch.board || 'State / Central Affiliated';
+        document.getElementById('modal-camp-tagline').innerText = `"${sch.tagline || 'Excellence in Education'}"`;
+        document.getElementById('modal-camp-desc').innerText = sch.description || 'Welcome to this campus of Thaiba Heritage Group. We offer state-of-the-art facilities, supportive faculty, and value-based education.';
+        document.getElementById('modal-camp-principal').innerText = sch.principal || 'Basith Sir';
+        document.getElementById('modal-camp-phone').innerText = sch.contact?.phone1 || sch.contactPhone || '+91 8653382851';
+        document.getElementById('modal-camp-address').innerText = `${sch.address?.campus || sch.campusLocation || 'Baghait, Tapan'}, ${sch.address?.district || 'Dakshin Dinajpur'}, ${sch.address?.state || 'West Bengal'} - ${sch.address?.pin || '733127'}`;
+        document.getElementById('modal-camp-grades').innerText = sch.gradesOffered || sch.grades_offered || 'Nursery to Grade 12';
+        
+        const facBox = document.getElementById('modal-camp-facilities');
+        if (facBox) {
+          facBox.innerHTML = facArr.map(f => `
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.84rem; font-weight:700; color:#334155; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="check" style="width:14px; height:14px; color:#16a34a;"></i>
+              <span>${esc(f)}</span>
+            </div>
+          `).join('');
+        }
+
+        const applyBtn = document.getElementById('modal-camp-apply-btn');
+        if (applyBtn) {
+          applyBtn.href = `/admission?school=${esc(sch.id)}`;
+        }
+
+        modal.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+      }
+
+      renderCampuses();
+      window.addEventListener('tms_schools_changed', renderCampuses);
+
       // Quick Inquiry Form Submission
       const inqForm = document.getElementById('inquiry-form');
       if (inqForm) {
         inqForm.addEventListener('submit', async (e) => {
           e.preventDefault();
+          const schoolEl = document.getElementById('inq-school');
           const nameEl = document.getElementById('inq-name');
           const phoneEl = document.getElementById('inq-phone');
           const gradeEl = document.getElementById('inq-grade');
@@ -3363,6 +3529,8 @@
           const status = document.getElementById('inquiry-status');
           const submitBtn = inqForm.querySelector('button[type="submit"]');
 
+          const schoolId = schoolEl ? schoolEl.value : 'tps';
+          const schoolName = (schoolEl && schoolEl.selectedOptions && schoolEl.selectedOptions[0]) ? schoolEl.selectedOptions[0].text : 'Thaiba Public School';
           const name = nameEl ? nameEl.value.trim() : '';
           const phone = phoneEl ? phoneEl.value.trim() : '';
           const grade = gradeEl ? gradeEl.value : 'General Admission';
@@ -3386,6 +3554,9 @@
 
           const inquiry = {
             id: 'INQ-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
+            school_id: schoolId,
+            schoolId: schoolId,
+            schoolName: schoolName,
             guardianName: name,
             phone: phone,
             grade: grade,
@@ -3413,7 +3584,7 @@
                   <span>Inquiry Received Successfully!</span>
                 </div>
                 <div style="font-size:0.86rem; color:#8C6E1E; line-height:1.5;">
-                  Thank you, <strong>${esc(name)}</strong>. Your admission inquiry for <strong>${esc(grade)}</strong> has been registered. Our admissions desk will call you at <strong>${esc(phone)}</strong> shortly.
+                  Thank you, <strong>${esc(name)}</strong>. Your inquiry for <strong>${esc(schoolName)}</strong> (${esc(grade)}) has been registered. Our admissions desk will call you at <strong>${esc(phone)}</strong> shortly.
                 </div>
               `;
               if (window.lucide) window.lucide.createIcons();
@@ -3444,5 +3615,63 @@
     // Launch!
     window.addEventListener('DOMContentLoaded', initWebsite);
   </script>
+
+  <!-- Campus Showcase Modal -->
+  <div id="campus-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.65); z-index:99999; backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#ffffff; border-radius:20px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.25); position:relative; overflow:hidden;">
+      <button id="btn-close-campus-modal" onclick="document.getElementById('campus-detail-modal').style.display='none'" style="position:absolute; top:16px; right:16px; z-index:10; background:rgba(0,0,0,0.5); border:none; color:#ffffff; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+        <i data-lucide="x" style="width:18px; height:18px;"></i>
+      </button>
+
+      <div style="height:220px; position:relative; overflow:hidden; background:#0f172a;">
+        <img id="modal-camp-banner" src="" alt="Campus Banner" style="width:100%; height:100%; object-fit:cover; opacity:0.85;">
+        <div style="position:absolute; inset:0; background:linear-gradient(to top, rgba(15,23,42,0.9) 0%, transparent 60%);"></div>
+        <div style="position:absolute; bottom:18px; left:22px; right:22px;">
+          <div style="display:flex; gap:8px; margin-bottom:6px;">
+            <span id="modal-camp-code" style="background:#BF9A33; color:#fff; font-size:0.75rem; font-weight:800; padding:2px 8px; border-radius:6px;"></span>
+            <span id="modal-camp-board" style="background:rgba(255,255,255,0.25); color:#fff; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:6px;"></span>
+          </div>
+          <h2 id="modal-camp-name" style="margin:0; font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:#ffffff; line-height:1.2;"></h2>
+        </div>
+      </div>
+
+      <div style="padding:24px;">
+        <p id="modal-camp-tagline" style="font-size:0.95rem; font-style:italic; color:#BF9A33; font-weight:700; margin:0 0 14px 0;"></p>
+        <p id="modal-camp-desc" style="font-size:0.9rem; color:#475569; line-height:1.6; margin:0 0 20px 0;"></p>
+
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 10px 0;">Offered Classes &amp; Programs</h4>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; font-weight:700; color:#1e293b; font-size:0.9rem;" id="modal-camp-grades"></div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:0.86rem; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:#0f172a; margin:0 0 10px 0;">Campus Facilities &amp; Amenities</h4>
+          <div id="modal-camp-facilities" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px;"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+          <div>
+            <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase;">Principal / Head</div>
+            <div id="modal-camp-principal" style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:2px;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase;">Campus Helpline</div>
+            <div id="modal-camp-phone" style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:2px;"></div>
+          </div>
+          <div style="grid-column: span 2;">
+            <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase;">Location Address</div>
+            <div id="modal-camp-address" style="font-size:0.85rem; color:#334155; margin-top:2px;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+          <button class="btn btn-secondary" onclick="document.getElementById('campus-detail-modal').style.display='none'">Close</button>
+          <a href="/admission" id="modal-camp-apply-btn" class="btn btn-primary" style="text-decoration:none; padding:10px 20px; font-weight:700;">
+            <i data-lucide="pen-tool" style="width:16px; height:16px;"></i> Apply for Admission at this Campus
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

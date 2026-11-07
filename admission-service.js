@@ -9,6 +9,7 @@ import { TMS_CONFIG } from './config.js';
 import { dbService } from './supabase-client.js';
 import { createUserViaRpc, describeAccountError } from './account-utils.js';
 import { websiteService } from './website-service.js';
+import { institutionService } from './institution-service.js';
 
 const STATUS = TMS_CONFIG.admissionStatuses;
 
@@ -17,6 +18,7 @@ const STATUS = TMS_CONFIG.admissionStatuses;
 /* ------------------------------------------------------------------ */
 
 export const DEFAULT_FIELDS = [
+  { key: 'schoolId', label: 'Select Campus / School Branch', type: 'select', section: 'Candidate Details', required: true, order: 0, options: ['THAIBA PUBLIC SCHOOL (TPS-TAPAN)', 'THAIBA MODEL SCHOOL (TMS-TAPAN)'], placeholder: 'Choose campus branch' },
   { key: 'candidateName', label: "Candidate's Name", type: 'text', section: 'Candidate Details', required: true, order: 1, placeholder: 'Full name as per birth certificate' },
   { key: 'dob', label: 'Date of Birth', type: 'date', section: 'Candidate Details', required: true, order: 2 },
   { key: 'gender', label: 'Gender', type: 'select', section: 'Candidate Details', required: true, order: 3, options: ['Male', 'Female', 'Other'] },
@@ -536,7 +538,8 @@ class AdmissionService {
   /* ---------------- Applications ---------------- */
 
   async listApplications() {
-    const rows = await dbService.select('admissions_applications', null, true);
+    let rows = await dbService.select('admissions_applications', null, true);
+    rows = institutionService.filterByActiveSchool(rows || []);
     return (rows || []).map((a) => {
       const pld = a.payload || {};
       const createdAt = a.createdAt || a.created_at || pld.applicationDate || new Date().toISOString();
@@ -623,11 +626,21 @@ class AdmissionService {
     const cleanDob = (values.dob && values.dob.trim()) ? values.dob.trim() : null;
     const cleanGender = (values.gender && values.gender.trim()) ? values.gender.trim() : null;
 
+    const rawSchool = (values.schoolId || values.school_id || values.school || '').toString().toLowerCase().trim();
+    let cleanSchoolId = 'tps';
+    if (rawSchool.includes('tms') || rawSchool === 'tms') cleanSchoolId = 'tms';
+    else if (rawSchool) {
+      const matched = institutionService.getSchool(rawSchool);
+      cleanSchoolId = matched ? matched.id : rawSchool.replace(/[^a-z0-9_-]/g, '_');
+    }
+
     const uniqueRowId = 'app_' + appNo.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString(36);
 
     const application = {
       id: uniqueRowId,
       appId: appNo,
+      school_id: cleanSchoolId,
+      schoolId: cleanSchoolId,
       studentName: cleanStudentName,
       dob: cleanDob,
       gender: cleanGender,

@@ -36,19 +36,24 @@ const STATUS_BADGE = {
 
 const ROLE_LABELS = {
   super_admin: '👑 Super Administrator',
-  boys_mentor: 'Boys Hostel Mentor',
-  girls_mentor: 'Girls Hostel Mentor',
-  mentor: 'Hostel Mentor',
-  hostel_leader: 'Hostel Leader',
+  academic_director: '🎓 Academic Director (Authority of All Schools)',
+  deputy_director: '🏛️ Deputy Director (Group Executive)',
+  chairman: '👑 Chairman (Higher Management - View Only)',
+  md: '💼 Managing Director / MD (Higher Management - View Only)',
+  dmd: '💼 Deputy Managing Director / DMD (Higher Management - View Only)',
+  principal: '🏫 School Principal (Full School Autonomy)',
   admin: 'Administrator',
-  principal: 'Principal',
   coordinator: 'Coordinator',
-  teacher: 'Teacher',
+  teacher: 'Teacher / Faculty',
   finance: 'Finance Officer',
   hr: 'HR Manager',
   librarian: 'Librarian',
   operations: 'Operations',
   office_boy: 'Office Boy (Data Entry)',
+  boys_mentor: 'Boys Hostel Mentor',
+  girls_mentor: 'Girls Hostel Mentor',
+  mentor: 'Hostel Mentor',
+  hostel_leader: 'Hostel Leader',
   student: 'Student',
   parent: 'Parent / Guardian',
   pending: 'Pending Assignment',
@@ -391,6 +396,7 @@ export class AdminModule {
         { key: 'audit', label: 'Security Audit Trail', icon: 'shield-alert' }
       ],
       website: [
+        { key: 'website-campuses', label: 'Campuses & Branch Pages', icon: 'building-2' },
         { key: 'website-inquiries', label: 'Admission Inquiries', icon: 'message-square', showInquiryBadge: true },
         { key: 'website-sections', label: 'Sections & Tabs Visibility (ON/OFF)', icon: 'toggle-right' },
         { key: 'website-general', label: 'Identity & Brand Colors', icon: 'palette' },
@@ -418,11 +424,13 @@ export class AdminModule {
         { key: 'notifications', label: 'Broadcast Bulletins', icon: 'bell' }
       ],
       system: [
-        { key: 'institution-details', label: 'Institution Profile & Campus Status', icon: 'building-2' },
+        { key: 'schools-management', label: 'Schools & Campuses Management', icon: 'building-2' },
+        { key: 'institution-details', label: 'Active Institution Profile & Campus Status', icon: 'shield-check' },
         { key: 'branding', label: 'Institute Logo & Emblem', icon: 'image' },
         { key: 'backup', label: 'JSON Disaster Recovery', icon: 'database' }
       ],
       superadmin: [
+        { key: 'schools-management', label: 'Schools & Sub-Managements Directory', icon: 'building-2' },
         { key: 'system-doctor', label: '🩺 System Doctor (Find & Fix)', icon: 'wrench' },
         { key: 'developer-tools', label: '⚡ Developer DB Explorer', icon: 'terminal' }
       ]
@@ -569,6 +577,11 @@ export class AdminModule {
       else if (tabKey === 'users') await this.renderUsersTab(tabContent);
       else if (tabKey === 'staff-onboarding') await this.renderStaffOnboardingTab(tabContent);
       else if (tabKey === 'google-approvals') await this.renderGoogleApprovalsTab(tabContent);
+      else if (tabKey === 'schools-management') await this.renderSchoolsManagementTab(tabContent);
+      else if (tabKey === 'website-campuses') {
+        const { AdminWebsiteCms } = await import('./admin-website-cms.js');
+        await AdminWebsiteCms.render(tabContent, 'website-campuses');
+      }
       else if (tabKey === 'institution-details') await this.renderInstitutionDetailsTab(tabContent);
       else if (tabKey === 'branding') await this.renderBrandingTab(tabContent);
       else if (tabKey === 'audit') await this.renderAuditTab(tabContent);
@@ -4183,6 +4196,7 @@ export class AdminModule {
                   <th style="min-width:220px;">User &amp; Google Account</th>
                   <th>Current Status</th>
                   <th style="min-width:160px;">Role Assignment</th>
+                  <th style="min-width:145px;">Access Level</th>
                   <th style="min-width:140px;">Access Scope</th>
                   <th style="min-width:150px;">School / Campus</th>
                   <th style="min-width:130px;">Title / Designation</th>
@@ -4248,6 +4262,16 @@ export class AdminModule {
                                 ${esc(ROLE_LABELS[r] || r)}
                               </option>
                             `).join('')}
+                          </select>
+                        `}
+                      </td>
+
+                      <td>
+                        ${!canModify ? `<span class="badge badge-success">Full Editor</span>` : `
+                          <select class="form-select form-select-sm approval-access-mode-select">
+                            <option value="default" ${(p.access_mode !== 'view_only' && p.access_mode !== 'full_editor') ? 'selected' : ''}>Role Default</option>
+                            <option value="view_only" ${(p.access_mode === 'view_only') ? 'selected' : ''}>👁️ View Only</option>
+                            <option value="full_editor" ${(p.access_mode === 'full_editor') ? 'selected' : ''}>✏️ Full Editor</option>
                           </select>
                         `}
                       </td>
@@ -4361,6 +4385,43 @@ export class AdminModule {
       });
     }
 
+    // 3.5 Role selection auto-adjuster
+    tabContent.querySelectorAll('.approval-role-select').forEach((sel) => {
+      sel.addEventListener('change', (e) => {
+        const row = e.currentTarget.closest('tr');
+        const role = e.currentTarget.value;
+        const scopeSel = row.querySelector('.approval-scope-select');
+        const schoolSel = row.querySelector('.approval-school-select');
+        const modeSel = row.querySelector('.approval-access-mode-select');
+        const titleInp = row.querySelector('.approval-title-input');
+        const deptInp = row.querySelector('.approval-dept-input');
+
+        if (role === 'academic_director') {
+          if (scopeSel) scopeSel.value = 'group_wide';
+          if (schoolSel) schoolSel.value = 'all';
+          if (modeSel) modeSel.value = 'full_editor';
+          if (titleInp) titleInp.value = 'Academic Director';
+          if (deptInp) deptInp.value = 'Academic Directorate (All Schools)';
+        } else if (role === 'deputy_director') {
+          if (scopeSel) scopeSel.value = 'group_wide';
+          if (schoolSel) schoolSel.value = 'all';
+          if (titleInp) titleInp.value = 'Deputy Director';
+          if (deptInp) deptInp.value = 'Executive Administration';
+        } else if (role === 'chairman' || role === 'md' || role === 'dmd') {
+          if (scopeSel) scopeSel.value = 'group_wide';
+          if (schoolSel) schoolSel.value = 'all';
+          if (modeSel) modeSel.value = 'view_only';
+          if (titleInp) titleInp.value = ROLE_LABELS[role] || 'Executive Governance';
+          if (deptInp) deptInp.value = 'Executive Directorate';
+        } else if (role === 'principal') {
+          if (scopeSel) scopeSel.value = 'school_wide';
+          if (modeSel) modeSel.value = 'full_editor';
+          if (titleInp) titleInp.value = 'School Principal';
+          if (deptInp) deptInp.value = 'School Administration';
+        }
+      });
+    });
+
     // 4. Approve / Update Button
     tabContent.querySelectorAll('.btn-action-approve, .btn-action-update').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
@@ -4368,6 +4429,7 @@ export class AdminModule {
         const userId = row.dataset.id;
         const userEmail = row.dataset.email;
         const selectedRole = row.querySelector('.approval-role-select')?.value || 'teacher';
+        const selectedAccessMode = row.querySelector('.approval-access-mode-select')?.value || 'default';
         const selectedScope = row.querySelector('.approval-scope-select')?.value || 'own_records';
         const selectedSchool = row.querySelector('.approval-school-select')?.value || 'tps';
         const title = row.querySelector('.approval-title-input')?.value.trim() || ROLE_LABELS[selectedRole] || 'Staff Member';
@@ -4383,6 +4445,8 @@ export class AdminModule {
             id: userId,
             email: userEmail,
             role: selectedRole,
+            access_mode: selectedAccessMode,
+            accessMode: selectedAccessMode,
             scope: selectedScope,
             school_id: selectedSchool,
             schoolId: selectedSchool,
@@ -4397,7 +4461,9 @@ export class AdminModule {
             userId,
             email: userEmail,
             role: selectedRole,
-            scope: selectedScope
+            accessMode: selectedAccessMode,
+            scope: selectedScope,
+            schoolId: selectedSchool
           });
 
           UIComponents.showToast(`Account ${userEmail} approved as ${ROLE_LABELS[selectedRole] || selectedRole}!`, 'success');
@@ -5564,6 +5630,9 @@ export class AdminModule {
     const title = isApprovalMode ? 'Approve Account & Assign Role' : `Assign Role & Scope: ${p.name || p.email}`;
     const rolesList = WINDOW_ROLES;
     const currentRole = p.role === 'pending' ? (isApprovalMode ? 'teacher' : 'teacher') : (p.role || 'teacher');
+    const schools = (typeof institutionService !== 'undefined' && institutionService.getSchools) ? institutionService.getSchools() : [];
+    const currentSchoolId = p.school_id || p.schoolId || '';
+    const currentAccessMode = p.access_mode || p.accessMode || 'role_default';
 
     const bodyHtml = `
       <div style="display:flex; flex-direction:column; gap:14px;">
@@ -5591,6 +5660,25 @@ export class AdminModule {
             <option value="operations" ${currentRole === 'operations' ? 'selected' : ''}>Operations (Facility & Hostel)</option>
             <option value="office_boy" ${currentRole === 'office_boy' ? 'selected' : ''}>Office Boy (Admission Data Entry)</option>
           </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Assigned Campus / School</label>
+          <select class="form-select" id="role-modal-school">
+            <option value="" ${!currentSchoolId || currentSchoolId === 'all' ? 'selected' : ''}>🌐 Central HQ / Group-Wide (All Schools)</option>
+            ${schools.map((s) => `<option value="${esc(s.id)}" ${currentSchoolId === s.id ? 'selected' : ''}>🏫 ${esc(s.name)} (${esc(s.code || s.shortName || s.id)})</option>`).join('')}
+          </select>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Branch Principals and teachers can only access their assigned school. Academic Director & Central Leadership oversee all schools.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-weight:700;">Access Level Override</label>
+          <select class="form-select" id="role-modal-access-mode">
+            <option value="role_default" ${currentAccessMode === 'role_default' ? 'selected' : ''}>Role Default (Window Matrix)</option>
+            <option value="view_only" ${currentAccessMode === 'view_only' ? 'selected' : ''}>👁️ View Only (Observer Mode - MD, Chairman, DMD)</option>
+            <option value="full_editor" ${currentAccessMode === 'full_editor' ? 'selected' : ''}>✏️ Full Editor (Super Admin Editor Override)</option>
+          </select>
+          <span style="font-size:0.72rem; color:var(--text-muted);">Super Admin can grant Full Editor powers to any user or restrict to View Only.</span>
         </div>
 
         <div class="form-group">
@@ -5631,6 +5719,26 @@ export class AdminModule {
       if (parentSec) {
         parentSec.style.display = roleSelect.value === 'parent' ? 'block' : 'none';
       }
+      const val = roleSelect.value;
+      const schoolSelect = document.getElementById('role-modal-school');
+      const scopeSelect = document.getElementById('role-modal-scope');
+      const accessModeSelect = document.getElementById('role-modal-access-mode');
+
+      if (val === 'academic_director') {
+        if (schoolSelect) schoolSelect.value = '';
+        if (scopeSelect) scopeSelect.value = 'group_wide';
+        if (accessModeSelect) accessModeSelect.value = 'full_editor';
+      } else if (['md', 'chairman', 'dmd'].includes(val)) {
+        if (schoolSelect) schoolSelect.value = '';
+        if (scopeSelect) scopeSelect.value = 'group_wide';
+        if (accessModeSelect && !p.access_mode) accessModeSelect.value = 'view_only';
+      } else if (val === 'deputy_director') {
+        if (schoolSelect) schoolSelect.value = '';
+        if (scopeSelect) scopeSelect.value = 'group_wide';
+      } else if (val === 'principal') {
+        if (scopeSelect) scopeSelect.value = 'school_wide';
+        if (accessModeSelect) accessModeSelect.value = 'role_default';
+      }
     });
 
     safeOn('btn-role-cancel', 'click', () => UIComponents.closeModal());
@@ -5638,11 +5746,17 @@ export class AdminModule {
     safeOn('btn-role-submit', 'click', async () => {
       const selectedRole = roleSelect.value;
       const selectedScope = document.getElementById('role-modal-scope')?.value || 'own_records';
+      const selectedSchool = document.getElementById('role-modal-school')?.value || null;
+      const selectedAccessMode = document.getElementById('role-modal-access-mode')?.value || 'role_default';
       const selectedChildren = Array.from(document.querySelectorAll('.cb-assign-child:checked')).map((cb) => cb.value);
 
       const updates = {
         role: selectedRole,
         scope: selectedScope,
+        school_id: selectedSchool,
+        schoolId: selectedSchool,
+        access_mode: selectedAccessMode,
+        accessMode: selectedAccessMode,
         approvalStatus: 'approved',
         isActive: true
       };
@@ -5679,6 +5793,9 @@ export class AdminModule {
     const scopeList = Object.values(TMS_CONFIG.scopes);
     const classList = ['', ...(TMS_CONFIG.academic && TMS_CONFIG.academic.classes ? TMS_CONFIG.academic.classes : [])];
     const sectionList = ['', 'A', 'B', 'C', 'D'];
+    const schools = (typeof institutionService !== 'undefined' && institutionService.getSchools) ? institutionService.getSchools() : [];
+    const currentSchoolId = p.school_id || p.schoolId || '';
+    const currentAccessMode = p.access_mode || p.accessMode || 'role_default';
 
     const bodyHtml = `
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
@@ -5704,6 +5821,17 @@ export class AdminModule {
           <select class="form-select" id="ue-role">${roleList.map((r) => `<option value="${esc(r)}" ${p.role === r ? 'selected' : ''}>${esc(ROLE_LABELS[r] || r)}</option>`).join('')}</select></div>
         <div class="form-group"><label class="form-label">Scope</label>
           <select class="form-select" id="ue-scope">${scopeList.map((s) => `<option value="${esc(s)}" ${p.scope === s ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+        <div class="form-group"><label class="form-label">Assigned Campus / School</label>
+          <select class="form-select" id="ue-school">
+            <option value="" ${!currentSchoolId || currentSchoolId === 'all' ? 'selected' : ''}>🌐 Central HQ / Group-Wide</option>
+            ${schools.map((s) => `<option value="${esc(s.id)}" ${(currentSchoolId === s.id) ? 'selected' : ''}>🏫 ${esc(s.name)} (${esc(s.code || s.shortName || s.id)})</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label class="form-label">Access Level Override</label>
+          <select class="form-select" id="ue-access-mode">
+            <option value="role_default" ${currentAccessMode === 'role_default' ? 'selected' : ''}>Role Default (Window Matrix)</option>
+            <option value="view_only" ${currentAccessMode === 'view_only' ? 'selected' : ''}>👁️ View Only (Observer Mode - MD, Chairman, DMD)</option>
+            <option value="full_editor" ${currentAccessMode === 'full_editor' ? 'selected' : ''}>✏️ Full Editor (Super Admin Override)</option>
+          </select></div>
         <label style="display:flex;gap:8px;align-items:center;grid-column:1/-1;"><input type="checkbox" id="ue-active" ${p.isActive === false ? '' : 'checked'} ${isTargetSuper ? 'disabled' : ''}> Account active</label>
         <div class="form-group" style="grid-column:1/-1; border-top:1px solid var(--border-color); padding-top:12px;">
           <label class="form-label">Set New Password (optional, min 6 characters)</label>
@@ -5771,6 +5899,10 @@ export class AdminModule {
         assignedSection: document.getElementById('ue-section').value,
         role: document.getElementById('ue-role').value,
         scope: document.getElementById('ue-scope').value,
+        school_id: document.getElementById('ue-school')?.value || null,
+        schoolId: document.getElementById('ue-school')?.value || null,
+        access_mode: document.getElementById('ue-access-mode')?.value || 'role_default',
+        accessMode: document.getElementById('ue-access-mode')?.value || 'role_default',
         isActive: document.getElementById('ue-active').checked
       };
       if (pendingAvatar) updates.avatar = pendingAvatar;
@@ -6415,12 +6547,518 @@ export class AdminModule {
     UIComponents.refreshIcons();
   }
 
-  /**
-   * Institution Profile & Campus Status Tab
-   * Editable institutional registration, trust body, campus location, support contacts,
-   * and Head of Institution.
-   */
-  static async renderInstitutionDetailsTab(tabContent) {
+  /* ================================================================== */
+  /* Schools & Campuses Management (Super Admin)                         */
+  /* ================================================================== */
+
+  static async renderSchoolsManagementTab(tabContent) {
+    const esc = (v) => UIComponents.escapeHtml(v);
+    await institutionService.refresh();
+    const schools = institutionService.getSchools();
+    const activeSchoolId = institutionService.getActiveSchoolId();
+    const isCentral = institutionService.isCentralManagementMode();
+    const groupProfile = institutionService.getGroupProfile();
+
+    const [students, staff, facilities] = await Promise.all([
+      dbService.select('students').catch(() => []),
+      dbService.select('staff_directory').catch(() => []),
+      dbService.select('facilities').catch(() => [])
+    ]);
+
+    const totalStudents = students.length;
+    const totalStaff = staff.length;
+    const totalFacilities = facilities.length;
+
+    tabContent.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Header Card -->
+        <div class="card" style="margin-bottom: 0;">
+          <div class="card-header" style="flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                  <i data-lucide="building-2" style="color: #BF9A33;"></i> Schools, Campuses &amp; Sub-Managements
+                </h3>
+                <span class="badge ${isCentral ? 'badge-info' : 'badge-success'}" style="font-weight: 800;">
+                  ${isCentral ? 'Central Group HQ Overview' : `Active: ${esc(institutionService.getActiveSchool()?.shortName || 'Branch')}`}
+                </span>
+              </div>
+              <p class="card-desc" style="margin-top: 6px;">
+                Super Admin centralized governance over all member schools, branch principals, admissions, and website campus pages.
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-sm" id="btn-edit-group-trust-profile">
+                <i data-lucide="shield-check"></i> Group Trust Profile
+              </button>
+              <button class="btn btn-primary btn-sm" id="btn-add-school-top">
+                <i data-lucide="plus-circle"></i> Register New School
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
+          <div class="card" style="padding: 16px; border-left: 4px solid #3b82f6;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase;">Member Schools</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${schools.length}</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Operating Campuses</div>
+          </div>
+          <div class="card" style="padding: 16px; border-left: 4px solid #BF9A33;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #8C6E1E; text-transform: uppercase;">Total Group Students</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStudents.toLocaleString()}</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Enrolled across all branches</div>
+          </div>
+          <div class="card" style="padding: 16px; border-left: 4px solid #10b981;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #047857; text-transform: uppercase;">Faculty &amp; Staff</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalStaff.toLocaleString()}</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Teachers, Mentors &amp; Admin</div>
+          </div>
+          <div class="card" style="padding: 16px; border-left: 4px solid #8b5cf6;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #6d28d9; text-transform: uppercase;">Campus Spaces / Labs</div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #0f172a; margin-top: 4px;">${totalFacilities.toLocaleString()}</div>
+            <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">Classrooms, labs &amp; wings</div>
+          </div>
+        </div>
+
+        <!-- Schools Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px;">
+          ${schools.map((sch) => {
+            const isCurrentActive = activeSchoolId === sch.id;
+            const branchStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+            const branchStaff = staff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+            const branchFacilities = facilities.filter(f => (f.school_id || f.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+            const facilitiesList = sch.facilitiesList || sch.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library'];
+
+            return `
+              <div class="card" style="border: 2px solid ${isCurrentActive ? '#BF9A33' : '#e2e8f0'}; border-radius: 16px; position: relative; padding: 20px; box-shadow: ${isCurrentActive ? '0 8px 24px rgba(191,154,51,0.14)' : '0 4px 12px rgba(15,23,42,0.03)'}; display:flex; flex-direction:column; justify-content:space-between; gap:16px;">
+                ${isCurrentActive ? `
+                  <span style="position: absolute; top: -10px; right: 16px; background: #BF9A33; color: #ffffff; font-size: 0.7rem; font-weight: 800; padding: 2px 10px; border-radius: 999px; letter-spacing: 0.04em;">
+                    ACTIVE CONSOLE
+                  </span>
+                ` : ''}
+
+                <div>
+                  <!-- Header -->
+                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <div style="width: 46px; height: 46px; border-radius: 12px; background: ${sch.themeColor ? sch.themeColor + '18' : '#eff6ff'}; color: ${sch.themeColor || '#BF9A33'}; border: 1.5px solid ${sch.themeColor ? sch.themeColor + '40' : '#bfdbfe'}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.05rem; flex-shrink: 0;">
+                        ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
+                      </div>
+                      <div>
+                        <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1.25;">
+                          ${esc(sch.name)}
+                        </h4>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 2px;">
+                          Code: <span class="font-mono" style="color: #0f172a; font-weight: 700;">${esc(sch.code)}</span> &bull; ${esc(sch.board || 'Affiliated')}
+                        </div>
+                      </div>
+                    </div>
+                    <span class="badge ${sch.status === 'Active' ? 'badge-success' : 'badge-warning'}">
+                      ${esc(sch.status || 'Active')}
+                    </span>
+                  </div>
+
+                  <!-- Tagline -->
+                  <div style="font-size: 0.8rem; color: #64748b; font-style: italic; margin-bottom: 12px;">
+                    &ldquo;${esc(sch.tagline || 'Excellence in Education')}&rdquo;
+                  </div>
+
+                  <!-- Key Info Box -->
+                  <div style="background: #f8fafc; border-radius: 10px; padding: 12px; font-size: 0.8rem; color: #334155; display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i data-lucide="user-check" style="width: 14px; height: 14px; color: #BF9A33; flex-shrink: 0;"></i>
+                      <span style="font-weight: 600;">Principal / Head:</span>
+                      <strong style="color: #0f172a;">${esc(sch.principal || 'Basith Sir')}</strong>
+                      ${sch.principalEmail ? `<span style="font-size: 0.72rem; color: #64748b;">(${esc(sch.principalEmail)})</span>` : ''}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i data-lucide="map-pin" style="width: 14px; height: 14px; color: #2563eb; flex-shrink: 0;"></i>
+                      <span>${esc(sch.address?.campus || sch.campusLocation || 'Campus Address')}, ${esc(sch.address?.district || 'District')}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <i data-lucide="phone" style="width: 14px; height: 14px; color: #16a34a; flex-shrink: 0;"></i>
+                      <span>${esc(sch.contact?.phone1 || sch.contactPhone || '+91 8653382851')}</span>
+                      ${sch.contact?.email ? `&bull; <span style="font-size: 0.74rem;">${esc(sch.contact.email)}</span>` : ''}
+                    </div>
+                  </div>
+
+                  <!-- Live Stats Row -->
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; text-align: center;">
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchStudents}</div>
+                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Students</div>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchStaff}</div>
+                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Staff</div>
+                    </div>
+                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px;">
+                      <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;">${branchFacilities}</div>
+                      <div style="font-size: 0.68rem; color: #64748b; font-weight: 600;">Rooms</div>
+                    </div>
+                  </div>
+
+                  <!-- Website Highlights Preview -->
+                  <div style="border-top: 1px dashed #e2e8f0; padding-top: 10px; font-size: 0.75rem; color: #64748b;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                      <span style="font-weight:700; color:#475569;">Website Showcase:</span>
+                      <span style="color:#059669; font-weight:600;">${esc(sch.gradesOffered || sch.grades_offered || 'Nursery - Grade 12')}</span>
+                    </div>
+                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                      ${(Array.isArray(facilitiesList) ? facilitiesList.slice(0, 3) : String(facilitiesList).split(',').slice(0, 3)).map(f => `
+                        <span class="badge" style="background:#f1f5f9; color:#475569; font-size:0.68rem; padding:1px 6px;">${esc(String(f).trim())}</span>
+                      `).join('')}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; pt-2; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                  <button class="btn btn-primary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" style="flex: 1; min-width: 120px; justify-content: center;">
+                    <i data-lucide="arrow-right-circle"></i> ${isCurrentActive ? 'Active' : 'Switch Branch'}
+                  </button>
+                  <button class="btn btn-secondary btn-sm btn-edit-school-action" data-id="${esc(sch.id)}" title="Configure school settings">
+                    <i data-lucide="settings"></i> Configure
+                  </button>
+                  ${schools.length > 1 ? `
+                    <button class="btn btn-secondary btn-sm btn-del-school-action" data-id="${esc(sch.id)}" title="Delete School" style="color: #ef4444;">
+                      <i data-lucide="trash-2"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // Wire events
+    tabContent.querySelector('#btn-add-school-top')?.addEventListener('click', () => {
+      this.openSchoolModal(null, tabContent);
+    });
+
+    tabContent.querySelector('#btn-edit-group-trust-profile')?.addEventListener('click', () => {
+      this.openGroupTrustModal(tabContent);
+    });
+
+    tabContent.querySelectorAll('.btn-switch-school-action').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        const switched = institutionService.setActiveSchoolId(id);
+        UIComponents.showToast(`Operating context switched to ${switched.name}!`, 'success');
+        this.renderSchoolsManagementTab(tabContent);
+      });
+    });
+
+    tabContent.querySelectorAll('.btn-edit-school-action').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        const sch = institutionService.getSchool(id);
+        if (sch) this.openSchoolModal(sch, tabContent);
+      });
+    });
+
+    tabContent.querySelectorAll('.btn-del-school-action').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        const sch = institutionService.getSchool(id);
+        if (!confirm(`Are you sure you want to remove school "${sch?.name || id}"? All assigned students and staff data should be migrated first.`)) return;
+        const res = await institutionService.deleteSchool(id);
+        if (res.success) {
+          UIComponents.showToast(`School removed successfully.`, 'success');
+          this.renderSchoolsManagementTab(tabContent);
+        } else {
+          UIComponents.showToast(res.error || 'Could not delete school.', 'error');
+        }
+      });
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static openGroupTrustModal(container) {
+    const esc = (v) => UIComponents.escapeHtml(v);
+    const p = institutionService.getGroupProfile();
+
+    UIComponents.openModal({
+      title: '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="shield-check" style="color:#BF9A33;"></i><span>Central Trust &amp; Group Governance Profile</span></div>',
+      bodyHtml: `
+        <form id="form-group-trust" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-group">
+            <label class="form-label">Central Educational Group Name <span class="req-star">*</span></label>
+            <input class="form-input" id="grp-name" required value="${esc(p.name || '')}">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Controlling Educational Trust <span class="req-star">*</span></label>
+              <input class="form-input" id="grp-trust" required value="${esc(p.trust || '')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Trust Registration No <span class="req-star">*</span></label>
+              <input class="form-input font-mono" id="grp-regno" required value="${esc(p.regNo || '')}">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Executive Director Name</label>
+              <input class="form-input" id="grp-director" value="${esc(p.executiveDirector || '')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Executive Director Email</label>
+              <input type="email" class="form-input" id="grp-director-email" value="${esc(p.directorEmail || '')}">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Central Headquarters</label>
+              <input class="form-input" id="grp-hq" value="${esc(p.headquarters || 'Kolkata, West Bengal')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Central Contact Helpline</label>
+              <input class="form-input" id="grp-phone" value="${esc(p.contactPhone || '')}">
+            </div>
+          </div>
+        </form>
+      `,
+      footerHtml: `
+        <button class="btn btn-secondary" id="grp-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-group-trust"><i data-lucide="save"></i> Save Group Profile</button>
+      `
+    });
+
+    document.getElementById('grp-cancel')?.addEventListener('click', () => UIComponents.closeModal());
+    document.getElementById('btn-save-group-trust')?.addEventListener('click', async () => {
+      const updates = {
+        name: document.getElementById('grp-name').value.trim(),
+        trust: document.getElementById('grp-trust').value.trim(),
+        regNo: document.getElementById('grp-regno').value.trim(),
+        executiveDirector: document.getElementById('grp-director').value.trim(),
+        directorEmail: document.getElementById('grp-director-email').value.trim(),
+        headquarters: document.getElementById('grp-hq').value.trim(),
+        contactPhone: document.getElementById('grp-phone').value.trim()
+      };
+      await institutionService.updateGroupProfile(updates);
+      UIComponents.showToast('Group trust profile updated successfully!', 'success');
+      UIComponents.closeModal();
+      this.renderSchoolsManagementTab(container);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+  static openSchoolModal(school, container) {
+    const esc = (v) => UIComponents.escapeHtml(v);
+    const isEdit = !!school;
+    const s = school || {};
+    const facilitiesStr = Array.isArray(s.facilitiesList || s.facilities_list) 
+      ? (s.facilitiesList || s.facilities_list).join(', ') 
+      : (s.facilitiesList || s.facilities_list || 'Smart Classrooms, Science Lab, Computer Lab, Library, Sports Arena');
+
+    UIComponents.openModal({
+      title: isEdit ? `<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="building-2" style="color:#BF9A33;"></i><span>Configure School / Campus — ${esc(s.name || '')}</span></div>` : '<div style="display:flex;align-items:center;gap:8px;"><i data-lucide="plus-circle" style="color:#BF9A33;"></i><span>Register New School Branch</span></div>',
+      bodyHtml: `
+        <form id="form-school-modal" style="display: flex; flex-direction: column; gap: 14px; max-height:72vh; overflow-y:auto; padding-right:4px;">
+          <!-- Section 1: Identification -->
+          <div style="font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">1. School Identification &amp; Credentials</div>
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">School / Campus Full Name <span class="req-star">*</span></label>
+              <input class="form-input" id="sch-name" required value="${esc(s.name || '')}" placeholder="e.g. THAIBA PUBLIC SCHOOL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Code <span class="req-star">*</span></label>
+              <input class="form-input font-mono" id="sch-code" required ${isEdit ? 'readonly' : ''} value="${esc(s.code || '')}" placeholder="e.g. TPS-TAPAN">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Short Display Name</label>
+              <input class="form-input" id="sch-shortname" value="${esc(s.shortName || s.name || '')}" placeholder="e.g. TPS (Tapan)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tagline / Motto</label>
+              <input class="form-input" id="sch-tagline" value="${esc(s.tagline || 'Modern Education with Morality')}" placeholder="Tagline">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Affiliation Board</label>
+              <input class="form-input" id="sch-board" value="${esc(s.board || 'State / Central Affiliated')}" placeholder="e.g. CBSE / State">
+            </div>
+          </div>
+
+          <!-- Section 2: Leadership & Contacts -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">2. Campus Leadership &amp; Contact Desk</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Campus Principal / Head <span class="req-star">*</span></label>
+              <input class="form-input" id="sch-principal" required value="${esc(s.principal || 'Basith Sir')}" placeholder="Principal Name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Principal Email</label>
+              <input type="email" class="form-input" id="sch-principal-email" value="${esc(s.principalEmail || '')}" placeholder="principal@domain.com">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Contact Phone 1 <span class="req-star">*</span></label>
+              <input class="form-input" id="sch-phone" required value="${esc(s.contact?.phone1 || s.contactPhone || '+91 8653382851')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact Phone 2</label>
+              <input class="form-input" id="sch-phone2" value="${esc(s.contact?.phone2 || s.contactPhone2 || '')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Campus Email</label>
+              <input type="email" class="form-input" id="sch-email" value="${esc(s.contact?.email || s.contactEmail || '')}">
+            </div>
+          </div>
+
+          <!-- Section 3: Campus Location -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #BF9A33; text-transform: uppercase; letter-spacing: 0.04em;">3. Location &amp; Physical Address</div>
+          <div class="form-group">
+            <label class="form-label">Campus Address &amp; Locality</label>
+            <input class="form-input" id="sch-address" value="${esc(s.address?.campus || s.campusLocation || 'Baghait, Tapan, Dakshin Dinajpur')}" placeholder="Campus location">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">District</label>
+              <input class="form-input" id="sch-district" value="${esc(s.address?.district || s.district || 'Dakshin Dinajpur')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">State</label>
+              <input class="form-input" id="sch-state" value="${esc(s.address?.state || s.state || 'West Bengal')}">
+            </div>
+            <div class="form-group">
+              <label class="form-label">PIN Code</label>
+              <input class="form-input font-mono" id="sch-pin" value="${esc(s.address?.pin || s.pin || '733127')}">
+            </div>
+          </div>
+
+          <!-- Section 4: Website Showcase Page Info -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-weight: 800; font-size: 0.82rem; color: #2563eb; text-transform: uppercase; letter-spacing: 0.04em;">4. Public Website Campus Showcase &amp; Page Details</div>
+          <div class="form-group">
+            <label class="form-label">Campus Overview / Description (Displayed on Website Campus Page)</label>
+            <textarea class="form-input" id="sch-desc" rows="2" placeholder="Brief history, educational highlights, and special features of this campus...">${esc(s.description || '')}</textarea>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Campus Banner Image URL</label>
+              <input class="form-input" id="sch-banner" value="${esc(s.bannerImage || s.banner_image || '')}" placeholder="https://... or photo URL">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Grades / Classes Offered</label>
+              <input class="form-input" id="sch-grades" value="${esc(s.gradesOffered || s.grades_offered || 'Nursery to Grade 12')}" placeholder="e.g. Nursery to Grade 12 (Science / Arts / Commerce)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Campus Facilities (Comma-separated)</label>
+            <input class="form-input" id="sch-facilities" value="${esc(facilitiesStr)}" placeholder="Smart Classrooms, Science Lab, Library, Hostel, Sports Arena">
+          </div>
+
+          <!-- Section 5: Branding -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label class="form-label">Theme Color</label>
+              <input type="color" class="form-input" id="sch-color" value="${esc(s.themeColor || '#BF9A33')}" style="height: 38px; padding: 2px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Logo Badge</label>
+              <input class="form-input font-mono" id="sch-badge" value="${esc(s.logoBadge || s.code?.substring(0, 3) || 'SCH')}" placeholder="e.g. TPS">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="sch-status">
+                <option value="Active" ${(s.status === 'Active' || !s.status) ? 'selected' : ''}>Active</option>
+                <option value="Inactive" ${(s.status === 'Inactive') ? 'selected' : ''}>Inactive</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      `,
+      footerHtml: `
+        <button class="btn btn-secondary" id="sch-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-school"><i data-lucide="save"></i> ${isEdit ? 'Save School Changes' : 'Register New School'}</button>
+      `
+    });
+
+    document.getElementById('sch-cancel')?.addEventListener('click', () => UIComponents.closeModal());
+    document.getElementById('btn-save-school')?.addEventListener('click', async () => {
+      const name = document.getElementById('sch-name').value.trim();
+      const code = document.getElementById('sch-code').value.trim().toUpperCase();
+      const shortName = document.getElementById('sch-shortname').value.trim() || name;
+      const tagline = document.getElementById('sch-tagline').value.trim();
+      const board = document.getElementById('sch-board').value.trim();
+      const principal = document.getElementById('sch-principal').value.trim();
+      const principalEmail = document.getElementById('sch-principal-email').value.trim();
+      const phone1 = document.getElementById('sch-phone').value.trim();
+      const phone2 = document.getElementById('sch-phone2').value.trim();
+      const email = document.getElementById('sch-email').value.trim();
+      const campus = document.getElementById('sch-address').value.trim();
+      const district = document.getElementById('sch-district').value.trim();
+      const state = document.getElementById('sch-state').value.trim();
+      const pin = document.getElementById('sch-pin').value.trim();
+      const desc = document.getElementById('sch-desc').value.trim();
+      const banner = document.getElementById('sch-banner').value.trim();
+      const grades = document.getElementById('sch-grades').value.trim();
+      const rawFacilities = document.getElementById('sch-facilities').value.trim();
+      const facilitiesList = rawFacilities ? rawFacilities.split(',').map(f => f.trim()).filter(Boolean) : [];
+      const themeColor = document.getElementById('sch-color').value;
+      const logoBadge = document.getElementById('sch-badge').value.trim() || code.substring(0, 3);
+      const status = document.getElementById('sch-status').value;
+
+      if (!name || !code) {
+        UIComponents.showToast('Please enter both School Name and Code.', 'warning');
+        return;
+      }
+
+      const payload = {
+        name,
+        code,
+        shortName,
+        tagline,
+        board,
+        status,
+        principal,
+        principalEmail,
+        contact: { phone1, phone2, email },
+        address: { campus, district, state, pin },
+        description: desc,
+        bannerImage: banner,
+        gradesOffered: grades,
+        facilitiesList,
+        themeColor,
+        logoBadge
+      };
+
+      if (isEdit) {
+        const res = await institutionService.updateSchool(s.id, payload);
+        if (!res.success) {
+          UIComponents.showToast(res.error || 'Update failed', 'danger');
+          return;
+        }
+        await auditService.log('SCHOOL_BRANCH_UPDATED', 'GOVERNANCE', { code, name }, s.id);
+        UIComponents.showToast(`School "${name}" updated successfully!`, 'success');
+      } else {
+        const res = await institutionService.addSchool(payload);
+        if (!res.success) {
+          UIComponents.showToast(res.error || 'Registration failed', 'danger');
+          return;
+        }
+        await auditService.log('SCHOOL_BRANCH_REGISTERED', 'GOVERNANCE', { code, name }, res.school.id);
+        UIComponents.showToast(`New school "${name}" registered successfully!`, 'success');
+      }
+
+      UIComponents.closeModal();
+      this.renderSchoolsManagementTab(container);
+    });
+
+    UIComponents.refreshIcons();
+  }
+
     const details = await institutionService.refresh();
 
     tabContent.innerHTML = `

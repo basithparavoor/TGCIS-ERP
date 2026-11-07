@@ -52,13 +52,16 @@ export class StudentLeaveService {
   /* Fetch all leaves with default fallback                             */
   /* ------------------------------------------------------------------ */
   static async getLeaves() {
-    const records = await dbService.select('student_leaves');
+    let records = await dbService.select('student_leaves');
     if (!records || !records.length) {
       // Seed default leave record so there is an active on-leave student for demo
       for (const item of INITIAL_STUDENT_LEAVES) {
         await dbService.insert('student_leaves', item);
       }
-      return [...INITIAL_STUDENT_LEAVES];
+      records = [...INITIAL_STUDENT_LEAVES];
+    }
+    if (window.institutionService) {
+      return window.institutionService.filterByActiveSchool(records);
     }
     return records;
   }
@@ -103,7 +106,11 @@ export class StudentLeaveService {
     const to = new Date(toDate || fromDate);
     const days = Math.max(1, Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1);
 
+    const currentSchoolId = window.institutionService ? window.institutionService.getActiveSchoolId() : 'tps';
+
     const leaveRecord = {
+      school_id: currentSchoolId,
+      schoolId: currentSchoolId,
       id: `LV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
       studentId,
       studentName,

@@ -118,6 +118,13 @@ export class AppController {
 
   renderShell() {
     const user = authService.getCurrentUser() || {};
+    if (user && !institutionService.isUserCentralAdmin(user) && (user.school_id || user.schoolId)) {
+      institutionService.setActiveSchoolId(user.school_id || user.schoolId);
+    }
+    const isCentral = institutionService.isCentralManagementMode();
+    const activeSchool = institutionService.getActiveSchool();
+    const brandTitle = isCentral ? 'THAIBA HERITAGE' : (activeSchool.shortName || activeSchool.name || 'THAIBA PUBLIC SCHOOL');
+    const brandSub = isCentral ? 'Group of Institutions' : (activeSchool.code ? `Campus ERP • ${activeSchool.code}` : 'Campus ERP');
     const root = document.getElementById('app-root');
     if (!root) return;
 
@@ -134,10 +141,10 @@ export class AppController {
         <aside class="app-sidebar" id="app-sidebar">
           <div class="sidebar-header">
             <div class="sidebar-brand-box" id="sidebar-brand-box">
-              <span id="shell-logo" style="display:inline-flex; flex-shrink:0;">${TMS_LOGO.emblemSvg(40)}</span>
+              <span id="shell-logo" style="display:inline-flex; flex-shrink:0;">${TMS_LOGO.emblemSvg(36)}</span>
               <div class="brand-info">
-                <h2>${TMS_CONFIG.institution.name}</h2>
-                <p>Enterprise Campus ERP</p>
+                <h2 title="${esc(brandTitle)}">${esc(brandTitle)}</h2>
+                <p title="${esc(brandSub)}">${esc(brandSub)}</p>
               </div>
             </div>
             <button class="sidebar-collapse-btn desktop-only" id="sidebar-collapse-btn" title="Toggle Sidebar (Ctrl+B)">
@@ -368,15 +375,17 @@ export class AppController {
 
     if (isCentralAdmin) {
       wrap.innerHTML = `
-        <button class="branch-switcher-btn" id="btn-topbar-branch-switcher" title="Switch Operating Context (Central Group HQ or Branch)" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 10px; background: ${isCentral ? '#0f172a' : '#ffffff'}; color: ${isCentral ? '#f8fafc' : '#0f172a'}; border: 1.5px solid ${isCentral ? '#334155' : '#cbd5e1'}; padding: 6px 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(15,23,42,0.06); font-size: 0.82rem; margin-right: 6px;">
-          <i data-lucide="${isCentral ? 'layers' : 'building-2'}" style="width: 16px; height: 16px; color: ${isCentral ? '#38bdf8' : '#BF9A33'};"></i>
-          <span style="white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;">
+        <button class="branch-switcher-btn" id="btn-topbar-branch-switcher" title="Switch Operating Context (Central Group HQ or Branch)" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; border-radius: 10px; background: #ffffff; color: #0f172a; border: 1.5px solid #e2e8f0; padding: 6px 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(15,23,42,0.04); font-size: 0.82rem; margin-right: 6px;">
+          <div style="width: 24px; height: 24px; border-radius: 6px; background: ${isCentral ? '#eff6ff' : '#FCF4D9'}; color: ${isCentral ? '#2563eb' : '#BF9A33'}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i data-lucide="${isCentral ? 'layers' : 'building-2'}" style="width: 14px; height: 14px;"></i>
+          </div>
+          <span style="white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: #0f172a;">
             ${esc(activeSchool.shortName || activeSchool.name)}
           </span>
-          <span style="display: inline-flex; align-items: center; justify-content: center; background: ${isCentral ? '#38bdf820' : '#BF9A3320'}; color: ${isCentral ? '#38bdf8' : '#BF9A33'}; padding: 2px 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;">
+          <span style="display: inline-flex; align-items: center; justify-content: center; background: ${isCentral ? '#eff6ff' : '#f8fafc'}; color: ${isCentral ? '#2563eb' : '#475569'}; border: 1px solid ${isCentral ? '#bfdbfe' : '#e2e8f0'}; padding: 2px 7px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em;">
             ${isCentral ? 'CENTRAL HQ' : 'BRANCH'}
           </span>
-          <i data-lucide="chevron-down" style="width: 13px; height: 13px; opacity: 0.7;"></i>
+          <i data-lucide="chevron-down" style="width: 13px; height: 13px; color: #94a3b8;"></i>
         </button>
       `;
 
@@ -413,22 +422,22 @@ export class AppController {
           </p>
 
           <!-- Central Management HQ Option -->
-          <div class="switcher-hq-card" data-id="all" style="background: ${activeId === 'all' ? '#0f172a' : '#f8fafc'}; color: ${activeId === 'all' ? '#ffffff' : '#0f172a'}; border: 2px solid ${activeId === 'all' ? '#38bdf8' : '#e2e8f0'}; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.2s ease;">
+          <div class="switcher-hq-card" data-id="all" style="background: ${activeId === 'all' ? '#eff6ff' : '#ffffff'}; color: #0f172a; border: 2px solid ${activeId === 'all' ? '#3b82f6' : '#e2e8f0'}; border-radius: 14px; padding: 16px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(15,23,42,0.03);">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
               <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; border-radius: 10px; background: ${activeId === 'all' ? '#1e293b' : '#eff6ff'}; color: ${activeId === 'all' ? '#38bdf8' : '#2563eb'}; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: ${activeId === 'all' ? '#dbeafe' : '#eff6ff'}; color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
                   🏛️
                 </div>
                 <div>
                   <div style="font-size: 1rem; font-weight: 800;">Central Group HQ — Consolidated Overview</div>
-                  <div style="font-size: 0.78rem; color: ${activeId === 'all' ? '#94a3b8' : '#64748b'}; margin-top: 2px;">
+                  <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
                     ${esc(groupProfile.name)} &bull; ${esc(groupProfile.trust)}
                   </div>
                 </div>
               </div>
               ${activeId === 'all' ? '<span class="badge badge-info">Active Console</span>' : '<button class="btn btn-secondary btn-sm" style="pointer-events:none;">Switch to Central</button>'}
             </div>
-            <div style="font-size: 0.78rem; color: ${activeId === 'all' ? '#cbd5e1' : '#64748b'}; margin-top: 10px; padding-top: 8px; border-top: 1px solid ${activeId === 'all' ? '#1e293b' : '#e2e8f0'};">
+            <div style="font-size: 0.78rem; color: #64748b; margin-top: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
               Access group consolidated KPIs, cross-school analytics, centralized audit trail, and all branch directories.
             </div>
           </div>
@@ -501,8 +510,18 @@ export class AppController {
       this.renderBranchSwitcher();
       const brandH2 = document.querySelector('#sidebar-brand-box h2');
       const brandP = document.querySelector('#sidebar-brand-box p');
-      if (brandH2) brandH2.innerText = institutionService.isCentralManagementMode() ? 'THAIBA HERITAGE' : TMS_CONFIG.institution.name;
-      if (brandP) brandP.innerText = institutionService.isCentralManagementMode() ? 'Central Group Management' : (TMS_CONFIG.institution.code || 'Campus ERP');
+      const isCentralNow = institutionService.isCentralManagementMode();
+      const currentSchool = institutionService.getActiveSchool();
+      const newTitle = isCentralNow ? 'THAIBA HERITAGE' : (currentSchool.shortName || currentSchool.name);
+      const newSub = isCentralNow ? 'Group of Institutions' : (currentSchool.code ? `Campus ERP • ${currentSchool.code}` : 'Campus ERP');
+      if (brandH2) {
+        brandH2.innerText = newTitle;
+        brandH2.title = newTitle;
+      }
+      if (brandP) {
+        brandP.innerText = newSub;
+        brandP.title = newSub;
+      }
       this.populateSidebarNav();
       this.handleRoute();
     });
@@ -1565,21 +1584,21 @@ export class AppController {
 
         ${isCentral ? `
         <!-- Central Management Directorate Header -->
-        <div class="group-central-banner" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border-radius: 18px; padding: 24px 26px; color: #ffffff; margin-bottom: 22px; box-shadow: 0 10px 30px rgba(15,23,42,0.12); position: relative; overflow: hidden; border: 1.5px solid #334155;">
+        <div class="group-central-banner" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 18px; padding: 24px 26px; color: #0f172a; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(15,23,42,0.04); position: relative; overflow: hidden; border: 1.5px solid #e2e8f0;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; position:relative; z-index:2;">
             <div>
-              <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:800; color:#38BDF8; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
+              <div style="display:inline-flex; align-items:center; gap:8px; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 12px; border-radius:999px; font-size:0.75rem; font-weight:800; color:#2563eb; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:10px;">
                 <i data-lucide="shield-check" style="width:14px;height:14px;"></i> Central Management Directorate &bull; Controlling Authority
               </div>
-              <h2 style="font-size:1.55rem; font-weight:900; margin:0 0 6px 0; color:#ffffff; letter-spacing:-0.01em;">
+              <h2 style="font-size:1.55rem; font-weight:900; margin:0 0 6px 0; color:#0f172a; letter-spacing:-0.01em;">
                 ${esc(groupProfile.name)}
               </h2>
-              <p style="font-size:0.86rem; color:#94A3B8; margin:0; max-width:680px; line-height:1.5;">
+              <p style="font-size:0.86rem; color:#64748b; margin:0; max-width:680px; line-height:1.5;">
                 Controlling, directing and governing all operating sub-managements across member schools. Central Trust: <strong>${esc(groupProfile.trust)}</strong> (${esc(groupProfile.regNo)}) &bull; HQ: ${esc(groupProfile.headquarters || 'Kolkata')}.
               </p>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-              <button class="btn btn-secondary btn-sm" id="btn-central-add-school" style="background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.25); color:#ffffff;">
+              <button class="btn btn-secondary btn-sm" id="btn-central-add-school" class="btn btn-secondary btn-sm">
                 <i data-lucide="plus-circle"></i> Register School Branch
               </button>
               <a href="#/institution" class="btn btn-primary btn-sm" style="background:#38BDF8; border-color:#38BDF8; color:#0F172A; font-weight:800;">
@@ -1656,7 +1675,7 @@ export class AppController {
         </div>
         ` : `
         <!-- Sub-Management Campus Header Banner -->
-        <div class="sub-management-banner" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #ffffff; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1.5px solid var(--primary, #BF9A33);">
+        <div class="sub-management-banner" style="background: #ffffff; color: #0f172a; border-radius: 14px; padding: 14px 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 10px rgba(15,23,42,0.03);">
           <div style="display: flex; align-items: center; gap: 12px;">
             <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(191,154,51,0.2); color: #BF9A33; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;">
               ${esc(activeSchool.logoBadge || activeSchool.code?.substring(0,3) || 'SCH')}
@@ -1666,13 +1685,13 @@ export class AppController {
                 <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #BF9A33;">Sub-Management Console</span>
                 <span class="badge badge-success" style="font-size: 0.68rem;">Live Active</span>
               </div>
-              <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; font-weight: 800; color: #ffffff;">
+              <h3 style="margin: 2px 0 0 0; font-size: 1.15rem; font-weight: 800; color: #0f172a;">
                 ${esc(activeSchool.name)} (${esc(activeSchool.code)})
               </h3>
             </div>
           </div>
           ${isCentralAdmin ? `
-            <button class="btn btn-secondary btn-sm" id="btn-return-central-hq" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #ffffff;">
+            <button class="btn btn-secondary btn-sm" id="btn-return-central-hq" class="btn btn-secondary btn-sm">
               <i data-lucide="layers"></i> <span>Return to Central Group HQ</span>
             </button>
           ` : ''}

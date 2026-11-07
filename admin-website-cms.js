@@ -18,6 +18,7 @@
 
 import { websiteService, DEFAULT_WEBSITE_CONFIG } from './website-service.js';
 import { brandingService } from './branding-service.js';
+import { institutionService } from './institution-service.js';
 import { UIComponents } from './ui-components.js';
 import { TMS_LOGO } from './logo.js';
 
@@ -101,6 +102,7 @@ export class AdminWebsiteCms {
       const { AdminModule } = await import('./admin-module.js');
       await AdminModule.renderInquiriesTab(subContainer);
     }
+    else if (subKey === 'website-campuses') await this.renderCampusesTab(subContainer);
     else if (subKey === 'website-sections') this.renderSectionsTab(subContainer);
     else if (subKey === 'website-general') this.renderGeneralTab(subContainer);
     else if (subKey === 'website-hero') this.renderHeroTab(subContainer);
@@ -604,8 +606,219 @@ export class AdminWebsiteCms {
   }
 
   /* ========================================================================== */
-  /* Subtab: Sections & Tabs Visibility (Master Toggle Center)                  */
+  /* Subtab: Campuses & Branch Pages CMS Editor                                 */
   /* ========================================================================== */
+  static async renderCampusesTab(container) {
+    await institutionService.refresh();
+    const schools = institutionService.getSchools();
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; border-bottom:1px solid #f1f5f9; padding-bottom:14px;">
+          <div>
+            <h4 style="margin:0; font-size:1.15rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+              <i data-lucide="building-2" style="color:#BF9A33;"></i> Website Campuses &amp; Branches Showcase Pages
+            </h4>
+            <p style="margin:4px 0 0; font-size:0.84rem; color:#64748b;">
+              Configure all campus branch profiles, descriptions, banner photos, and facility highlights displayed on the public website.
+            </p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-cms-add-campus">
+            <i data-lucide="plus-circle"></i> Add New Campus Branch
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+          ${schools.map((sch, idx) => {
+            const facListStr = Array.isArray(sch.facilitiesList || sch.facilities_list)
+              ? (sch.facilitiesList || sch.facilities_list).join(', ')
+              : (sch.facilitiesList || sch.facilities_list || 'Smart Classrooms, Science Lab, Computer Lab, Library, Sports Arena');
+
+            return `
+              <div class="card" style="border:1.5px solid #e2e8f0; border-radius:14px; padding:20px; background:#ffffff; box-shadow:0 2px 8px rgba(15,23,42,0.03);" data-campus-id="${esc(sch.id)}">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px; flex-wrap:wrap; gap:10px;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:${sch.themeColor || '#BF9A33'}15; color:${sch.themeColor || '#BF9A33'}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.9rem;">
+                      ${esc(sch.logoBadge || sch.code?.substring(0, 3) || 'SCH')}
+                    </div>
+                    <div>
+                      <h4 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a;">${esc(sch.name)}</h4>
+                      <span style="font-size:0.75rem; color:#64748b; font-family:monospace;">ID: ${esc(sch.id)} &bull; Code: ${esc(sch.code)}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <button class="btn btn-primary btn-sm btn-save-campus-item" data-id="${esc(sch.id)}">
+                      <i data-lucide="save"></i> Save Campus
+                    </button>
+                    ${schools.length > 1 ? `
+                      <button class="btn btn-secondary btn-sm btn-del-campus-item" data-id="${esc(sch.id)}" style="color:#ef4444;" title="Delete this campus">
+                        <i data-lucide="trash-2"></i>
+                      </button>
+                    ` : ''}
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px; margin-bottom:14px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700;">Campus Official Name</label>
+                    <input class="form-input camp-input-name" value="${esc(sch.name || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700;">Short Display Name</label>
+                    <input class="form-input camp-input-shortname" value="${esc(sch.shortName || sch.name || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700;">Affiliation Board</label>
+                    <input class="form-input camp-input-board" value="${esc(sch.board || 'State / Central Affiliated')}">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label class="form-label" style="font-size:0.8rem; font-weight:700;">Motto / Tagline</label>
+                  <input class="form-input camp-input-tagline" value="${esc(sch.tagline || 'Excellence in Education')}">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700;">Campus Banner / Photo Image URL</label>
+                    <input class="form-input camp-input-banner" value="${esc(sch.bannerImage || sch.banner_image || '')}" placeholder="https://... or photo URL">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700;">Classes / Grades Offered</label>
+                    <input class="form-input camp-input-grades" value="${esc(sch.gradesOffered || sch.grades_offered || 'Nursery to Grade 12')}" placeholder="e.g. Nursery to Grade 12 (Science / Arts / Commerce)">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label class="form-label" style="font-size:0.8rem; font-weight:700;">Campus Description &amp; History (Website Showcase)</label>
+                  <textarea class="form-input camp-input-desc" rows="3" placeholder="Write a short showcase description highlighting what makes this campus unique, its facilities and environment...">${esc(sch.description || '')}</textarea>
+                </div>
+
+                <div class="form-group" style="margin-bottom:14px;">
+                  <label class="form-label" style="font-size:0.8rem; font-weight:700;">Campus Facilities (Comma-separated tags)</label>
+                  <input class="form-input camp-input-facilities" value="${esc(facListStr)}" placeholder="Smart Classrooms, Science Lab, Library, Sports Arena, Hostel">
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-bottom:14px; background:#f8fafc; padding:12px; border-radius:10px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">Principal / Head Name</label>
+                    <input class="form-input camp-input-principal" value="${esc(sch.principal || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">Principal Email</label>
+                    <input type="email" class="form-input camp-input-principal-email" value="${esc(sch.principalEmail || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">Campus Contact Phone</label>
+                    <input class="form-input camp-input-phone" value="${esc(sch.contact?.phone1 || sch.contactPhone || '')}">
+                  </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:14px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">Campus Physical Location</label>
+                    <input class="form-input camp-input-address" value="${esc(sch.address?.campus || sch.campusLocation || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">District</label>
+                    <input class="form-input camp-input-district" value="${esc(sch.address?.district || sch.district || '')}">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:0.78rem; font-weight:700;">Theme Accent Color</label>
+                    <input type="color" class="form-input camp-input-color" value="${esc(sch.themeColor || '#BF9A33')}" style="height:38px; padding:2px;">
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+
+    // Wire events
+    container.querySelector('#btn-cms-add-campus')?.addEventListener('click', async () => {
+      const { AdminModule } = await import('./admin-module.js');
+      AdminModule.openSchoolModal(null, container);
+    });
+
+    container.querySelectorAll('.btn-save-campus-item').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        const card = e.currentTarget.closest('[data-campus-id]');
+        if (!card) return;
+
+        const name = card.querySelector('.camp-input-name')?.value.trim();
+        const shortName = card.querySelector('.camp-input-shortname')?.value.trim();
+        const board = card.querySelector('.camp-input-board')?.value.trim();
+        const tagline = card.querySelector('.camp-input-tagline')?.value.trim();
+        const bannerImage = card.querySelector('.camp-input-banner')?.value.trim();
+        const gradesOffered = card.querySelector('.camp-input-grades')?.value.trim();
+        const description = card.querySelector('.camp-input-desc')?.value.trim();
+        const rawFac = card.querySelector('.camp-input-facilities')?.value.trim() || '';
+        const facilitiesList = rawFac.split(',').map(f => f.trim()).filter(Boolean);
+        const principal = card.querySelector('.camp-input-principal')?.value.trim();
+        const principalEmail = card.querySelector('.camp-input-principal-email')?.value.trim();
+        const phone = card.querySelector('.camp-input-phone')?.value.trim();
+        const address = card.querySelector('.camp-input-address')?.value.trim();
+        const district = card.querySelector('.camp-input-district')?.value.trim();
+        const themeColor = card.querySelector('.camp-input-color')?.value;
+
+        btn.disabled = true;
+        const origText = btn.innerHTML;
+        btn.innerHTML = `<i data-lucide="loader-2" class="spin"></i> Saving...`;
+        UIComponents.refreshIcons();
+
+        try {
+          const res = await institutionService.updateSchool(id, {
+            name,
+            shortName,
+            board,
+            tagline,
+            bannerImage,
+            gradesOffered,
+            description,
+            facilitiesList,
+            principal,
+            principalEmail,
+            contactPhone: phone,
+            campusLocation: address,
+            district,
+            themeColor
+          });
+
+          if (res.success) {
+            UIComponents.showToast(`Campus "${name}" updated and published!`, 'success');
+          } else {
+            UIComponents.showToast(res.error || 'Update failed', 'error');
+          }
+        } catch (err) {
+          UIComponents.showToast(err.message, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+          UIComponents.refreshIcons();
+        }
+      });
+    });
+
+    container.querySelectorAll('.btn-del-campus-item').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.dataset.id;
+        if (!confirm('Are you sure you want to delete this campus from the website?')) return;
+        const res = await institutionService.deleteSchool(id);
+        if (res.success) {
+          UIComponents.showToast('Campus removed successfully', 'success');
+          await this.renderCampusesTab(container);
+        } else {
+          UIComponents.showToast(res.error || 'Failed to delete campus', 'error');
+        }
+      });
+    });
+
+    UIComponents.refreshIcons();
+  }
+
+
   static renderSectionsTab(container) {
     if (!this._config.sections) {
       this._config.sections = JSON.parse(JSON.stringify(DEFAULT_WEBSITE_CONFIG.sections || {}));

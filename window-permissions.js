@@ -7,6 +7,42 @@ import { TMS_CONFIG } from './config.js';
 
 export const WINDOW_ROLES = [
   {
+    key: "academic_director",
+    label: "Academic Director",
+    subtitle: "Full Academic & Operational Authority Across All Schools",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/><circle cx="12" cy="7" r="2"/></svg>'
+  },
+  {
+    key: "deputy_director",
+    label: "Deputy Director",
+    subtitle: "Group Executive Administration & Oversight",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+  },
+  {
+    key: "chairman",
+    label: "Chairman",
+    subtitle: "Group Executive Governance (View-Only / Configurable)",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 5h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z"/></svg>'
+  },
+  {
+    key: "md",
+    label: "Managing Director (MD)",
+    subtitle: "Executive Directorate & Oversight (View-Only / Configurable)",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
+  },
+  {
+    key: "dmd",
+    label: "Deputy Managing Director (DMD)",
+    subtitle: "Executive Directorate & Operations (View-Only / Configurable)",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><line x1="12" y1="11" x2="12" y2="17"/></svg>'
+  },
+  {
+    key: "principal",
+    label: "School Principal",
+    subtitle: "Full Autonomy & Authority over School Branch",
+    icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="10" r="3"/></svg>'
+  },
+  {
     key: "admin",
     label: "Master Admin",
     subtitle: "Academic & Records Governance",
@@ -59,6 +95,13 @@ export const WINDOW_ROLES = [
 export const ROLE_THEMES = {
   admin: { color: "#059669", light: "#ECFDF5", border: "#A7F3D0", badgeBg: "#D1FAE5", badgeColor: "#065F46" },
   super_admin: { color: "#0F172A", light: "#F8FAFC", border: "#CBD5E1", badgeBg: "#0F172A", badgeColor: "#FFFFFF" },
+  academic_director: { color: "#7C3AED", light: "#F5F3FF", border: "#DDD6FE", badgeBg: "#EDE9FE", badgeColor: "#5B21B6" },
+  deputy_director: { color: "#4F46E5", light: "#EEF2FF", border: "#C7D2FE", badgeBg: "#E0E7FF", badgeColor: "#3730A3" },
+  chairman: { color: "#B45309", light: "#FFFBEB", border: "#FDE68A", badgeBg: "#FEF3C7", badgeColor: "#78350F" },
+  md: { color: "#0D9488", light: "#F0FDFA", border: "#99F6E4", badgeBg: "#CCFBF1", badgeColor: "#115E59" },
+  dmd: { color: "#0284C7", light: "#F0F9FF", border: "#BAE6FD", badgeBg: "#E0F2FE", badgeColor: "#0369A1" },
+  principal: { color: "#059669", light: "#ECFDF5", border: "#A7F3D0", badgeBg: "#D1FAE5", badgeColor: "#065F46" },
+  coordinator: { color: "#0284C7", light: "#F0F9FF", border: "#BAE6FD", badgeBg: "#E0F2FE", badgeColor: "#0369A1" },
   teacher: { color: "#2563EB", light: "#EFF6FF", border: "#BFDBFE", badgeBg: "#DBEAFE", badgeColor: "#1E40AF" },
   boys_mentor: { color: "#0284C7", light: "#F0F9FF", border: "#BAE6FD", badgeBg: "#E0F2FE", badgeColor: "#0369A1" },
   girls_mentor: { color: "#DB2777", light: "#FDF2F8", border: "#FBCFE8", badgeBg: "#FCE7F3", badgeColor: "#9D174D" },
@@ -66,8 +109,6 @@ export const ROLE_THEMES = {
   hostel_leader: { color: "#D97706", light: "#FFFBEB", border: "#FDE68A", badgeBg: "#FEF3C7", badgeColor: "#92400E" },
   parent: { color: "#E11D48", light: "#FFF1F2", border: "#FECDD3", badgeBg: "#FFE4E6", badgeColor: "#9F1239" },
   student: { color: "#0891B2", light: "#ECFEFF", border: "#A5F3FC", badgeBg: "#CFFAFE", badgeColor: "#155E75" },
-  coordinator: { color: "#0284C7", light: "#F0F9FF", border: "#BAE6FD", badgeBg: "#E0F2FE", badgeColor: "#0369A1" },
-  principal: { color: "#059669", light: "#ECFDF5", border: "#A7F3D0", badgeBg: "#D1FAE5", badgeColor: "#065F46" },
   finance: { color: "#BF9A33", light: "#FDF8E8", border: "#F7E8B5", badgeBg: "#FCF4D9", badgeColor: "#8C6E1E" },
   hr: { color: "#9333EA", light: "#FAF5FF", border: "#E9D5FF", badgeBg: "#F3E8FF", badgeColor: "#7E22CE" },
   librarian: { color: "#EA580C", light: "#FFF7ED", border: "#FED7AA", badgeBg: "#FFEDD5", badgeColor: "#C2410C" },
@@ -205,6 +246,41 @@ export const WINDOW_CATEGORIES = [
 ];
 
 export const DEFAULT_RBAC_MATRIX = {
+  academic_director: {
+    dashboard: "full", users: "view", admissions: "full", students: "full", sections: "full",
+    assignments: "full", timetable: "full", calendar: "full", attendance: "full",
+    attendance_report: "full", faculty_leaves: "full", leaves: "full", leave_card: "full",
+    fines: "full", discipline: "full", exams: "full", marks: "full", hostel: "full",
+    fees: "view", notices: "full", maintenance: "full", reports: "full", settings: "full"
+  },
+  deputy_director: {
+    dashboard: "full", users: "view", admissions: "full", students: "full", sections: "full",
+    assignments: "full", timetable: "full", calendar: "full", attendance: "full",
+    attendance_report: "full", faculty_leaves: "full", leaves: "full", leave_card: "full",
+    fines: "full", discipline: "full", exams: "full", marks: "full", hostel: "full",
+    fees: "view", notices: "full", maintenance: "full", reports: "full", settings: "view"
+  },
+  chairman: {
+    dashboard: "full", users: "view", admissions: "view", students: "view", sections: "view",
+    assignments: "view", timetable: "view", calendar: "view", attendance: "view",
+    attendance_report: "view", faculty_leaves: "view", leaves: "view", leave_card: "view",
+    fines: "view", discipline: "view", exams: "view", marks: "view", hostel: "view",
+    fees: "view", notices: "view", maintenance: "view", reports: "view", settings: "view"
+  },
+  md: {
+    dashboard: "full", users: "view", admissions: "view", students: "view", sections: "view",
+    assignments: "view", timetable: "view", calendar: "view", attendance: "view",
+    attendance_report: "view", faculty_leaves: "view", leaves: "view", leave_card: "view",
+    fines: "view", discipline: "view", exams: "view", marks: "view", hostel: "view",
+    fees: "view", notices: "view", maintenance: "view", reports: "view", settings: "view"
+  },
+  dmd: {
+    dashboard: "full", users: "view", admissions: "view", students: "view", sections: "view",
+    assignments: "view", timetable: "view", calendar: "view", attendance: "view",
+    attendance_report: "view", faculty_leaves: "view", leaves: "view", leave_card: "view",
+    fines: "view", discipline: "view", exams: "view", marks: "view", hostel: "view",
+    fees: "view", notices: "view", maintenance: "view", reports: "view", settings: "view"
+  },
   admin: {
     dashboard: "full", users: "full", admissions: "full", students: "full", sections: "full",
     assignments: "full", timetable: "full", calendar: "full", attendance: "full",
@@ -478,7 +554,17 @@ export class WindowPermissionsService {
     const matrix = this.getRoleMatrix();
     const role = user.role || 'teacher';
     const rolePerms = matrix[role] || matrix.teacher || {};
-    return rolePerms[windowKey] || 'off';
+    let perm = rolePerms[windowKey] || 'off';
+
+    // Super Admin explicitly configured Access Mode override (e.g. giving Editor access to Chairman/MD, or forcing View-Only)
+    const accessMode = user.access_mode || user.accessMode;
+    if (accessMode === 'full_editor' && perm === 'view') {
+      perm = 'full';
+    } else if (accessMode === 'view_only' && perm === 'full' && windowKey !== 'dashboard') {
+      perm = 'view';
+    }
+
+    return perm;
   }
 
   /**

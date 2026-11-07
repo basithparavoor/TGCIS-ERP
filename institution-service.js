@@ -232,28 +232,33 @@ class InstitutionService {
       id: cleanId,
       code: (schoolData.code || cleanId.toUpperCase()).trim(),
       name: schoolData.name || 'New Campus',
-      shortName: schoolData.shortName || schoolData.name,
+      shortName: schoolData.shortName || schoolData.short_name || schoolData.name,
       tagline: schoolData.tagline || 'Excellence in Education',
       board: schoolData.board || 'CBSE / State Affiliated',
       status: schoolData.status || 'Active',
-      principal: schoolData.principal || 'Branch Principal',
-      principalEmail: schoolData.principalEmail || '',
+      principal: schoolData.principal || schoolData.principal_name || 'Branch Principal',
+      principalEmail: schoolData.principalEmail || schoolData.principal_email || '',
       contact: {
-        phone1: schoolData.contactPhone || schoolData.contact?.phone1 || '',
+        phone1: schoolData.contactPhone || schoolData.contact?.phone1 || schoolData.contact_phone || '',
         phone2: schoolData.contactPhone2 || schoolData.contact?.phone2 || '',
-        email: schoolData.contactEmail || schoolData.contact?.email || '',
+        email: schoolData.contactEmail || schoolData.contact?.email || schoolData.contact_email || '',
         website: schoolData.website || ''
       },
       address: {
-        campus: schoolData.campusLocation || schoolData.address?.campus || '',
+        campus: schoolData.campusLocation || schoolData.address?.campus || schoolData.campus_location || '',
         city: schoolData.city || schoolData.address?.city || 'Tapan',
         district: schoolData.district || schoolData.address?.district || 'Dakshin Dinajpur',
         state: schoolData.state || schoolData.address?.state || 'West Bengal',
+        country: schoolData.country || schoolData.address?.country || 'India',
         pin: schoolData.pin || schoolData.address?.pin || '733127'
       },
-      themeColor: schoolData.themeColor || '#BF9A33',
+      themeColor: schoolData.themeColor || schoolData.theme_color || '#BF9A33',
       logo: schoolData.logo || 'tps-logo.png',
-      logoBadge: (schoolData.code || 'SCH').substring(0, 4).toUpperCase(),
+      logoBadge: (schoolData.logoBadge || schoolData.logo_badge || schoolData.code || 'SCH').substring(0, 4).toUpperCase(),
+      bannerImage: schoolData.bannerImage || schoolData.banner_image || '',
+      description: schoolData.description || '',
+      facilitiesList: schoolData.facilitiesList || schoolData.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena', 'Computer Lab'],
+      gradesOffered: schoolData.gradesOffered || schoolData.grades_offered || 'Nursery to Grade 12',
       founded: schoolData.founded || String(new Date().getFullYear()),
       createdAt: new Date().toISOString()
     };
@@ -261,13 +266,46 @@ class InstitutionService {
     this.schools.push(newSchool);
     this.writeSchoolsCache(this.schools);
 
+    // Sync to Supabase 'schools' table
+    try {
+      await dbService.upsert('schools', {
+        id: newSchool.id,
+        code: newSchool.code,
+        name: newSchool.name,
+        short_name: newSchool.shortName,
+        tagline: newSchool.tagline,
+        board: newSchool.board,
+        status: newSchool.status,
+        principal_name: newSchool.principal,
+        principal_email: newSchool.principalEmail,
+        contact_phone: newSchool.contact.phone1,
+        contact_email: newSchool.contact.email,
+        website: newSchool.contact.website,
+        campus_location: newSchool.address.campus,
+        district: newSchool.address.district,
+        state: newSchool.address.state,
+        country: newSchool.address.country,
+        pin: newSchool.address.pin,
+        theme_color: newSchool.themeColor,
+        logo_badge: newSchool.logoBadge,
+        banner_image: newSchool.bannerImage,
+        description: newSchool.description,
+        facilities_list: newSchool.facilitiesList,
+        grades_offered: newSchool.gradesOffered,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn('Could not sync school to Supabase schools table:', e.message);
+    }
+
+    // Also sync to app_settings registry
     try {
       await dbService.upsert('app_settings', {
         id: SCHOOLS_REGISTRY_ID,
         value: this.schools
       });
     } catch (e) {
-      console.warn('Could not sync schools registry to cloud:', e.message);
+      console.warn('Could not sync schools registry to cloud app_settings:', e.message);
     }
 
     window.dispatchEvent(new CustomEvent('tms_schools_changed', { detail: this.schools }));
@@ -283,8 +321,54 @@ class InstitutionService {
       ...updates,
       updatedAt: new Date().toISOString()
     };
+    if (updates.contactPhone || updates.contactEmail) {
+      updated.contact = {
+        ...(updated.contact || {}),
+        phone1: updates.contactPhone || updated.contact?.phone1 || '',
+        email: updates.contactEmail || updated.contact?.email || ''
+      };
+    }
+    if (updates.campusLocation || updates.district) {
+      updated.address = {
+        ...(updated.address || {}),
+        campus: updates.campusLocation || updated.address?.campus || '',
+        district: updates.district || updated.address?.district || ''
+      };
+    }
+
     this.schools[idx] = updated;
     this.writeSchoolsCache(this.schools);
+
+    // Sync to Supabase 'schools' table
+    try {
+      await dbService.upsert('schools', {
+        id: updated.id,
+        code: updated.code,
+        name: updated.name,
+        short_name: updated.shortName || updated.short_name,
+        tagline: updated.tagline,
+        board: updated.board,
+        status: updated.status,
+        principal_name: updated.principal || updated.principal_name,
+        principal_email: updated.principalEmail || updated.principal_email,
+        contact_phone: updated.contact?.phone1 || updated.contactPhone,
+        contact_email: updated.contact?.email || updated.contactEmail,
+        website: updated.contact?.website || updated.website,
+        campus_location: updated.address?.campus || updated.campusLocation,
+        district: updated.address?.district || updated.district,
+        state: updated.address?.state || updated.state,
+        pin: updated.address?.pin || updated.pin,
+        theme_color: updated.themeColor || updated.theme_color,
+        logo_badge: updated.logoBadge || updated.logo_badge,
+        banner_image: updated.bannerImage || updated.banner_image,
+        description: updated.description,
+        facilities_list: updated.facilitiesList || updated.facilities_list,
+        grades_offered: updated.gradesOffered || updated.grades_offered,
+        updated_at: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn('Could not sync school update to Supabase schools table:', e.message);
+    }
 
     try {
       await dbService.upsert('app_settings', {
@@ -292,7 +376,7 @@ class InstitutionService {
         value: this.schools
       });
     } catch (e) {
-      console.warn('Could not update schools registry in cloud:', e.message);
+      console.warn('Could not update schools registry in cloud app_settings:', e.message);
     }
 
     if (this.activeSchoolId === id) {
@@ -316,12 +400,18 @@ class InstitutionService {
     }
 
     try {
+      await dbService.delete('schools', id);
+    } catch (e) {
+      console.warn('Could not delete school from Supabase schools table:', e.message);
+    }
+
+    try {
       await dbService.upsert('app_settings', {
         id: SCHOOLS_REGISTRY_ID,
         value: this.schools
       });
     } catch (e) {
-      console.warn('Could not sync school deletion to cloud:', e.message);
+      console.warn('Could not sync school deletion to cloud app_settings:', e.message);
     }
 
     window.dispatchEvent(new CustomEvent('tms_schools_changed', { detail: this.schools }));
@@ -333,6 +423,13 @@ class InstitutionService {
   /* -------------------------------------------------------------------------- */
 
   getActiveSchoolId() {
+    try {
+      const user = (typeof window !== 'undefined' && (window.tmsCurrentUser || JSON.parse(localStorage.getItem('tms_auth_session') || '{}'))) || null;
+      if (user && user.role && !this.isUserCentralAdmin(user)) {
+        const assignedSchool = user.school_id || user.schoolId;
+        if (assignedSchool) return String(assignedSchool).toLowerCase();
+      }
+    } catch (e) {}
     return this.activeSchoolId || 'all';
   }
 
@@ -367,11 +464,20 @@ class InstitutionService {
         }
       };
     }
-    return this.getSchool(this.activeSchoolId) || this.schools[0] || DEFAULT_PROFILE;
+    return this.getSchool(this.getActiveSchoolId()) || this.schools[0] || DEFAULT_PROFILE;
   }
 
   setActiveSchoolId(id) {
-    this.activeSchoolId = id || 'all';
+    let targetId = id || 'all';
+    try {
+      const user = (typeof window !== 'undefined' && (window.tmsCurrentUser || JSON.parse(localStorage.getItem('tms_auth_session') || '{}'))) || null;
+      if (user && user.role && !this.isUserCentralAdmin(user)) {
+        const assignedSchool = user.school_id || user.schoolId;
+        if (assignedSchool) targetId = String(assignedSchool).toLowerCase();
+      }
+    } catch (e) {}
+
+    this.activeSchoolId = targetId;
     this.writeActiveSchoolId(this.activeSchoolId);
     this.syncConfigWithActiveSchool();
 
@@ -413,22 +519,40 @@ class InstitutionService {
 
   filterByActiveSchool(items, schoolIdKey = 'school_id') {
     if (!Array.isArray(items)) return [];
-    if (this.isCentralManagementMode()) {
+
+    let currentId = this.getActiveSchoolId();
+    try {
+      const user = (typeof window !== 'undefined' && (window.tmsCurrentUser || JSON.parse(localStorage.getItem('tms_auth_session') || '{}'))) || null;
+      if (user && user.role && !this.isUserCentralAdmin(user)) {
+        const assignedSchool = user.school_id || user.schoolId;
+        if (assignedSchool) currentId = String(assignedSchool).toLowerCase();
+      }
+    } catch (e) {}
+
+    if (currentId === 'all') {
       return items; // In Central Group Mode, show all records across all schools
     }
-    const currentId = this.getActiveSchoolId().toLowerCase();
+    const target = currentId.toLowerCase();
     return items.filter(item => {
-      const sid = (item[schoolIdKey] || item.schoolId || '').toLowerCase();
+      const sid = (item[schoolIdKey] || item.schoolId || item.school_code || '').toLowerCase();
       // If item has no school_id, associate with default school 'tps'
-      if (!sid) return currentId === 'tps';
-      return sid === currentId;
+      if (!sid) return target === 'tps';
+      return sid === target;
     });
   }
 
   stampSchoolId(record) {
     if (!record || typeof record !== 'object') return record;
     if (!record.school_id && !record.schoolId) {
-      record.school_id = this.isCentralManagementMode() ? 'tps' : this.getActiveSchoolId();
+      let currentId = this.getActiveSchoolId();
+      try {
+        const user = (typeof window !== 'undefined' && (window.tmsCurrentUser || JSON.parse(localStorage.getItem('tms_auth_session') || '{}'))) || null;
+        if (user && user.role && !this.isUserCentralAdmin(user)) {
+          const assignedSchool = user.school_id || user.schoolId;
+          if (assignedSchool) currentId = String(assignedSchool).toLowerCase();
+        }
+      } catch (e) {}
+      record.school_id = (currentId === 'all') ? 'tps' : currentId;
     }
     return record;
   }
@@ -437,9 +561,17 @@ class InstitutionService {
     if (!user) return false;
     const email = (user.email || '').toLowerCase().trim();
     const superEmail = (TMS_CONFIG.superAdminEmail || '').toLowerCase().trim();
+    const role = (user.role || '').toLowerCase();
+
     return user.isSuperAdmin === true ||
-      user.role === 'super_admin' ||
-      user.role === 'central_admin' ||
+      user.is_super_admin === true ||
+      role === 'super_admin' ||
+      role === 'central_admin' ||
+      role === 'academic_director' ||
+      role === 'deputy_director' ||
+      role === 'md' ||
+      role === 'chairman' ||
+      role === 'dmd' ||
       user.scope === 'group_wide' ||
       email === superEmail;
   }
@@ -476,6 +608,49 @@ class InstitutionService {
 
   async refresh() {
     try {
+      // 1. Try fetching from schools table in Supabase
+      try {
+        const dbSchools = await dbService.select('schools');
+        if (Array.isArray(dbSchools) && dbSchools.length > 0) {
+          this.schools = dbSchools.map(r => ({
+            id: r.id,
+            code: r.code || r.id.toUpperCase(),
+            name: r.name,
+            shortName: r.short_name || r.name,
+            tagline: r.tagline || 'Excellence in Education',
+            board: r.board || 'CBSE / State Affiliated',
+            status: r.status || 'Active',
+            principal: r.principal_name || 'Branch Principal',
+            principalEmail: r.principal_email || '',
+            contact: {
+              phone1: r.contact_phone || '',
+              email: r.contact_email || '',
+              website: r.website || ''
+            },
+            address: {
+              campus: r.campus_location || '',
+              city: r.district || 'Tapan',
+              district: r.district || 'Dakshin Dinajpur',
+              state: r.state || 'West Bengal',
+              country: r.country || 'India',
+              pin: r.pin || '733127'
+            },
+            themeColor: r.theme_color || '#BF9A33',
+            logo: 'tps-logo.png',
+            logoBadge: r.logo_badge || r.code?.substring(0, 3) || 'SCH',
+            bannerImage: r.banner_image || '',
+            description: r.description || '',
+            facilitiesList: r.facilities_list || ['Smart Classrooms', 'Science Lab', 'Library', 'Sports Arena'],
+            gradesOffered: r.grades_offered || 'Nursery to Grade 12',
+            createdAt: r.created_at
+          }));
+          this.writeSchoolsCache(this.schools);
+        }
+      } catch (schErr) {
+        console.warn('Could not select from schools table:', schErr.message);
+      }
+
+      // 2. Fetch app_settings for group and fallback
       const rows = await dbService.select('app_settings');
 
       const groupRow = rows.find(r => r.id === GROUP_SETTINGS_ID);
@@ -484,11 +659,22 @@ class InstitutionService {
         this.writeGroupCache(this.groupProfile);
       }
 
-      const schoolsRow = rows.find(r => r.id === SCHOOLS_REGISTRY_ID);
-      if (schoolsRow && Array.isArray(schoolsRow.value) && schoolsRow.value.length > 0) {
-        this.schools = schoolsRow.value;
-        this.writeSchoolsCache(this.schools);
+      if (this.schools.length === 0) {
+        const schoolsRow = rows.find(r => r.id === SCHOOLS_REGISTRY_ID);
+        if (schoolsRow && Array.isArray(schoolsRow.value) && schoolsRow.value.length > 0) {
+          this.schools = schoolsRow.value;
+          this.writeSchoolsCache(this.schools);
+        }
       }
+
+      this.syncConfigWithActiveSchool();
+      this._loaded = true;
+      window.dispatchEvent(new CustomEvent('tms_schools_changed', { detail: this.schools }));
+    } catch (err) {
+      console.warn('Could not refresh group & school settings from cloud:', err.message);
+    }
+    return this.getActiveSchool();
+  }
 
       this.syncConfigWithActiveSchool();
       this._loaded = true;

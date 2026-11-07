@@ -159,6 +159,11 @@ export const TMS_CONFIG = {
   roles: {
     SUPER_ADMIN: "super_admin",
     CENTRAL_ADMIN: "central_admin",
+    ACADEMIC_DIRECTOR: "academic_director",
+    DEPUTY_DIRECTOR: "deputy_director",
+    CHAIRMAN: "chairman",
+    MD: "md",
+    DMD: "dmd",
     ADMIN: "admin",
     PRINCIPAL: "principal",
     COORDINATOR: "coordinator",

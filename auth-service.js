@@ -61,7 +61,21 @@ class AuthService {
       }
 
       this.currentUser = profile;
+      if (typeof window !== 'undefined') {
+        window.tmsCurrentUser = profile;
+      }
       this.saveCache(profile);
+
+      // Auto-lock operating school context for branch-level users
+      try {
+        const { institutionService } = await import('./institution-service.js');
+        if (!institutionService.isUserCentralAdmin(profile) && (profile.school_id || profile.schoolId)) {
+          institutionService.setActiveSchoolId(profile.school_id || profile.schoolId);
+        }
+      } catch (instErr) {
+        // non-blocking
+      }
+
       return profile;
     } catch (e) {
       console.error('TMS session validation failed:', e);
@@ -210,6 +224,12 @@ class AuthService {
       title: isSuperAdmin ? (profile.title || 'Executive Director & Super Admin') : (profile.title || (isPending ? 'Pending Approval' : 'Staff Member')),
       scope: isSuperAdmin ? TMS_CONFIG.scopes.SCHOOL_WIDE : (profile.scope || TMS_CONFIG.scopes.OWN_RECORDS),
       department: profile.department || '—',
+      school_id: profile.school_id || profile.schoolId || 'tps',
+      schoolId: profile.school_id || profile.schoolId || 'tps',
+      access_mode: profile.access_mode || profile.accessMode || 'default',
+      accessMode: profile.access_mode || profile.accessMode || 'default',
+      custom_modules: profile.custom_modules || profile.customModules || null,
+      customModules: profile.custom_modules || profile.customModules || null,
       assignedClass: profile.assigned_class || null,
       assignedSection: profile.assigned_section || null,
       phone: profile.phone || '',
@@ -316,7 +336,18 @@ class AuthService {
       }
 
       this.currentUser = profile;
+      if (typeof window !== 'undefined') {
+        window.tmsCurrentUser = profile;
+      }
       this.saveCache(profile);
+
+      // Auto-lock operating school context for branch-level users
+      try {
+        const { institutionService } = await import('./institution-service.js');
+        if (!institutionService.isUserCentralAdmin(profile) && (profile.school_id || profile.schoolId)) {
+          institutionService.setActiveSchoolId(profile.school_id || profile.schoolId);
+        }
+      } catch (instErr) {}
 
       // Create tracking session in user_sessions
       const sessionId = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
