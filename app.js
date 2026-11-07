@@ -17,7 +17,7 @@ import { UsersModule } from './users-module.js';
 import { AdminModule } from './admin-module.js';
 import { InstitutionModule } from './institution-module.js';
 import { MyWorkModule } from './my-work-module.js';
-import { AttendanceModule } from './attendance-module.js';
+import { AttendanceModule } from './attendance-module.js?v=7';
 import { StudentModule } from './student-module.js';
 import { StaffModule } from './staff-module.js';
 import { AcademicModule, syncActiveAcademicSession } from './academic-module.js';

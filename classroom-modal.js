@@ -18,6 +18,15 @@ export const DAYS_CONFIG = [
   { key: 'Sat', short: 'S', full: 'Saturday' }
 ];
 
+const defaultWifiNetworks = [
+  { ssid: 'TGCIS-Campus-Faculty-5G', block: 'Main Academic Directorate' },
+  { ssid: 'TGCIS-Academic-Block-2.4G', block: 'Junior & Senior Classrooms' },
+  { ssid: 'Thaiba-Heritage-Staff-Net', block: 'Central Directorate' }
+];
+const defaultGeofenceZones = [
+  { name: 'Main Academic Campus Zone', latitude: 25.2891, longitude: 88.5832, radiusMeters: 300 }
+];
+
 export class ClassroomModal {
   /**
    * Opens the Add/Edit Classroom or Period modal matching the reference design.
@@ -28,8 +37,8 @@ export class ClassroomModal {
    */
   static async open(options = {}) {
     // Fetch campus wifi & geofence settings
-    let wifiNetworks = [];
-    let geofenceZones = [];
+    let wifiNetworks = [...defaultWifiNetworks];
+    let geofenceZones = [...defaultGeofenceZones];
     try {
       wifiNetworks = await StaffGeofenceService.getWifiNetworks();
       geofenceZones = await StaffGeofenceService.getGeofenceZones();

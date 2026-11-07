@@ -14,7 +14,7 @@ import { UIComponents } from './ui-components.js';
 import { auditService } from './audit-service.js';
 import { downloadCsv } from './export-utils.js';
 import { WhatsAppService } from './whatsapp-service.js';
-import { ClassroomModal, DAYS_CONFIG } from './classroom-modal.js';
+import { ClassroomModal, DAYS_CONFIG } from './classroom-modal.js?v=7';
 import { SAMPLE_STUDENTS } from './student-module.js';
 import { BiometricCredentialModal } from './biometric-credential-modal.js';
 import { NfcEnrollerModal } from './nfc-enroller-modal.js';

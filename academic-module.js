@@ -22,7 +22,7 @@ export async function syncActiveAcademicSession() {
   return TMS_CONFIG.academic.currentYear;
 }
 
-import { ClassroomModal } from './classroom-modal.js';
+import { ClassroomModal } from './classroom-modal.js?v=7';
 /**
  * THAIBA COLLEGE OF INTEGRATED STUDIES — Academic & Curriculum Management Module
  * Comprehensive CRUD Suite: Classes, Sections, Period & Bell Timetable,
