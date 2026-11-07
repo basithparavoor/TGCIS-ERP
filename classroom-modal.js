@@ -6,6 +6,7 @@
 import { TMS_CONFIG } from './config.js';
 import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
+import { StaffGeofenceService } from './staff-geofence-service.js';
 
 export const DAYS_CONFIG = [
   { key: 'Sun', short: 'S', full: 'Sunday' },
@@ -38,7 +39,15 @@ export class ClassroomModal {
       staff = [];
     }
     if (!staff.length) {
-      staff = [
+      // Fetch campus wifi & geofence settings
+    let wifiNetworks = [];
+    let geofenceZones = [];
+    try {
+      wifiNetworks = await StaffGeofenceService.getWifiNetworks();
+      geofenceZones = await StaffGeofenceService.getGeofenceZones();
+    } catch (e) {}
+
+    staff = [
         { id: 'st-1', name: 'muhammad mubashir', designation: 'Teacher' },
         { id: 'st-2', name: 'Hafiz Tariq', designation: 'Hifz Faculty' },
         { id: 'st-3', name: 'Br. Abdul Basith', designation: 'Academic Council' },
@@ -68,6 +77,11 @@ export class ClassroomModal {
     const currentGender = cls.gender || cls.gender_eligibility || 'Boys';
     const currentRoom = cls.room || cls.room_number || cls.roomNo || 'R1';
     const currentCapacity = cls.capacity || 40;
+    const currentWifi = cls.wifiSsid || (wifiNetworks[0]?.ssid || 'TGCIS-Campus-Faculty-5G');
+    const currentRadius = cls.geofenceRadius || (geofenceZones[0]?.radiusMeters || 150);
+    const currentLat = cls.geofenceLat || (geofenceZones[0]?.latitude || 25.2891);
+    const currentLng = cls.geofenceLng || (geofenceZones[0]?.longitude || 88.5832);
+    const currentRule = cls.verificationRule || 'GEOFENCE_AND_WIFI';
 
     // Active days list
     let activeDays = cls.days;
@@ -236,7 +250,7 @@ export class ClassroomModal {
       <button class="btn btn-secondary" id="btn-cls-modal-cancel" style="border-radius: 12px; padding: 10px 22px; font-weight: 700;">
         Cancel
       </button>
-      <button class="btn btn-primary" id="btn-cls-modal-save" style="border-radius: 12px; padding: 10px 30px; font-weight: 700; background: #0E623B; border-color: #0E623B; color: #FFFFFF;">
+      <button class="btn btn-primary" id="btn-cls-modal-save" style="border-radius: 12px; padding: 10px 30px; font-weight: 700; background: linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border: none; color: #FFFFFF;">
         Save Changes
       </button>
     `;
@@ -246,6 +260,42 @@ export class ClassroomModal {
       bodyHtml,
       footerHtml,
       maxWidth: '680px'
+    });
+
+    // Wire Radius Slider & Inputs
+    const radiusSlider = document.getElementById('cls-modal-radius-slider');
+    const radiusInput = document.getElementById('cls-modal-radius');
+    const radiusBadge = document.getElementById('cls-modal-radius-badge');
+    if (radiusSlider && radiusInput) {
+      radiusSlider.addEventListener('input', () => {
+        radiusInput.value = radiusSlider.value;
+        if (radiusBadge) radiusBadge.innerText = `${radiusSlider.value}m`;
+      });
+      radiusInput.addEventListener('input', () => {
+        radiusSlider.value = radiusInput.value;
+        if (radiusBadge) radiusBadge.innerText = `${radiusInput.value}m`;
+      });
+    }
+
+    // Detect GPS button
+    document.getElementById('btn-cls-detect-gps')?.addEventListener('click', async () => {
+      const btn = document.getElementById('btn-cls-detect-gps');
+      if (btn) btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Locating...';
+      try {
+        const coords = await StaffGeofenceService.getCurrentCoordinates();
+        const latInput = document.getElementById('cls-modal-lat');
+        const lngInput = document.getElementById('cls-modal-lng');
+        if (latInput && lngInput) {
+          latInput.value = coords.latitude.toFixed(6);
+          lngInput.value = coords.longitude.toFixed(6);
+          UIComponents.showToast(`GPS captured: ${coords.latitude.toFixed(4)}°N, ${coords.longitude.toFixed(4)}°E (±${coords.accuracy}m)`, 'success');
+        }
+      } catch (err) {
+        UIComponents.showToast(`GPS error: ${err.message}`, 'warning');
+      } finally {
+        if (btn) btn.innerHTML = '<i data-lucide="crosshair"></i> Use Current GPS';
+        UIComponents.refreshIcons();
+      }
     });
 
     // Wire Days Round Buttons

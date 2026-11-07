@@ -15,6 +15,7 @@ import { downloadCsv, formatPdfFilename } from './export-utils.js';
 import { TMS_LOGO } from './logo.js';
 import { admissionService } from './admission-service.js';
 import { BiometricCredentialModal } from './biometric-credential-modal.js';
+import { NfcEnrollerModal } from './nfc-enroller-modal.js';
 
 
 export const STUDENT_IMPORT_FIELDS = [
@@ -171,6 +172,7 @@ export class StudentModule {
                 <button class="btn btn-secondary btn-sm btn-print-id" data-id="${esc(s.id)}" title="Print ID Card"><i data-lucide="id-card"></i> ID</button>
                 <button class="btn btn-secondary btn-sm btn-merit-log" data-id="${esc(s.id)}" title="Merits &amp; Conduct" style="color: #1A659F;"><i data-lucide="shield-check"></i> Merit</button>
                 <button class="btn btn-secondary btn-sm btn-view-profile" data-id="${esc(s.id)}" title="View Details"><i data-lucide="eye"></i> View</button>
+                <button class="btn btn-secondary btn-sm btn-record-biometrics" data-id="${esc(s.id)}" title="Record Biometrics & Face / NFC" style="color:#1A659F;"><i data-lucide="scan-face"></i> Biometrics</button>
                 ${canManage ? `
                   <button class="btn btn-secondary btn-sm btn-edit-student" data-id="${esc(s.id)}" title="Edit student"><i data-lucide="pencil"></i></button>
                   <button class="btn btn-secondary btn-sm btn-del-student" data-id="${esc(s.id)}" title="Delete student" style="color:#ef4444;"><i data-lucide="trash-2"></i></button>
@@ -619,6 +621,34 @@ export class StudentModule {
         UIComponents.showToast('Selected students exported.', 'success');
       });
     }
+    container.querySelectorAll('.btn-record-biometrics').forEach((b) =>
+      b.addEventListener('click', () => {
+        const s = students.find((x) => x.id === b.dataset.id);
+        if (s) {
+          BiometricCredentialModal.open({
+            person: s,
+            type: 'student',
+            onSave: () => this.render(container)
+          });
+        }
+      }));
+
+    container.querySelector('#btn-student-nfc-enroller')?.addEventListener('click', () => {
+      NfcEnrollerModal.open({
+        students: this._students,
+        onUpdate: () => this.render(container)
+      });
+    });
+
+    container.querySelector('#btn-students-bulk-nfc')?.addEventListener('click', () => {
+      const rows = selectedStudents();
+      NfcEnrollerModal.open({
+        students: rows.length ? rows : this._students,
+        defaultMode: 'bulk',
+        onUpdate: () => this.render(container)
+      });
+    });
+
     container.querySelectorAll('.btn-edit-student').forEach((b) =>
       b.addEventListener('click', () => {
         const s = students.find((x) => x.id === b.dataset.id);

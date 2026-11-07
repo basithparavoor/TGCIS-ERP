@@ -17,6 +17,7 @@ import { WhatsAppService } from './whatsapp-service.js';
 import { ClassroomModal, DAYS_CONFIG } from './classroom-modal.js';
 import { SAMPLE_STUDENTS } from './student-module.js';
 import { BiometricCredentialModal } from './biometric-credential-modal.js';
+import { NfcEnrollerModal } from './nfc-enroller-modal.js';
 import { StudentLeaveService } from './student-leave-service.js';
 import { authService } from './auth-service.js';
 
@@ -233,7 +234,7 @@ export class AttendanceModule {
               <button type="button" class="btn btn-secondary" id="btn-export-att-csv">
                 <i data-lucide="download"></i> Export CSV
               </button>
-              <button type="button" class="btn btn-primary" id="btn-add-new-classroom" style="background:#0E623B; border-color:#0E623B;">
+              <button type="button" class="btn btn-primary" id="btn-add-new-classroom" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none;">
                 <i data-lucide="plus"></i> New Classroom / Period
               </button>
             </div>
@@ -581,7 +582,7 @@ export class AttendanceModule {
                     </span>
                   `}
                 </div>
-                <button type="button" class="btn btn-sm btn-take-attendance" data-cls-id="${esc(c.id)}" style="background:#0E623B; color:#FFFFFF; border:none; border-radius:10px; font-weight:700; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                <button type="button" class="btn btn-sm btn-take-attendance" data-cls-id="${esc(c.id)}" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); color:#FFFFFF; border:none; border-radius:10px; font-weight:700; padding:6px 14px; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                   <i data-lucide="check-square" style="width:14px; height:14px;"></i> ${attStats ? 'Update Attendance' : 'Take Attendance'}
                 </button>
               </div>
@@ -592,7 +593,7 @@ export class AttendanceModule {
             <i data-lucide="calendar-x" style="width:48px; height:48px; color:#94A3B8; margin-bottom:12px;"></i>
             <h4 style="margin:0 0 6px 0; color:#1E293B;">No classroom periods scheduled for this view</h4>
             <p style="margin:0 0 16px 0; color:#64748B; font-size:0.86rem;">Add new classroom schedules or switch schedule tabs.</p>
-            <button class="btn btn-primary btn-sm" id="btn-empty-add-class" style="background:#0E623B; border-color:#0E623B;">
+            <button class="btn btn-primary btn-sm" id="btn-empty-add-class" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none;">
               + Add Classroom / Period
             </button>
           </div>
@@ -763,7 +764,7 @@ export class AttendanceModule {
         <button class="btn btn-secondary" id="btn-session-cancel" style="border-radius:12px; font-weight:700; padding:10px 20px;">
           Cancel
         </button>
-        <button class="btn btn-primary" id="btn-session-save" style="border-radius:12px; font-weight:700; padding:10px 28px; background:#0E623B; border-color:#0E623B;">
+        <button class="btn btn-primary" id="btn-session-save" style="border-radius:12px; font-weight:700; padding:10px 28px; background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none;">
           <i data-lucide="check"></i> Submit &amp; Lock Attendance Session
         </button>
       </div>
@@ -919,7 +920,7 @@ export class AttendanceModule {
           </label>
           <div style="display:flex; gap:8px;">
             <input type="text" id="qr-input-scan" class="form-input font-mono" placeholder="e.g. TPS-2026-001" autofocus style="font-size:1.05rem; padding:10px 14px; text-align:center; border-radius:9999px;">
-            <button class="btn btn-primary" id="btn-qr-punch-submit" style="background:#0E623B; border-color:#0E623B; border-radius:9999px; padding:0 22px; font-weight:700;">
+            <button class="btn btn-primary" id="btn-qr-punch-submit" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; padding:0 22px; font-weight:700;">
               Punch IN
             </button>
           </div>
@@ -1061,7 +1062,7 @@ export class AttendanceModule {
                   Attendance taking is locked until Assigned Staff or Authority marks student return.
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-primary btn-kiosk-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:#0E623B; border-color:#0E623B; font-weight:700; border-radius:8px; white-space:nowrap;">
+              <button type="button" class="btn btn-sm btn-primary btn-kiosk-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; font-weight:700; border-radius:8px; white-space:nowrap;">
                 <i data-lucide="corner-down-left"></i> Mark Returned
               </button>
             </div>
@@ -1257,14 +1258,14 @@ export class AttendanceModule {
               <option value="${esc(s.admissionNo)}">${esc(s.fullName)} (${esc(s.admissionNo)})</option>
             `).join('')}
           </select>
-          <button class="btn btn-primary" id="btn-nfc-tap-submit" style="background:#0E623B; border-color:#0E623B; border-radius:9999px; font-weight:700; padding:0 20px;">
+          <button class="btn btn-primary" id="btn-nfc-tap-submit" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; font-weight:700; padding:0 20px;">
             Tap
           </button>
         </div>
 
         <!-- Simulated NFC Card Tap -->
         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-          <button class="btn btn-primary btn-sm demo-nfc-tap" data-id="TPS-2026-001" style="background:#0E623B; border-color:#0E623B; border-radius:9999px;">
+          <button class="btn btn-primary btn-sm demo-nfc-tap" data-id="TPS-2026-001" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px;">
             <i data-lucide="zap"></i> Tap: MD Aamir
           </button>
           <button class="btn btn-secondary btn-sm demo-nfc-tap" data-id="TPS-2026-003" style="border-radius:9999px;">
@@ -1362,7 +1363,7 @@ export class AttendanceModule {
                   Leave is active. Attendance disabled until verified return by Staff or Authority.
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-primary btn-nfc-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:#0E623B; border-color:#0E623B; font-weight:700; border-radius:8px; white-space:nowrap;">
+              <button type="button" class="btn btn-sm btn-primary btn-nfc-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; font-weight:700; border-radius:8px; white-space:nowrap;">
                 <i data-lucide="corner-down-left"></i> Mark Returned
               </button>
             </div>
@@ -1510,7 +1511,7 @@ export class AttendanceModule {
           <button type="button" class="btn btn-secondary btn-sm" id="btn-toggle-face-cam" style="font-weight:700; border-radius:9999px;">
             <i data-lucide="camera"></i> <span id="lbl-toggle-face-cam">Turn On Webcam</span>
           </button>
-          <button type="button" class="btn btn-primary btn-sm" id="btn-snapshot-verify-face" style="background:#0E623B; border-color:#0E623B; border-radius:9999px; font-weight:700;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-snapshot-verify-face" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; font-weight:700;">
             <i data-lucide="scan"></i> Scan &amp; Match Face
           </button>
         </div>
@@ -1528,13 +1529,13 @@ export class AttendanceModule {
               <option value="${esc(s.admissionNo)}">${esc(s.fullName)} (${esc(s.admissionNo)})</option>
             `).join('')}
           </select>
-          <button class="btn btn-primary" id="btn-face-match-select" style="background:#0E623B; border-color:#0E623B; border-radius:9999px; font-weight:700; padding:0 18px;">
+          <button class="btn btn-primary" id="btn-face-match-select" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px; font-weight:700; padding:0 18px;">
             Verify
           </button>
         </div>
 
         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-bottom:24px;">
-          <button class="btn btn-primary btn-sm demo-face-match" data-id="TPS-2026-001" style="background:#0E623B; border-color:#0E623B; border-radius:9999px;">
+          <button class="btn btn-primary btn-sm demo-face-match" data-id="TPS-2026-001" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; border-radius:9999px;">
             <i data-lucide="user-check"></i> Match MD Aamir (99.2%)
           </button>
           <button class="btn btn-secondary btn-sm demo-face-match" data-id="TPS-2026-002" style="border-radius:9999px;">
@@ -1637,7 +1638,7 @@ export class AttendanceModule {
                   Student is registered on active leave. Attendance locked until staff records return.
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-primary btn-face-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:#0E623B; border-color:#0E623B; font-weight:700; border-radius:8px; white-space:nowrap;">
+              <button type="button" class="btn btn-sm btn-primary btn-face-mark-returned" data-leave-id="${esc(activeLeave.id)}" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none; font-weight:700; border-radius:8px; white-space:nowrap;">
                 <i data-lucide="corner-down-left"></i> Mark Returned
               </button>
             </div>
@@ -1801,7 +1802,7 @@ export class AttendanceModule {
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn btn-secondary btn-sm" id="btn-reg-mark-all-p"><i data-lucide="check-check"></i> Mark All Present</button>
             <button class="btn btn-secondary btn-sm" id="btn-reg-mark-all-a" style="color:#DC2626;"><i data-lucide="x"></i> Mark All Absent</button>
-            <button class="btn btn-primary btn-sm" id="btn-reg-save-ledger" style="background:#0E623B; border-color:#0E623B;">
+            <button class="btn btn-primary btn-sm" id="btn-reg-save-ledger" style="background:linear-gradient(135deg, #1A659F 0%, #134e7a 100%); border:none;">
               <i data-lucide="save"></i> Save &amp; Sync Ledger
             </button>
             <button class="btn btn-secondary btn-sm" id="btn-reg-export"><i data-lucide="download"></i> Download CSV</button>
@@ -1921,7 +1922,7 @@ export class AttendanceModule {
                           <div style="font-size:0.7rem; color:#B45309; font-weight:600;">
                             Pass: <span class="font-mono" style="font-weight:700;">${esc(activeLeave.gatePassNo || 'GP-ACTIVE')}</span> • ${esc(activeLeave.fromDate)} to ${esc(activeLeave.toDate)}
                           </div>
-                          <button type="button" class="btn btn-xs btn-outline btn-mark-returned-reg" data-leave-id="${esc(activeLeave.id)}" style="background:#FFFFFF; color:#0E623B; border:1px solid #0E623B; font-weight:700; border-radius:6px; padding:2px 10px; font-size:0.72rem; cursor:pointer; margin-top:2px;" title="Assigned staff marks student return">
+                          <button type="button" class="btn btn-xs btn-outline btn-mark-returned-reg" data-leave-id="${esc(activeLeave.id)}" style="background:#FFFFFF; color:#1A659F; border:1px solid #1A659F; font-weight:700; border-radius:6px; padding:2px 10px; font-size:0.72rem; cursor:pointer; margin-top:2px;" title="Assigned staff marks student return">
                             <i data-lucide="corner-down-left" style="width:11px; height:11px;"></i> Mark Returned
                           </button>
                         </div>
@@ -2202,6 +2203,25 @@ export class AttendanceModule {
     }
 
     // Header Actions
+    container.querySelector('#btn-top-nfc-enroller')?.addEventListener('click', () => {
+      NfcEnrollerModal.open({
+        students: this._students,
+        onUpdate: () => this.renderActiveModeView(container)
+      });
+    });
+
+    container.querySelector('#btn-top-record-biometrics')?.addEventListener('click', () => {
+      if (this._students.length) {
+        BiometricCredentialModal.open({
+          person: this._students[0],
+          type: 'student',
+          onSave: () => this.renderActiveModeView(container)
+        });
+      } else {
+        UIComponents.showToast('No students enrolled yet to record biometrics.', 'info');
+      }
+    });
+
     container.querySelector('#btn-open-leave-desk')?.addEventListener('click', () => {
       StudentLeaveService.openManageLeavesModal({
         staffUser: authService.getCurrentUser(),

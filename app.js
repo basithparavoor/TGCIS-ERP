@@ -8,6 +8,7 @@ import { TMS_CONFIG } from './config.js';
 import { authService } from './auth-service.js';
 import { PermissionEngine } from './permission-engine.js';
 import { UIComponents } from './ui-components.js';
+import { AppointmentLetterModal } from './appointment-letter-modal.js';
 import { dbService } from './supabase-client.js';
 import { TMS_LOGO } from './logo.js';
 
@@ -1618,6 +1619,9 @@ export class AppController {
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
               <button class="btn btn-secondary btn-sm" id="btn-central-add-school" style="font-weight:700; padding:8px 16px; border:1.5px solid #cbd5e1; background:#ffffff; color:#0f172a; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                 <i data-lucide="plus-circle" style="width:15px;height:15px;color:#1A659F;"></i> Register New Campus
+              </button>
+              <button class="btn btn-outline btn-sm" id="btn-central-issue-apt" style="font-weight:700; padding:8px 16px; border:1.5px solid #bfdbfe; background:#ffffff; color:#1A659F; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                <i data-lucide="file-badge" style="width:15px;height:15px;color:#1A659F;"></i> Issue Appointment Letter
               </button>
               <a href="#/institution" class="btn btn-primary btn-sm" style="background:#1A659F; border-color:#1A659F; color:#ffffff; font-weight:700; padding:8px 16px; border-radius:8px; box-shadow:0 2px 8px rgba(26,101,159,0.25); display:inline-flex; align-items:center; gap:6px;">
                 <i data-lucide="building" style="width:15px;height:15px;"></i> Campuses &amp; Units (${schools.length})

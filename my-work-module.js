@@ -7,10 +7,14 @@ import { authService } from './auth-service.js';
 import { dbService } from './supabase-client.js';
 import { UIComponents } from './ui-components.js';
 import { auditService } from './audit-service.js';
+import { StaffGeofenceService } from './staff-geofence-service.js';
 
 const esc = (v) => UIComponents.escapeHtml(v);
 
 export class MyWorkModule {
+  static _geofenceWatcherInterval = null;
+  static _outOfBoundsMinutes = 0;
+  static _activePunchSession = null;
   static async render(container) {
     const user = authService.getCurrentUser() || {};
     const tasks = await dbService.select('staff_tasks');
@@ -31,14 +35,26 @@ export class MyWorkModule {
             <div id="geofence-live-status" class="badge badge-success" style="padding: 8px 14px; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 6px;">
               <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i> Campus Geofence Active (250m)
             </div>
-            <button class="btn btn-primary" id="btn-punch-now"><i data-lucide="fingerprint"></i> Biometric / GPS Punch</button>
+            ${(() => {
+              const sess = JSON.parse(localStorage.getItem('tgcis_staff_punch_session') || 'null');
+              if (sess && sess.date === new Date().toISOString().split('T')[0]) {
+                return `<button class="btn btn-primary" id="btn-punch-now" style="background:linear-gradient(135deg, #10B981 0%, #059669 100%); border:none;"><i data-lucide="check-circle-2"></i> Punched IN (${esc(sess.punchedAt)}) — End Shift</button>`;
+              }
+              return `<button class="btn btn-primary" id="btn-punch-now"><i data-lucide="fingerprint"></i> Biometric / GPS Punch</button>`;
+            })()}
           `
         })}
 
         <!-- Quick KPI Row -->
         <div class="kpi-grid">
           ${UIComponents.renderKpiCard({ title: 'My Shift Today', value: '—', icon: 'clock', color: 'blue', subtitle: 'No Shift Records' })}
-          ${UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: '—', icon: 'check-circle-2', color: 'Gold', subtitle: 'Not Punched In Yet' })}
+          ${(() => {
+            const sess = JSON.parse(localStorage.getItem('tgcis_staff_punch_session') || 'null');
+            if (sess && sess.date === new Date().toISOString().split('T')[0]) {
+              return UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: 'Present / Active', icon: 'check-circle-2', color: 'blue', subtitle: `Punched In at ${sess.punchedAt}` });
+            }
+            return UIComponents.renderKpiCard({ title: 'Today\'s Attendance', value: 'Not Punched In', icon: 'clock', color: 'rose', subtitle: 'Biometric / GPS Punch Required' });
+          })()}
           ${UIComponents.renderKpiCard({ title: 'Teaching Workload', value: '—', icon: 'book-open', color: 'amber', subtitle: 'No Timetable Assigned' })}
           ${UIComponents.renderKpiCard({ title: 'Pending Tasks', value: `${tasks.filter(t => t.status !== 'Completed').length} Pending`, icon: 'check-square', color: 'rose', subtitle: 'Kanban Action Items' })}
         </div>
@@ -528,6 +544,84 @@ export class MyWorkModule {
   /* ================================================================== */
   /* Task board: create / edit / move / delete                          */
   /* ================================================================== */
+
+  static startGeofenceWatcher(closestZone, container) {
+    if (this._geofenceWatcherInterval) {
+      clearInterval(this._geofenceWatcherInterval);
+      this._geofenceWatcherInterval = null;
+    }
+
+    // Check location every 5 minutes (300,000 ms)
+    const POLL_INTERVAL_MS = 5 * 60 * 1000;
+    const MAX_OUT_OF_BOUNDS_MINUTES = 10;
+
+    this._geofenceWatcherInterval = setInterval(async () => {
+      const sess = JSON.parse(localStorage.getItem('tgcis_staff_punch_session') || 'null');
+      if (!sess) {
+        clearInterval(this._geofenceWatcherInterval);
+        this._geofenceWatcherInterval = null;
+        return;
+      }
+
+      try {
+        const coords = await StaffGeofenceService.getCurrentCoordinates();
+        const dist = StaffGeofenceService.calculateDistanceMeters(
+          coords.latitude,
+          coords.longitude,
+          closestZone.latitude,
+          closestZone.longitude
+        );
+
+        if (dist !== null && dist > (closestZone.radiusMeters || 300)) {
+          this._outOfBoundsMinutes += 5;
+
+          if (this._outOfBoundsMinutes >= MAX_OUT_OF_BOUNDS_MINUTES) {
+            // AUTO LOG OUT TRIGGERED
+            clearInterval(this._geofenceWatcherInterval);
+            this._geofenceWatcherInterval = null;
+            localStorage.removeItem('tgcis_staff_punch_session');
+            this._activePunchSession = null;
+            this._outOfBoundsMinutes = 0;
+
+            const user = authService.getCurrentUser() || {};
+            await auditService.log('STAFF_AUTO_LOGGED_OUT_GEOFENCE_EXIT', 'ATTENDANCE', {
+              reason: 'Outside campus boundaries for > 10 minutes',
+              distanceMeters: dist,
+              zone: closestZone.name
+            }, user.id);
+
+            UIComponents.openModal({
+              title: '⚠️ Shift Auto-Ended — Out of Campus Geofence',
+              bodyHtml: `
+                <div style="text-align:center; padding:18px;">
+                  <div style="font-size:3rem; margin-bottom:10px;">🚨</div>
+                  <h3 style="color:#DC2626; margin-bottom:6px;">Attendance Session Logged Out</h3>
+                  <p style="color:#475569; font-size:0.92rem; line-height:1.5;">
+                    You have been detected outside the authorized campus geofence for <strong>more than 10 minutes</strong>.
+                    Per institutional governance policy, your shift attendance has been marked as <strong>Logged Out</strong>.
+                  </p>
+                  <div style="background:#FEF2F2; border:1.5px solid #FECACA; border-radius:12px; padding:14px; margin-top:14px; font-size:0.86rem; color:#991B1B; font-weight:700;">
+                    Please return to campus premises and perform Biometric / GPS Punch once more to resume your session.
+                  </div>
+                </div>
+              `,
+              maxWidth: '520px'
+            });
+
+            if (container) this.render(container);
+          } else {
+            UIComponents.showToast(`⚠️ Geofence Alert: You are outside campus premises (${this._outOfBoundsMinutes}m / max 10m). Return to campus to avoid auto logout.`, 'warning');
+          }
+        } else {
+          // Within bounds: reset counter
+          this._outOfBoundsMinutes = 0;
+          sess.lastVerifiedAt = Date.now();
+          sess.distanceMeters = dist;
+          localStorage.setItem('tgcis_staff_punch_session', JSON.stringify(sess));
+        }
+      } catch (e) {}
+    }, POLL_INTERVAL_MS);
+  }
 
   static bindTaskActions(content) {
     if (!content) return;

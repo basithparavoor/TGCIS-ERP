@@ -3,7 +3,7 @@
  * Robust Network-First Offline Caching
  */
 
-const CACHE_NAME = 'tgcis-erp-cache-v4';
+const CACHE_NAME = 'tgcis-erp-cache-v5';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -20,7 +20,10 @@ const PRECACHE_URLS = [
   './app.css',
   './manifest.json',
   './icons/icon.svg',
-  './tps-logo.png'
+  './tps-logo.png',
+  './appointment-letter-modal.js',
+  './nfc-enroller-modal.js',
+  './staff-geofence-service.js'
 ];
 
 self.addEventListener('install', (event) => {

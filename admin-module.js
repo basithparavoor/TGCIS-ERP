@@ -9,6 +9,7 @@ import { dbService } from './supabase-client.js';
 import { authService } from './auth-service.js';
 import { auditService } from './audit-service.js';
 import { UIComponents } from './ui-components.js';
+import { AppointmentLetterModal } from './appointment-letter-modal.js';
 import { TMS_LOGO } from './logo.js';
 import { OnboardingService } from './onboarding-service.js';
 import { admissionService, DEFAULT_INSTRUCTIONS, DEFAULT_POPUP_INSTRUCTIONS, getEmbedVideoUrl, renderVideoPlayerHtml } from './admission-service.js';
@@ -7127,6 +7128,10 @@ export class AdminModule {
     `;
 
     // Wire up events
+    tabContent.querySelector('#btn-central-issue-apt-letter')?.addEventListener('click', () => {
+      AppointmentLetterModal.open({ staffList: staff });
+    });
+
     tabContent.querySelector('#btn-add-school-top')?.addEventListener('click', () => {
       this.openSchoolModal(null, tabContent);
     });
