@@ -104,14 +104,16 @@
     }
 
     .inst-nav-inner {
-      max-width: 1320px;
+      max-width: 1440px;
+      width: 100%;
       margin: 0 auto;
-      padding: 0 28px;
+      padding: 0 24px;
       height: 72px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 24px;
+      gap: 16px;
+      box-sizing: border-box;
     }
 
     .inst-brand {
@@ -147,20 +149,20 @@
 
     .inst-brand-name {
       font-family: var(--font-display);
-      font-size: 1.18rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: #0f172a;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.01em;
       line-height: 1.15;
       white-space: nowrap;
     }
 
     .inst-brand-tagline {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       color: var(--brand-theme-primary);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       white-space: nowrap;
       margin-top: 2px;
     }
@@ -168,18 +170,23 @@
     .inst-nav-links {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 12px;
       list-style: none;
+      margin: 0;
+      padding: 0;
+      flex-shrink: 1;
+      min-width: 0;
     }
 
     .inst-nav-links a {
       color: #475569;
       text-decoration: none;
-      font-size: 0.92rem;
+      font-size: 0.84rem;
       font-weight: 600;
       transition: color 0.2s, transform 0.2s;
       position: relative;
-      padding: 6px 0;
+      padding: 6px 2px;
+      white-space: nowrap;
     }
 
     .inst-nav-links a:hover {
@@ -217,12 +224,12 @@
       gap: 8px;
       background: linear-gradient(135deg, var(--brand-theme-primary) 0%, var(--brand-theme-dark) 100%);
       color: #ffffff !important;
-      padding: 0 24px;
-      height: 42px;
+      padding: 0 18px;
+      height: 40px;
       border-radius: 9999px;
       font-family: var(--font-display);
       font-weight: 700;
-      font-size: 0.92rem;
+      font-size: 0.85rem;
       letter-spacing: 0.02em;
       text-decoration: none;
       box-shadow: 0 4px 14px rgba(26, 101, 159, 0.28);
@@ -1539,13 +1546,25 @@
       color: var(--brand-theme-primary);
     }
 
-    /* Upgraded Allover Mobile Responsiveness */
-    @media (max-width: 1160px) {
+    /* Upgraded Refined Header & Layout Responsiveness */
+    @media (max-width: 1360px) {
+      .inst-nav-inner { padding: 0 16px; gap: 12px; }
+      .inst-brand-name { font-size: 0.98rem; }
+      .inst-brand-tagline { font-size: 0.62rem; }
       .inst-nav-links { gap: 10px; }
-      .inst-nav-links a { font-size: 0.84rem; padding: 6px 6px; }
+      .inst-nav-links a { font-size: 0.82rem; padding: 5px 2px; }
+      .btn-inst-login { padding: 0 14px; height: 38px; font-size: 0.82rem; }
+      #nav-testimonials-link { display: none !important; }
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1240px) {
+      .inst-brand-name { font-size: 0.94rem; }
+      .inst-nav-links { gap: 8px; }
+      .inst-nav-links a { font-size: 0.80rem; }
+      #nav-gallery-link { display: none !important; }
+    }
+
+    @media (max-width: 1120px) {
       .inst-nav-links { display: none !important; }
       .mobile-menu-toggle { display: inline-flex !important; }
       .inst-hero-inner { grid-template-columns: 1fr; gap: 36px; }

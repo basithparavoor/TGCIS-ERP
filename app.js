@@ -1586,62 +1586,62 @@ export class AppController {
         </div>
 
         ${isCentral ? `
-        <!-- Central Management Directorate Header -->
-        <div class="group-central-banner" style="background: linear-gradient(135deg, #091e36 0%, #10385c 45%, #1A659F 100%); border-radius: 20px; padding: 26px 28px; color: #ffffff; margin-bottom: 22px; box-shadow: 0 10px 30px rgba(10,30,54,0.18); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+        <!-- Central Management Directorate Header (Light Theme) -->
+        <div class="group-central-banner" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 60%, #eef5fa 100%); border-radius: 18px; padding: 24px 28px; color: #0f172a; margin-bottom: 22px; box-shadow: 0 4px 20px rgba(15,23,42,0.04); position: relative; overflow: hidden; border: 1.5px solid #dbeafe;">
           <!-- Ambient decorative backdrop circle -->
-          <div style="position: absolute; right: -40px; top: -40px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(26,101,159,0) 70%); pointer-events: none;"></div>
+          <div style="position: absolute; right: -30px; top: -30px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(26,101,159,0.06) 0%, rgba(26,101,159,0) 70%); pointer-events: none;"></div>
 
           <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; position:relative; z-index:2; margin-bottom: 20px;">
             <div>
-              <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.22); padding:5px 14px; border-radius:999px; font-size:0.72rem; font-weight:800; color:#93c5fd; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:12px; backdrop-filter:blur(6px);">
-                <i data-lucide="shield-check" style="width:14px;height:14px;color:#38bdf8;"></i> Central Management Directorate &bull; Controlling Authority
+              <div style="display:inline-flex; align-items:center; gap:8px; background:#eff6ff; border:1px solid #bfdbfe; padding:5px 14px; border-radius:999px; font-size:0.72rem; font-weight:800; color:#1A659F; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;">
+                <i data-lucide="shield-check" style="width:14px;height:14px;color:#1A659F;"></i> Central Management Directorate &bull; Controlling Authority
               </div>
-              <h2 style="font-size:1.68rem; font-weight:900; margin:0 0 8px 0; color:#ffffff; letter-spacing:-0.01em; text-shadow:0 2px 4px rgba(0,0,0,0.15);">
+              <h2 style="font-size:1.65rem; font-weight:900; margin:0 0 6px 0; color:#0f172a; letter-spacing:-0.01em;">
                 ${esc(groupProfile.name)}
               </h2>
-              <p style="font-size:0.88rem; color:#cbd5e1; margin:0 0 14px 0; max-width:700px; line-height:1.55;">
+              <p style="font-size:0.88rem; color:#475569; margin:0 0 14px 0; max-width:700px; line-height:1.55;">
                 Controlling, directing and governing all affiliated campuses and academic units under central trust administration.
               </p>
-              <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:0.76rem; color:#94a3b8;">
-                <span style="background:rgba(255,255,255,0.08); padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; display:inline-flex; align-items:center; gap:6px;">
-                  <i data-lucide="building-2" style="width:13px;height:13px;color:#38bdf8;"></i> Central Trust: <strong style="color:#ffffff;">${esc(groupProfile.trust || 'Thaiba Heritage, Kolkata')}</strong> (${esc(groupProfile.regNo || 'IV 01894/2011')})
+              <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:0.76rem; color:#64748b;">
+                <span style="background:#ffffff; padding:5px 12px; border-radius:8px; border:1px solid #e2e8f0; color:#475569; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <i data-lucide="building-2" style="width:13px;height:13px;color:#1A659F;"></i> Central Trust: <strong style="color:#0f172a;">${esc(groupProfile.trust || 'Thaiba Heritage, Kolkata')}</strong> (${esc(groupProfile.regNo || 'IV 01894/2011')})
                 </span>
-                <span style="background:rgba(255,255,255,0.08); padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; display:inline-flex; align-items:center; gap:6px;">
-                  <i data-lucide="user-check" style="width:13px;height:13px;color:#38bdf8;"></i> Director: <strong style="color:#ffffff;">${esc(groupProfile.executiveDirector || 'C. M. Basith')}</strong>
+                <span style="background:#ffffff; padding:5px 12px; border-radius:8px; border:1px solid #e2e8f0; color:#475569; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <i data-lucide="user-check" style="width:13px;height:13px;color:#1A659F;"></i> Director: <strong style="color:#0f172a;">${esc(groupProfile.executiveDirector || 'C. M. Basith')}</strong>
                 </span>
-                <span style="background:rgba(255,255,255,0.08); padding:5px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); color:#e2e8f0; display:inline-flex; align-items:center; gap:6px;">
-                  <i data-lucide="map-pin" style="width:13px;height:13px;color:#38bdf8;"></i> HQ: <strong style="color:#ffffff;">${esc(groupProfile.headquarters || 'Kolkata, West Bengal')}</strong>
+                <span style="background:#ffffff; padding:5px 12px; border-radius:8px; border:1px solid #e2e8f0; color:#475569; display:inline-flex; align-items:center; gap:6px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                  <i data-lucide="map-pin" style="width:13px;height:13px;color:#1A659F;"></i> HQ: <strong style="color:#0f172a;">${esc(groupProfile.headquarters || 'Kolkata, West Bengal')}</strong>
                 </span>
               </div>
             </div>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-              <button class="btn btn-sm" id="btn-central-add-school" style="background:rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.25); font-weight:700; padding:8px 14px; border-radius:8px; backdrop-filter:blur(6px); display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
-                <i data-lucide="plus-circle" style="width:15px;height:15px;color:#38bdf8;"></i> Register New Campus
+              <button class="btn btn-secondary btn-sm" id="btn-central-add-school" style="font-weight:700; padding:8px 16px; border:1.5px solid #cbd5e1; background:#ffffff; color:#0f172a; display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                <i data-lucide="plus-circle" style="width:15px;height:15px;color:#1A659F;"></i> Register New Campus
               </button>
-              <a href="#/institution" class="btn btn-sm" style="background:#ffffff; color:#0f2742; border:none; font-weight:800; padding:8px 16px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); display:inline-flex; align-items:center; gap:6px;">
-                <i data-lucide="building" style="width:15px;height:15px;color:#1A659F;"></i> Campuses &amp; Units (${schools.length})
+              <a href="#/institution" class="btn btn-primary btn-sm" style="background:#1A659F; border-color:#1A659F; color:#ffffff; font-weight:700; padding:8px 16px; border-radius:8px; box-shadow:0 2px 8px rgba(26,101,159,0.25); display:inline-flex; align-items:center; gap:6px;">
+                <i data-lucide="building" style="width:15px;height:15px;"></i> Campuses &amp; Units (${schools.length})
               </a>
             </div>
           </div>
 
-          <!-- Glassmorphic Directorate Quick KPI Bar -->
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; position:relative; z-index:2; border-top:1px solid rgba(255,255,255,0.12); padding-top:18px;">
-            <div style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 16px; backdrop-filter:blur(6px);">
-              <div style="font-size:0.72rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Operating Campuses</div>
-              <div style="font-size:1.45rem; font-weight:900; color:#ffffff; margin-top:2px;">${schools.length} <span style="font-size:0.78rem; font-weight:600; color:#38bdf8;">Institutions</span></div>
+          <!-- Light Theme Quick KPI Bar -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; position:relative; z-index:2; border-top:1px solid #e2e8f0; padding-top:18px;">
+            <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 16px; box-shadow:0 2px 6px rgba(15,23,42,0.02);">
+              <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Operating Campuses</div>
+              <div style="font-size:1.45rem; font-weight:900; color:#0f172a; margin-top:2px;">${schools.length} <span style="font-size:0.78rem; font-weight:600; color:#1A659F;">Institutions</span></div>
             </div>
-            <div style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 16px; backdrop-filter:blur(6px);">
-              <div style="font-size:0.72rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Group Enrollment</div>
-              <div style="font-size:1.45rem; font-weight:900; color:#ffffff; margin-top:2px;">${totalGroupStudents} <span style="font-size:0.78rem; font-weight:600; color:#93c5fd;">Scholars</span></div>
+            <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 16px; box-shadow:0 2px 6px rgba(15,23,42,0.02);">
+              <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Group Enrollment</div>
+              <div style="font-size:1.45rem; font-weight:900; color:#0f172a; margin-top:2px;">${totalGroupStudents} <span style="font-size:0.78rem; font-weight:600; color:#1A659F;">Scholars</span></div>
             </div>
-            <div style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 16px; backdrop-filter:blur(6px);">
-              <div style="font-size:0.72rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Faculty &amp; Staff</div>
-              <div style="font-size:1.45rem; font-weight:900; color:#ffffff; margin-top:2px;">${totalGroupStaff} <span style="font-size:0.78rem; font-weight:600; color:#93c5fd;">Members</span></div>
+            <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 16px; box-shadow:0 2px 6px rgba(15,23,42,0.02);">
+              <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Faculty &amp; Staff</div>
+              <div style="font-size:1.45rem; font-weight:900; color:#0f172a; margin-top:2px;">${totalGroupStaff} <span style="font-size:0.78rem; font-weight:600; color:#1A659F;">Members</span></div>
             </div>
-            <div style="background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); border-radius:12px; padding:12px 16px; backdrop-filter:blur(6px);">
-              <div style="font-size:0.72rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Fee Collections</div>
-              <div style="font-size:1.45rem; font-weight:900; color:#34d399; margin-top:2px;">₹${totalGroupCollections.toLocaleString()}</div>
+            <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; padding:12px 16px; box-shadow:0 2px 6px rgba(15,23,42,0.02);">
+              <div style="font-size:0.72rem; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Fee Collections</div>
+              <div style="font-size:1.45rem; font-weight:900; color:#059669; margin-top:2px;">₹${totalGroupCollections.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -1689,9 +1689,15 @@ export class AppController {
                       <!-- Card Header -->
                       <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px;">
                         <div style="display: flex; align-items: center; gap: 12px;">
-                          <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, rgba(26,101,159,0.12) 0%, rgba(26,101,159,0.22) 100%); color: #1A659F; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem; border: 1.5px solid rgba(26,101,159,0.25); flex-shrink: 0;">
+                          ${sch.logo ? `
+                          <div style="width: 48px; height: 48px; border-radius: 12px; background: #ffffff; border: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: center; padding: 4px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                            <img src="${esc(sch.logo)}" alt="${esc(sch.name)}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                          </div>
+                        ` : `
+                          <div style="min-width: 54px; height: 42px; padding: 0 8px; border-radius: 10px; background: rgba(26,101,159,0.1); color: #1A659F; border: 1.5px solid rgba(26,101,159,0.25); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.82rem; flex-shrink: 0; letter-spacing: 0.04em;">
                             ${esc(sch.logoBadge || sch.code?.substring(0,5) || 'CAMPUS')}
                           </div>
+                        `}
                           <div>
                             <strong style="font-size: 0.98rem; color: #0f172a; line-height: 1.3; display: block;">${esc(sch.name)}</strong>
                             <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
@@ -1770,14 +1776,20 @@ export class AppController {
 
                       return `
                         <tr>
-                          <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                              <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(26,101,159,0.12); color: #1A659F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;">
-                                ${esc(sch.logoBadge || sch.code?.substring(0,3) || 'SCH')}
-                              </div>
-                              <div>
-                                <strong style="color: #0f172a; font-size: 0.88rem;">${esc(sch.name)}</strong>
-                                <div style="font-size: 0.72rem; color: #64748b;">${esc(sch.address?.district || 'Dakshin Dinajpur')}</div>
+                          <td style="min-width: 290px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                              ${sch.logo ? `
+                                <div style="width: 42px; height: 42px; border-radius: 9px; background: #ffffff; border: 1.5px solid #e2e8f0; display: flex; align-items: center; justify-content: center; padding: 3px; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                                  <img src="${esc(sch.logo)}" alt="${esc(sch.name)}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                </div>
+                              ` : `
+                                <div style="min-width: 52px; height: 36px; padding: 0 8px; border-radius: 8px; background: rgba(26,101,159,0.1); color: #1A659F; border: 1.5px solid rgba(26,101,159,0.22); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.76rem; flex-shrink: 0; letter-spacing: 0.04em;">
+                                  ${esc(sch.logoBadge || sch.code?.substring(0,5) || 'CAMPUS')}
+                                </div>
+                              `}
+                              <div style="min-width: 0;">
+                                <strong style="color: #0f172a; font-size: 0.90rem; display: block; line-height: 1.35; white-space: normal;">${esc(sch.name)}</strong>
+                                <div style="font-size: 0.73rem; color: #64748b; margin-top: 2px;">${esc(sch.address?.district || 'Dakshin Dinajpur')}</div>
                               </div>
                             </div>
                           </td>

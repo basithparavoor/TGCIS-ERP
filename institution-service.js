@@ -141,6 +141,7 @@ class InstitutionService {
             },
             themeColor: '#1A659F',
             logo: 'tps-logo.png',
+            logo: 'tps-logo.png',
             logoBadge: 'TGCIS',
             founded: '2011'
           },
@@ -168,6 +169,7 @@ class InstitutionService {
               pin: '733127'
             },
             themeColor: '#16a34a',
+            logo: 'icons/tms-logo.png',
             logo: 'icons/tms-logo.png',
             logoBadge: 'TMS',
             founded: '2015'

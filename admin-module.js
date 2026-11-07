@@ -6660,103 +6660,150 @@ export class AdminModule {
           </div>
 
           <!-- Structural Hierarchy & Governance Tree Card -->
-          <div class="card" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; padding:20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+          <div class="card" style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:18px; padding:24px; box-shadow:0 4px 20px rgba(15,23,42,0.03); margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #f1f5f9; padding-bottom:14px; flex-wrap:wrap; gap:12px;">
               <div>
-                <h4 style="margin:0; font-size:1.05rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
-                  <i data-lucide="git-branch" style="color:#1A659F;"></i> Institutional Governance &amp; Multi-School Authority Hierarchy
+                <h4 style="margin:0; font-size:1.15rem; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:10px;">
+                  <i data-lucide="git-merge" style="color:#1A659F; width:20px; height:20px;"></i>
+                  Institutional Governance &amp; Multi-Campus Authority Hierarchy
                 </h4>
-                <p style="margin:4px 0 0 0; font-size:0.8rem; color:#64748b;">
-                  Visual authority tiers: Trust Board, Central Sovereignty, Academic Council, and AUTONOMOUS CAMPUS Principals.
+                <p style="margin:4px 0 0 0; font-size:0.82rem; color:#64748b;">
+                  Visual authority tiers: Central Trust Board, Directorate Academic Council, and Autonomous Operating Campuses.
                 </p>
               </div>
+              <button class="btn btn-secondary btn-sm" id="btn-edit-group-trust-profile" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                <i data-lucide="edit-3" style="width:14px;height:14px;color:#1A659F;"></i> Edit Trust Authority
+              </button>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+            <div style="display: flex; flex-direction: column; gap: 0; font-size: 0.85rem;">
               <!-- Level 1: Trust Board & Super Admin -->
-              <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <span style="font-size:1.6rem;">🏛️</span>
+              <div style="background: linear-gradient(135deg, #091e36 0%, #10385c 100%); border-radius: 14px; padding: 18px 22px; color: #ffffff; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 16px rgba(10,30,54,0.12);">
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); display: flex; align-items: center; justify-content: center; color: #38bdf8; flex-shrink: 0;">
+                    <i data-lucide="shield-check" style="width: 22px; height: 22px;"></i>
+                  </div>
                   <div>
-                    <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">THAIBA GROUP EXECUTIVE TRUST BOARD &amp; SUPER ADMIN</div>
-                    <div style="font-size:0.75rem; color:#64748b;">Supreme Institutional Governance &bull; Root Sovereign: cmbasith786@gmail.com</div>
+                    <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #93c5fd; margin-bottom: 2px;">Supreme Authority &bull; Tier 1</div>
+                    <div style="font-weight: 900; color: #ffffff; font-size: 1.05rem; letter-spacing: -0.01em;">THAIBA GROUP EXECUTIVE TRUST BOARD &amp; SUPER ADMIN</div>
+                    <div style="font-size: 0.78rem; color: #cbd5e1; margin-top: 3px;">
+                      Governing Trust: <strong>${esc(groupProfile.trust || 'Thaiba Heritage, Kolkata')}</strong> &bull; Root Sovereign: <strong>cmbasith786@gmail.com</strong>
+                    </div>
                   </div>
                 </div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                  <span class="badge" style="background:#0f172a; color:#fff; font-weight:700;">Super Administrator</span>
-                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">Chairman</span>
-                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">MD</span>
-                  <span class="badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; font-weight:700;">DMD</span>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                  <span class="badge" style="background:#ffffff; color:#0f2742; font-weight:800; padding:6px 12px; border-radius:8px; font-size:0.75rem;"><i data-lucide="crown" style="width:13px;height:13px;vertical-align:-2px;color:#1A659F;margin-right:4px;"></i> Super Admin</span>
+                  <span class="badge" style="background:rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.25); font-weight:700; padding:6px 10px; border-radius:8px; font-size:0.75rem;">Chairman</span>
+                  <span class="badge" style="background:rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.25); font-weight:700; padding:6px 10px; border-radius:8px; font-size:0.75rem;">MD</span>
+                  <span class="badge" style="background:rgba(255,255,255,0.12); color:#ffffff; border:1px solid rgba(255,255,255,0.25); font-weight:700; padding:6px 10px; border-radius:8px; font-size:0.75rem;">DMD</span>
                 </div>
               </div>
 
-              <!-- Connecting Line -->
-              <div style="width:2px; height:18px; background:#cbd5e1; margin-left:36px;"></div>
+              <!-- Connecting Line 1 -->
+              <div style="display: flex; align-items: center; justify-content: center; height: 26px;">
+                <div style="width: 2px; height: 100%; background: #bfdbfe;"></div>
+              </div>
 
               <!-- Level 2: Central Academic & Operations -->
-              <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-left:24px;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <span style="font-size:1.6rem;">🎓</span>
+              <div style="background: #f0f7ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <div style="width: 42px; height: 42px; border-radius: 10px; background: #ffffff; border: 1.5px solid #bfdbfe; display: flex; align-items: center; justify-content: center; color: #1A659F; flex-shrink: 0;">
+                    <i data-lucide="graduation-cap" style="width: 22px; height: 22px;"></i>
+                  </div>
                   <div>
-                    <div style="font-weight:800; color:#1e40af; font-size:0.95rem;">CENTRAL ACADEMIC &amp; OPERATIONAL COUNCIL</div>
-                    <div style="font-size:0.75rem; color:#3b82f6;">Group-Wide Academic Autonomy over ALL Campuses &bull; Curriculum, Examinations &amp; Standards</div>
+                    <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #1A659F; margin-bottom: 2px;">Directorate Authority &bull; Tier 2</div>
+                    <div style="font-weight: 800; color: #0f172a; font-size: 0.98rem;">CENTRAL ACADEMIC &amp; OPERATIONAL COUNCIL</div>
+                    <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">Group-wide academic oversight, standardized examinations, curriculum guidelines &amp; quality control</div>
                   </div>
                 </div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                  <span class="badge" style="background:#1d4ed8; color:#fff; font-weight:700;">Academic Director (Autonomy of All Schools)</span>
-                  <span class="badge" style="background:#dbeafe; color:#1e40af; font-weight:700;">Deputy Director</span>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                  <span class="badge" style="background:#1A659F; color:#ffffff; font-weight:700; padding:6px 12px; border-radius:8px; font-size:0.75rem;">Academic Director</span>
+                  <span class="badge" style="background:#ffffff; color:#1A659F; border:1px solid #bfdbfe; font-weight:700; padding:6px 10px; border-radius:8px; font-size:0.75rem;">Deputy Director</span>
                 </div>
               </div>
 
-              <!-- Connecting Line -->
-              <div style="width:2px; height:18px; background:#cbd5e1; margin-left:36px;"></div>
+              <!-- Connecting Line 2 -->
+              <div style="display: flex; align-items: center; justify-content: center; height: 26px;">
+                <div style="width: 2px; height: 100%; background: #bfdbfe;"></div>
+              </div>
 
-              <!-- Level 3: AUTONOMOUS CAMPUSs -->
-              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:14px; margin-left:24px;">
+              <!-- Level 3 Header -->
+              <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #1A659F; display: flex; align-items: center; gap: 6px;">
+                  <i data-lucide="building-2" style="width: 14px; height: 14px;"></i> Operating Units &bull; Tier 3: Autonomous Campuses (${schools.length})
+                </div>
+                <span style="font-size: 0.72rem; color: #64748b;">Full Branch Administration &amp; Daily Operations</span>
+              </div>
+
+              <!-- Level 3: AUTONOMOUS CAMPUSES -->
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:16px;">
                 ${schools.map(sch => {
-                  const bStudents = students.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
-                  const bStaff = staff.filter(s => (s.school_id || s.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
-                  const bClasses = classes.filter(c => (c.school_id || c.schoolId || 'tps').toLowerCase() === sch.id.toLowerCase()).length;
+                  const bStudents = students.filter(s => (s.school_id || s.schoolId || 'tgcis').toLowerCase() === sch.id.toLowerCase()).length;
+                  const bStaff = staff.filter(s => (s.school_id || s.schoolId || 'tgcis').toLowerCase() === sch.id.toLowerCase()).length;
+                  const bClasses = classes.filter(c => (c.school_id || c.schoolId || 'tgcis').toLowerCase() === sch.id.toLowerCase()).length;
 
                   return `
-                    <div style="background:#ffffff; border:2px solid ${sch.themeColor || '#1A659F'}; border-radius:14px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); display:flex; flex-direction:column; justify-content:space-between; gap:12px;">
+                    <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:14px; padding:18px; box-shadow:0 2px 10px rgba(15,23,42,0.03); display:flex; flex-direction:column; justify-content:space-between; gap:14px; transition:all 0.2s ease;">
                       <div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <!-- Header with Logo / Badge -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                          <div style="display:flex; align-items:center; gap:12px;">
+                            ${sch.logo ? `
+                              <div style="width: 44px; height: 44px; border-radius: 10px; background: #ffffff; border: 1.5px solid #e2e8f0; display:flex; align-items:center; justify-content:center; padding:3px; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.03);">
+                                <img src="${esc(sch.logo)}" alt="${esc(sch.name)}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                              </div>
+                            ` : `
+                              <div style="min-width: 50px; height: 38px; padding: 0 8px; border-radius: 9px; background: rgba(26,101,159,0.1); color: #1A659F; border: 1.5px solid rgba(26,101,159,0.25); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0; letter-spacing: 0.04em;">
+                                ${esc(sch.logoBadge || sch.code?.substring(0,5) || 'CAMPUS')}
+                              </div>
+                            `}
+                            <div>
+                              <div style="font-size:0.68rem; color:#1A659F; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Autonomous Campus</div>
+                              <h4 style="margin:2px 0 0 0; font-size:1rem; font-weight:800; color:#0f172a; line-height:1.3;">${esc(sch.name)}</h4>
+                              <div style="font-size:0.74rem; color:#64748b; margin-top:2px;">Code: <strong style="color:#1A659F;">${esc(sch.code)}</strong> &bull; ${esc(sch.board || 'State / Central Affiliated')}</div>
+                            </div>
+                          </div>
+                          <span class="badge badge-success" style="font-size:0.65rem; font-weight:800; flex-shrink:0;">Active Campus</span>
+                        </div>
+
+                        <!-- Principal & Location Box -->
+                        <div style="margin-top:12px; background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; padding:10px 12px; font-size:0.78rem;">
+                          <div style="display:flex; align-items:center; gap:6px; color:#475569; margin-bottom:4px;">
+                            <i data-lucide="user-check" style="width:13px;height:13px;color:#1A659F;"></i>
+                            <span>Principal:</span>
+                            <strong style="color:#0f172a;">${esc(sch.principal || 'C. M. Basith')}</strong>
+                            <span style="font-size:0.7rem; color:#64748b;">(Full Campus Autonomy)</span>
+                          </div>
+                          <div style="display:flex; align-items:center; gap:6px; color:#64748b;">
+                            <i data-lucide="map-pin" style="width:13px;height:13px;color:#94a3b8;"></i>
+                            <span>${esc(sch.address?.campus || sch.campusLocation || 'Baghait, Tapan, Dakshin Dinajpur')}</span>
+                          </div>
+                        </div>
+
+                        <!-- 3-Pillar Metrics Strip -->
+                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-top:12px; text-align:center; background:#ffffff; border:1.5px solid #edf2f7; border-radius:9px; padding:8px 6px;">
                           <div>
-                            <div style="font-size:0.72rem; color:#1A659F; font-weight:800; text-transform:uppercase;">AUTONOMOUS CAMPUS</div>
-                            <h4 style="margin:2px 0 0 0; font-size:1.05rem; font-weight:800; color:#0f172a;">${esc(sch.name)}</h4>
-                            <div style="font-size:0.75rem; color:#64748b;">Code: <strong>${esc(sch.code)}</strong> &bull; ${esc(sch.board || 'Affiliated')}</div>
+                            <div style="font-weight:800; font-size:1.05rem; color:#0f172a;">${bStudents}</div>
+                            <div style="font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase;">Scholars</div>
                           </div>
-                          <span class="badge badge-success" style="font-size:0.65rem;">ACTIVE BRANCH</span>
-                        </div>
-
-                        <div style="margin-top:10px; background:#f8fafc; border-radius:8px; padding:8px 10px; font-size:0.78rem;">
-                          <div>👨‍💼 <strong>Principal:</strong> ${esc(sch.principal || 'Basith Sir')} (Full Branch Autonomy)</div>
-                          <div style="color:#64748b; margin-top:2px;">📍 ${esc(sch.address?.campus || sch.campusLocation || 'Campus Address')}</div>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-top:10px; text-align:center;">
-                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
-                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bStudents}</div>
-                            <div style="font-size:0.65rem; color:#64748b;">Students</div>
+                          <div style="border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+                            <div style="font-weight:800; font-size:1.05rem; color:#0f172a;">${bStaff}</div>
+                            <div style="font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase;">Staff</div>
                           </div>
-                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
-                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bStaff}</div>
-                            <div style="font-size:0.65rem; color:#64748b;">Staff</div>
-                          </div>
-                          <div style="background:#f1f5f9; border-radius:6px; padding:6px;">
-                            <div style="font-weight:800; font-size:1rem; color:#0f172a;">${bClasses}</div>
-                            <div style="font-size:0.65rem; color:#64748b;">Classes</div>
+                          <div>
+                            <div style="font-weight:800; font-size:1.05rem; color:#0f172a;">${bClasses}</div>
+                            <div style="font-size:0.65rem; color:#64748b; font-weight:700; text-transform:uppercase;">Classes</div>
                           </div>
                         </div>
                       </div>
 
+                      <!-- Actions -->
                       <div style="display:flex; gap:8px; border-top:1px solid #f1f5f9; padding-top:10px;">
-                        <button class="btn btn-primary btn-sm btn-open-school-management" data-id="${esc(sch.id)}" style="flex:1; justify-content:center;">
-                          <i data-lucide="sliders"></i> Manage this Campus
+                        <button class="btn btn-primary btn-sm btn-open-school-management" data-id="${esc(sch.id)}" style="flex:1; justify-content:center; background:#1A659F; border-color:#1A659F; font-weight:700; padding:7px 12px; display:inline-flex; align-items:center; gap:6px;">
+                          <i data-lucide="sliders" style="width:14px;height:14px;"></i> Configure Campus
                         </button>
-                        <button class="btn btn-secondary btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" title="Switch active operating context">
-                          ${activeSchoolId === sch.id ? 'Active' : 'Switch'}
+                        <button class="btn ${activeSchoolId === sch.id ? 'btn-secondary' : 'btn-outline'} btn-sm btn-switch-school-action" data-id="${esc(sch.id)}" title="Switch active operating context" style="font-weight:700; padding:7px 12px;">
+                          ${activeSchoolId === sch.id ? 'Active Console' : 'Switch'}
                         </button>
                       </div>
                     </div>
@@ -7276,22 +7323,49 @@ export class AdminModule {
             <input class="form-input" id="sch-facilities" value="${esc(facilitiesStr)}" placeholder="Smart Classrooms, Science Lab, Library, Hostel, Sports Arena">
           </div>
 
-          <!-- Section 5: Branding -->
-          <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-            <div class="form-group">
-              <label class="form-label">Theme Color</label>
-              <input type="color" class="form-input" id="sch-color" value="${esc(s.themeColor || '#1A659F')}" style="height: 38px; padding: 2px;">
+          <!-- Section 5: Campus Logo & Visual Identity -->
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 12px;">
+            <div style="font-weight: 800; font-size: 0.82rem; color: #1A659F; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px;">
+              5. Campus Logo &amp; Visual Identity
             </div>
-            <div class="form-group">
-              <label class="form-label">Logo Badge</label>
-              <input class="form-input font-mono" id="sch-badge" value="${esc(s.logoBadge || s.code?.substring(0, 3) || 'SCH')}" placeholder="e.g. TPS">
+
+            <div style="display: grid; grid-template-columns: 80px 1fr; gap: 16px; align-items: center; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+              <!-- Logo Preview Box -->
+              <div id="sch-logo-preview" style="width: 72px; height: 72px; border-radius: 12px; background: #ffffff; border: 1.5px solid #cbd5e1; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden;">
+                ${s.logo ? `<img src="${esc(s.logo)}" style="max-width:100%; max-height:100%; object-fit:contain;" id="sch-preview-img">` : `<div style="font-weight:900; font-size:1.1rem; color:#1A659F;" id="sch-preview-monogram">${esc(s.logoBadge || s.code?.substring(0,5) || 'LOGO')}</div>`}
+              </div>
+
+              <!-- Upload / URL Options -->
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                  <label class="btn btn-secondary btn-sm" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; margin: 0;">
+                    <i data-lucide="upload"></i> Upload Logo File
+                    <input type="file" id="sch-logo-file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display: none;">
+                  </label>
+                  <span style="font-size: 0.74rem; color: #64748b;">PNG, JPG, SVG or WebP</span>
+                </div>
+                <div>
+                  <input class="form-input" id="sch-logo" value="${esc(s.logo || '')}" placeholder="Or enter logo path/URL (e.g. tps-logo.png, tgcis-emblem.png)">
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Status</label>
-              <select class="form-select" id="sch-status">
-                <option value="Active" ${(s.status === 'Active' || !s.status) ? 'selected' : ''}>Active</option>
-                <option value="Inactive" ${(s.status === 'Inactive') ? 'selected' : ''}>Inactive</option>
-              </select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label">Logo Monogram Badge</label>
+                <input class="form-input font-mono" id="sch-badge" value="${esc(s.logoBadge || s.code?.substring(0, 5) || 'TGCIS')}" placeholder="e.g. TGCIS">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Campus Theme Color</label>
+                <input type="color" class="form-input" id="sch-color" value="${esc(s.themeColor || '#1A659F')}" style="height: 38px; padding: 2px;">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Operating Status</label>
+                <select class="form-select" id="sch-status">
+                  <option value="Active" ${(s.status === 'Active' || !s.status) ? 'selected' : ''}>Active</option>
+                  <option value="Inactive" ${(s.status === 'Inactive') ? 'selected' : ''}>Inactive</option>
+                </select>
+              </div>
             </div>
           </div>
         </form>
@@ -7324,7 +7398,8 @@ export class AdminModule {
       const rawFacilities = document.getElementById('sch-facilities').value.trim();
       const facilitiesList = rawFacilities ? rawFacilities.split(',').map(f => f.trim()).filter(Boolean) : [];
       const themeColor = document.getElementById('sch-color').value;
-      const logoBadge = document.getElementById('sch-badge').value.trim() || code.substring(0, 3);
+      const logo = document.getElementById('sch-logo').value.trim();
+      const logoBadge = document.getElementById('sch-badge').value.trim() || code.substring(0, 5);
       const status = document.getElementById('sch-status').value;
 
       if (!name || !code) {
@@ -7348,6 +7423,7 @@ export class AdminModule {
         gradesOffered: grades,
         facilitiesList,
         themeColor,
+        logo,
         logoBadge
       };
 
@@ -7372,6 +7448,31 @@ export class AdminModule {
       UIComponents.closeModal();
       this.renderSchoolsManagementTab(container);
     });
+
+    // Campus Logo File Upload Handler
+    const fileInput = document.getElementById('sch-logo-file');
+    const logoInput = document.getElementById('sch-logo');
+    const previewBox = document.getElementById('sch-logo-preview');
+    if (fileInput && logoInput && previewBox) {
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const dataUrl = evt.target.result;
+            logoInput.value = dataUrl;
+            previewBox.innerHTML = `<img src="${dataUrl}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      logoInput.addEventListener('input', () => {
+        const val = logoInput.value.trim();
+        if (val) {
+          previewBox.innerHTML = `<img src="${val}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+        }
+      });
+    }
 
     UIComponents.refreshIcons();
   }
