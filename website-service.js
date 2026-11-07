@@ -58,7 +58,7 @@ export const DEFAULT_WEBSITE_CONFIG = {
     navAbout: true,
     navAcademics: true,
     navFacilities: true,
-    navHostel: false,
+    navHostel: true,
     navNotices: true,
     navGallery: true,
     navTestimonials: true,
@@ -71,7 +71,7 @@ export const DEFAULT_WEBSITE_CONFIG = {
     about: true,
     academics: true,
     facilities: true,
-    hostel: false,
+    hostel: true,
     notices: true,
     gallery: true,
     testimonials: true,
@@ -253,8 +253,8 @@ export const DEFAULT_WEBSITE_CONFIG = {
 
   // 7b. Hostel & Residential Campus Setup (Toggleable by Admin)
   hostel: {
-    enabled: false,              // Admin turn on/off toggle for hostel module & section (Default: OFF)
-    showNavButton: false,        // Admin turn on/off toggle for "Hostel" navbar button (Default: OFF)
+    enabled: true,               // Admin turn on/off toggle for hostel module & section (Default: OFF)
+    showNavButton: true,         // Admin turn on/off toggle for "Hostel" navbar button (Default: OFF)
     navButtonText: 'Hostel',
     badge: 'RESIDENTIAL CAMPUS & BOARDING',
     title: 'Student Hostel & Residential Dormitories',
@@ -511,6 +511,12 @@ class WebsiteService {
         const parsed = JSON.parse(stored);
         const merged = this.deepMerge(DEFAULT_WEBSITE_CONFIG, parsed);
         // Only default hostel to false if it was NEVER explicitly set in the saved config
+        if (!merged.hostel) merged.hostel = {};
+        if (localStorage.getItem('tms_hostel_force_on') !== 'done') {
+          merged.hostel.enabled = true;
+          merged.hostel.showNavButton = true;
+          try { localStorage.setItem('tms_hostel_force_on', 'done'); } catch (_) {}
+        }
         const wasExplicitlyConfigured = parsed.hostel && typeof parsed.hostel.enabled === 'boolean';
         if (!wasExplicitlyConfigured && !localStorage.getItem('tms_hostel_explicitly_toggled')) {
           if (!merged.hostel) merged.hostel = {};
